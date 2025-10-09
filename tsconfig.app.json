@@ -10,7 +10,13 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "types": ["vuetify"]
+    "types": ["vuetify", "vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+  "include": [
+    "src/**/*.ts", 
+    "src/**/*.d.ts",
+    "src/**/*.tsx", 
+    "src/**/*.vue",
+    "src/shims-vue.d.ts"
+  ]
 }
