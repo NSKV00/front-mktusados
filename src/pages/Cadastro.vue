@@ -1,149 +1,297 @@
 <template>
-  <v-container class="fill-height d-flex align-center justify-center">
-    <v-card
-      class="pa-6"
-      max-width="500"
-      elevation="8"
-      rounded="xl"
-    >
-      <v-card-title class="text-h5 text-center mb-4">
-        Crie sua conta
-      </v-card-title>
+  <main class="custom-main">
+    <v-card class="custom-form">
+      <div class="logo-container">
+        <v-img src="../assets/Logo.png" alt="logo" width="120" class="logo-img" />
+      </div>
+      
+      <h1 class="title">Criar Conta</h1>
 
-      <v-form v-model="formValid" @submit.prevent="cadastrarUsuario">
+      <v-form @submit.prevent="handleSubmit" ref="form" class="form-content">
+        <!-- Nome -->
         <v-text-field
-          v-model="usuario.nome"
-          label="Nome completo"
+          v-model="nome"
+          label="Nome Completo"
+          :rules="[v => !!v || 'Nome completo é obrigatório']"
+          variant="outlined"
           prepend-inner-icon="mdi-account"
-          :rules="[rules.required]"
-          outlined
-          dense
-          class="mb-3"
+          class="custom-input"
+          required
         />
 
+        <!-- Email -->
         <v-text-field
-          v-model="usuario.email"
+          v-model="email"
           label="E-mail"
+          type="email"
+          :rules=" [
+            v => !!v || 'E-mail é obrigatório',
+            v => /.+@.+\..+/.test(v) || 'E-mail deve ser válido'
+          ]"
+          variant="outlined"
           prepend-inner-icon="mdi-email"
-          :rules="[rules.required, rules.email]"
-          outlined
-          dense
-          class="mb-3"
+          class="custom-input"
+          required
         />
 
+        <!-- Senha -->
         <v-text-field
-          v-model="usuario.senha"
+          v-model="password"
           label="Senha"
-          type="password"
+          :type="showPassword ? 'text' : 'password'"
+          :rules="[
+            v => !!v || 'Senha é obrigatória',
+            v => v.length >= 6 || 'Senha deve ter pelo menos 6 caracteres'
+          ]"
+          variant="outlined"
           prepend-inner-icon="mdi-lock"
-          :rules="[rules.required, rules.password]"
-          outlined
-          dense
-          class="mb-3"
+          :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          @click:append-inner="showPassword = !showPassword"
+          class="custom-input"
+          required
         />
 
+        <!-- Telefone -->
         <v-text-field
-          v-model="usuario.confirmarSenha"
-          label="Confirmar senha"
-          type="password"
-          prepend-inner-icon="mdi-lock-check"
-          :rules="[rules.required, confirmSenha]"
-          outlined
-          dense
-          class="mb-5"
+          v-model="telefone"
+          label="Telefone"
+          :rules="[
+            v => !!v || 'Telefone é obrigatório',
+            v => v.replace(/\D/g, '').length === 11 || 'Telefone deve ter 11 dígitos'
+          ]"
+          variant="outlined"
+          prepend-inner-icon="mdi-phone"
+          class="custom-input"
+          v-mask="'(##) #####-####'"
+          required
         />
 
-        <v-checkbox
-          v-model="usuario.termos"
-          :rules="[rules.requiredCheckbox]"
-          label="Aceito os termos de uso"
-          density="compact"
-          hide-details="auto"
+        <!-- CPF -->
+        <v-text-field
+          v-model="cpf"
+          label="CPF"
+          :rules="[
+            v => !!v || 'CPF é obrigatório',
+            v => v.replace(/\D/g, '').length === 11 || 'CPF inválido'
+          ]"
+          variant="outlined"
+          prepend-inner-icon="mdi-card-account-details"
+          class="custom-input"
+          v-mask="'###.###.###-##'"
+          required
         />
 
+        <!-- Botões -->
         <v-btn
-          :disabled="!formValid"
-          color="primary"
           type="submit"
           block
-          class="mt-4"
+          :loading="loading"
+          class="custom-button"
         >
-          Cadastrar
+          Cadastrar-se
         </v-btn>
-
-        <v-divider class="my-4"></v-divider>
 
         <v-btn
-          color="red-darken-1"
-          block
-          variant="outlined"
-          @click="loginGoogle"
+          variant="text"
+          to="/login"
+          class="custom-link"
         >
-          <v-icon start>mdi-google</v-icon>
-          Entrar com Google
+          Já tem uma conta? Fazer login
         </v-btn>
-
-        <p class="text-center text-caption mt-4">
-          Já tem uma conta?
-          <RouterLink to="/login">Faça login</RouterLink>
-        </p>
       </v-form>
     </v-card>
-  </v-container>
+  </main>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../controller/api'
+import { toast } from 'vue3-toastify'
+import { mask } from 'vue-the-mask'
 
-// ✅ Dados do usuário
-const usuario = ref({
-  nome: '',
-  email: '',
-  senha: '',
-  confirmarSenha: '',
-  termos: false,
-})
+const router = useRouter()
+const form = ref()
+const loading = ref(false)
+const showPassword = ref(false)
 
-// ✅ Controle do formulário
-const formValid = ref(false)
+const nome = ref('')
+const email = ref('')
+const password = ref('')
+const telefone = ref('')
+const cpf = ref('')
 
-// ✅ Regras de validação
-const rules = {
-  required: (v: string) => !!v || 'Campo obrigatório',
-  email: (v: string) =>
-    /.+@.+\..+/.test(v) || 'E-mail inválido',
-  password: (v: string) =>
-    v.length >= 6 || 'Mínimo de 6 caracteres',
-  requiredCheckbox: (v: boolean) =>
-    v || 'Você deve aceitar os termos',
-}
+const handleSubmit = async () => {
+  const { valid } = await form.value.validate()
+  if (!valid) return
 
-// ✅ Confirmação de senha
-const confirmSenha = (v: string) =>
-  v === usuario.value.senha || 'As senhas não conferem'
+  loading.value = true
+  try {
+    const res = await api.post("/usuario", {
+      nome: nome.value,
+      email: email.value,
+      password: password.value,
+      telefone: telefone.value.replace(/\D/g, ""),
+      cpf: cpf.value.replace(/\D/g, ""),
+    })
 
-// ✅ Função de cadastro
-function cadastrarUsuario() {
-  if (!formValid.value) return
-  console.log('Usuário cadastrado:', usuario.value)
-  alert(`Bem-vindo, ${usuario.value.nome}!`)
-}
-
-// ✅ Login via Google (placeholder)
-function loginGoogle() {
-  console.log('Login com Google...')
-  alert('Login com Google em desenvolvimento')
+    if (res.status === 201) {
+      toast.success("Usuário cadastrado com sucesso!")
+      setTimeout(() => router.push("/login"), 2500)
+    }
+  } catch (error: any) {
+    if (error.response) {
+      console.error("Erro no backend:", error.response.data)
+      const msg = error.response.data.message
+      if (typeof msg === "string") {
+        toast.error(msg)
+      } else if (typeof msg === "object") {
+        const firstError = Object.values(msg)[0]
+        toast.error(String(firstError))
+      } else {
+        toast.error("Erro ao cadastrar usuário")
+      }
+    } else {
+      console.error(error)
+      toast.error("Erro de conexão com servidor")
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <style scoped>
-.v-card {
-  background-color: #ffffff;
+.custom-main {
+  background-color: var(--cinza-aço, #2c3e50);
+  background-image: url('https://www.transparenttextures.com/patterns/cream-pixels.png');
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  font-family: 'Poppins', sans-serif;
 }
 
+.custom-form {
+  background: var(--preto-intenso, #1a1a1a);
+  backdrop-filter: blur(0.2rem);
+  border-radius: 20px;
+  padding: 3rem 2rem 2rem;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.logo-container {
+  position: absolute;
+  top: -3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 50%;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.title {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.custom-input :deep(.v-field__outline) {
+  color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.custom-input :deep(.v-field__input) {
+  color: #fff !important;
+}
+
+.custom-input :deep(.v-label) {
+  color: #e0e0e0 !important;
+}
+
+.custom-button {
+  margin-top: 1rem;
+  background: linear-gradient(90deg, #6a11cb, #2575fc) !important;
+  border-radius: 25px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: none;
+  transition: all 0.3s ease;
+}
+
+.custom-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.custom-link {
+  color: #fff !important;
+  font-size: 14px;
+  margin-top: 1rem;
+  text-transform: none;
+  transition: color 0.3s;
+}
+
+.custom-link:hover {
+  color: #ffcc70 !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
 @media (max-width: 600px) {
-  .v-card {
-    margin: 0 12px;
+  .custom-form {
+    padding: 2.5rem 1.5rem 1.5rem;
+    max-width: 340px;
+  }
+
+  .title {
+    font-size: 24px;
+    margin-bottom: 1.5rem;
+  }
+
+  .logo-container {
+    top: -2.5rem;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 960px) {
+  .custom-form {
+    max-width: 400px;
+  }
+}
+
+@media (min-width: 961px) and (max-width: 1264px) {
+  .custom-form {
+    max-width: 440px;
+  }
+}
+
+@media (min-width: 1265px) {
+  .custom-form {
+    max-width: 480px;
   }
 }
 </style>

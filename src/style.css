@@ -7,10 +7,11 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --cinza-aço: #2c3e50;
+  --preto-intenso: #1a1a1a;
+  --gradient-primary: linear-gradient(90deg, #6a11cb, #2575fc);
+  --border-radius: 20px;
+  --transition-default: all 0.3s ease;
 }
 
 a {
