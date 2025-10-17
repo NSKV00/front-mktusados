@@ -8,25 +8,26 @@
       <h1 class="title">Criar Conta</h1>
 
       <v-form @submit.prevent="handleSubmit" ref="form" class="form-content">
-        <!-- Nome -->
+        
         <v-text-field
           v-model="nome"
           label="Nome Completo"
-          :rules="[v => !!v || 'Nome completo é obrigatório']"
+          :rules="[ 
+          (v: string) => !!v || 'Nome completo é obrigatório']"
           variant="outlined"
           prepend-inner-icon="mdi-account"
           class="custom-input"
           required
         />
 
-        <!-- Email -->
+        
         <v-text-field
           v-model="email"
           label="E-mail"
           type="email"
           :rules=" [
-            v => !!v || 'E-mail é obrigatório',
-            v => /.+@.+\..+/.test(v) || 'E-mail deve ser válido'
+            (v: string) => !!v || 'E-mail é obrigatório',
+            (v: string) => /.+@.+\..+/.test(v) || 'E-mail deve ser válido'
           ]"
           variant="outlined"
           prepend-inner-icon="mdi-email"
@@ -34,14 +35,14 @@
           required
         />
 
-        <!-- Senha -->
+        
         <v-text-field
           v-model="password"
           label="Senha"
           :type="showPassword ? 'text' : 'password'"
           :rules="[
-            v => !!v || 'Senha é obrigatória',
-            v => v.length >= 6 || 'Senha deve ter pelo menos 6 caracteres'
+            (v: string) => !!v || 'Senha é obrigatória',
+            (v: string) => v.length >= 6 || 'Senha deve ter pelo menos 6 caracteres'
           ]"
           variant="outlined"
           prepend-inner-icon="mdi-lock"
@@ -51,13 +52,13 @@
           required
         />
 
-        <!-- Telefone -->
+        
         <v-text-field
           v-model="telefone"
           label="Telefone"
           :rules="[
-            v => !!v || 'Telefone é obrigatório',
-            v => v.replace(/\D/g, '').length === 11 || 'Telefone deve ter 11 dígitos'
+        (v: string) => !!v || 'Telefone é obrigatório',
+        (v: string) => v.replace(/\D/g, '').length === 11 || 'Telefone deve ter 11 dígitos'
           ]"
           variant="outlined"
           prepend-inner-icon="mdi-phone"
@@ -66,13 +67,13 @@
           required
         />
 
-        <!-- CPF -->
+        
         <v-text-field
           v-model="cpf"
           label="CPF"
           :rules="[
-            v => !!v || 'CPF é obrigatório',
-            v => v.replace(/\D/g, '').length === 11 || 'CPF inválido'
+            (v: string) => !!v || 'CPF é obrigatório',
+            (v: string) => v.replace(/\D/g, '').length === 11 || 'CPF inválido'
           ]"
           variant="outlined"
           prepend-inner-icon="mdi-card-account-details"
@@ -81,7 +82,7 @@
           required
         />
 
-        <!-- Botões -->
+        
         <v-btn
           type="submit"
           block
@@ -107,8 +108,16 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../controller/api'
+
 import { toast } from 'vue3-toastify'
-import { mask } from 'vue-the-mask'
+import type { Ref } from 'vue'
+import type { AxiosResponse, AxiosInstance } from 'axios'
+
+
+const apiTyped = api as AxiosInstance
+
+
+
 
 const router = useRouter()
 const form = ref()
@@ -121,43 +130,48 @@ const password = ref('')
 const telefone = ref('')
 const cpf = ref('')
 
-const handleSubmit = async () => {
-  const { valid } = await form.value.validate()
-  if (!valid) return
-
-  loading.value = true
-  try {
-    const res = await api.post("/usuario", {
-      nome: nome.value,
-      email: email.value,
-      password: password.value,
-      telefone: telefone.value.replace(/\D/g, ""),
-      cpf: cpf.value.replace(/\D/g, ""),
+const handleSubmit = () => {
+  form.value
+    .validate()
+    .then(({ valid }: { valid: boolean }) => {
+      if (!valid) return
+      loading.value = true
+      return api.post("/usuario", {
+        nome: nome.value,
+        email: email.value,
+        password: password.value,
+        telefone: telefone.value.replace(/\D/g, ""),
+        cpf: cpf.value.replace(/\D/g, ""),
+      })
     })
-
-    if (res.status === 201) {
-      toast.success("Usuário cadastrado com sucesso!")
-      setTimeout(() => router.push("/login"), 2500)
-    }
-  } catch (error: any) {
-    if (error.response) {
-      console.error("Erro no backend:", error.response.data)
-      const msg = error.response.data.message
-      if (typeof msg === "string") {
-        toast.error(msg)
-      } else if (typeof msg === "object") {
-        const firstError = Object.values(msg)[0]
-        toast.error(String(firstError))
-      } else {
-        toast.error("Erro ao cadastrar usuário")
+    .then((res: AxiosResponse | void) => {
+      if (!res) return
+      if (res.status === 201) {
+        toast.success("Usuário cadastrado com sucesso!")
+        setTimeout(() => router.push("/login"), 2500)
       }
-    } else {
-      console.error(error)
-      toast.error("Erro de conexão com servidor")
-    }
-  } finally {
-    loading.value = false
-  }
+    })
+    .catch((error: any) => {
+      if (error && error.response) {
+        console.error("Erro no backend:", error.response.data)
+        const msg = error.response.data.message
+        if (typeof msg === "string") {
+          toast.error(msg)
+        } else if (typeof msg === "object" && msg !== null) {
+          const firstKey = Object.keys(msg)[0]
+          const firstError = firstKey ? (msg as any)[firstKey] : msg
+          toast.error(String(firstError))
+        } else {
+          toast.error("Erro ao cadastrar usuário")
+        }
+      } else {
+        console.error(error)
+        toast.error("Erro de conexão com servidor")
+      }
+    })
+    .finally(() => {
+      loading.value = false
+    })
 }
 </script>
 

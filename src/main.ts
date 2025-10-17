@@ -10,16 +10,23 @@ import '@mdi/font/css/materialdesignicons.css'
 import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
+
 const vuetify = createVuetify({
   components,
   directives,
+  theme: {
+    defaultTheme: 'dark', 
+  },
 })
 
-createApp(App)
-  .use(vuetify)
-  .use(router)
-  .use(Vue3Toastify, {
-    autoClose: 2500,
-    position: toast.POSITION.TOP_RIGHT,
-  })
-  .mount('#app')
+const app = createApp(App)
+
+
+app.use(vuetify)
+app.use(router)
+app.use(Vue3Toastify, {
+  autoClose: 2500,
+  position: toast.POSITION.TOP_RIGHT,
+})
+
+app.mount('#app')
