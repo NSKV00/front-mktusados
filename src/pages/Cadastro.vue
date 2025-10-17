@@ -1,15 +1,12 @@
 <template>
-  <main class="custom-main">
-    <v-card class="custom-form">
-      <div class="logo-container">
-        <v-img src="../assets/Logo.png" alt="logo" width="120" class="logo-img" />
-      </div>
-      
-      <h1 class="title">Criar Conta</h1>
+  <main class="main">
+    <v-form class="form" ref="form" @submit.prevent="handleSubmit">
+      <span class="logo">
+        <img src="../assets/" alt="Logo">
+      </span>
+      <span class="title">Criar Conta</span>
 
-      <v-form @submit.prevent="handleSubmit" ref="form" class="form-content">
-        <!-- Nome -->
-        <v-text-field
+       <v-text-field
           v-model="nome"
           label="Nome Completo"
           :rules="[v => !!v || 'Nome completo é obrigatório']"
@@ -19,12 +16,11 @@
           required
         />
 
-        <!-- Email -->
         <v-text-field
           v-model="email"
           label="E-mail"
           type="email"
-          :rules=" [
+          :rules="[
             v => !!v || 'E-mail é obrigatório',
             v => /.+@.+\..+/.test(v) || 'E-mail deve ser válido'
           ]"
@@ -34,15 +30,16 @@
           required
         />
 
-        <!-- Senha -->
         <v-text-field
           v-model="password"
           label="Senha"
           :type="showPassword ? 'text' : 'password'"
-          :rules="[
-            v => !!v || 'Senha é obrigatória',
-            v => v.length >= 6 || 'Senha deve ter pelo menos 6 caracteres'
-          ]"
+          :rules='[
+            v => !!v || "Senha é obrigatória",
+            v => v.length >= 6 || "Senha deve ter pelo menos 6 caracteres",
+            v => /[A-Z]/.test(v) || "Senha deve conter ao menos uma letra maiúscula",
+            v => /[!@#$%^&*(),.?":{}|<>]/.test(v) || "Senha deve conter ao menos um caractere especial"
+          ]'
           variant="outlined"
           prepend-inner-icon="mdi-lock"
           :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -51,10 +48,7 @@
           required
         />
 
-        <!-- Telefone -->
-        <v-text-field
-          v-model="telefone"
-          label="Telefone"
+        <v-text-field v-model="telefone" label="Telefone" maxlength="11"
           :rules="[
             v => !!v || 'Telefone é obrigatório',
             v => v.replace(/\D/g, '').length === 11 || 'Telefone deve ter 11 dígitos'
@@ -63,16 +57,14 @@
           prepend-inner-icon="mdi-phone"
           class="custom-input"
           v-mask="'(##) #####-####'"
+          
           required
         />
 
-        <!-- CPF -->
-        <v-text-field
-          v-model="cpf"
-          label="CPF"
+        <v-text-field v-model="cpf" label="CPF"
           :rules="[
             v => !!v || 'CPF é obrigatório',
-            v => v.replace(/\D/g, '').length === 11 || 'CPF inválido'
+            v => validarCPF(v) || 'CPF inválido'
           ]"
           variant="outlined"
           prepend-inner-icon="mdi-card-account-details"
@@ -81,172 +73,121 @@
           required
         />
 
-        <!-- Botões -->
-        <v-btn
-          type="submit"
-          block
-          :loading="loading"
-          class="custom-button"
-        >
-          Cadastrar-se
-        </v-btn>
+        <v-btn type="submit" block:loading="loading" class="submit-btn">Cadastrar-se</v-btn>
+        <v-btn variant="text" to="/login" class="login-link">Já tem uma conta? Fazer login</v-btn>
 
-        <v-btn
-          variant="text"
-          to="/login"
-          class="custom-link"
-        >
-          Já tem uma conta? Fazer login
-        </v-btn>
-      </v-form>
-    </v-card>
+    </v-form>
   </main>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import api from '../controller/api'
-import { toast } from 'vue3-toastify'
-import { mask } from 'vue-the-mask'
-
-const router = useRouter()
-const form = ref()
-const loading = ref(false)
-const showPassword = ref(false)
-
-const nome = ref('')
-const email = ref('')
-const password = ref('')
-const telefone = ref('')
-const cpf = ref('')
-
-const handleSubmit = async () => {
-  const { valid } = await form.value.validate()
-  if (!valid) return
-
-  loading.value = true
-  try {
-    const res = await api.post("/usuario", {
-      nome: nome.value,
-      email: email.value,
-      password: password.value,
-      telefone: telefone.value.replace(/\D/g, ""),
-      cpf: cpf.value.replace(/\D/g, ""),
-    })
-
-    if (res.status === 201) {
-      toast.success("Usuário cadastrado com sucesso!")
-      setTimeout(() => router.push("/login"), 2500)
-    }
-  } catch (error: any) {
-    if (error.response) {
-      console.error("Erro no backend:", error.response.data)
-      const msg = error.response.data.message
-      if (typeof msg === "string") {
-        toast.error(msg)
-      } else if (typeof msg === "object") {
-        const firstError = Object.values(msg)[0]
-        toast.error(String(firstError))
-      } else {
-        toast.error("Erro ao cadastrar usuário")
-      }
-    } else {
-      console.error(error)
-      toast.error("Erro de conexão com servidor")
-    }
-  } finally {
-    loading.value = false
-  }
-}
-</script>
-
 <style scoped>
 .custom-main {
-  background-color: var(--cinza-aço, #2c3e50);
-  background-image: url('https://www.transparenttextures.com/patterns/cream-pixels.png');
   min-height: 100vh;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 1rem;
+  background-image: 
+    linear-gradient(45deg, #FF6B6B, #8C52FF),
+    url('https://www.transparenttextures.com/patterns/cream-pixels.png');
+  background-blend-mode: overlay;
+  background-size: auto; /* Adicionar esta linha */
+  background-repeat: repeat; /* Adicionar esta linha */
+  background-position: center; /* Adicionar esta linha */
+  background-attachment: fixed; /* Adicionar esta linha */
   font-family: 'Poppins', sans-serif;
+  position: fixed; /* Adicionar esta linha */
+  top: 0; /* Adicionar esta linha */
+  left: 0; /* Adicionar esta linha */
+  right: 0; /* Adicionar esta linha */
+  bottom: 0; /* Adicionar esta linha */
 }
 
-.custom-form {
-  background: var(--preto-intenso, #1a1a1a);
-  backdrop-filter: blur(0.2rem);
+.custom-form-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   border-radius: 20px;
-  padding: 3rem 2rem 2rem;
+  padding: 2rem;
   width: 100%;
   max-width: 480px;
   position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.6s ease-in-out;
 }
 
-.logo-container {
+.logo-wrapper {
   position: absolute;
-  top: -3rem;
+  top: -60px;
   left: 50%;
   transform: translateX(-50%);
   background: white;
   border-radius: 50%;
-  padding: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
-.title {
-  color: #fff;
-  font-size: 28px;
+.logo {
+  width: 80px;
+  height: auto;
+}
+
+.form-content {
+  margin-top: 2rem;
+}
+
+.form-title {
+  color: #333;
+  font-size: 1.8rem;
   font-weight: 600;
   text-align: center;
   margin-bottom: 2rem;
 }
 
-.form-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.custom-input {
+  margin-bottom: 1rem;
 }
 
-.custom-input :deep(.v-field__outline) {
-  color: rgba(255, 255, 255, 0.15) !important;
+:deep(.v-field__outline) {
+  color: rgba(140, 82, 255, 0.2) !important;
 }
 
-.custom-input :deep(.v-field__input) {
-  color: #fff !important;
+:deep(.v-field__input) {
+  color: #333 !important;
 }
 
-.custom-input :deep(.v-label) {
-  color: #e0e0e0 !important;
+:deep(.v-label) {
+  color: #666 !important;
 }
 
-.custom-button {
-  margin-top: 1rem;
-  background: linear-gradient(90deg, #6a11cb, #2575fc) !important;
-  border-radius: 25px;
+.submit-btn {
+  margin-top: 1.5rem;
+  background: linear-gradient(45deg, #FF6B6B, #8C52FF) !important;
+  color: white !important;
   height: 48px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 1.1rem;
   text-transform: none;
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.custom-button:hover {
-  opacity: 0.9;
+.submit-btn:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(140, 82, 255, 0.3);
 }
 
-.custom-link {
-  color: #fff !important;
-  font-size: 14px;
+.login-link {
   margin-top: 1rem;
+  color: #8C52FF !important;
+  font-weight: 500;
   text-transform: none;
-  transition: color 0.3s;
+  transition: color 0.3s ease;
 }
 
-.custom-link:hover {
-  color: #ffcc70 !important;
+.login-link:hover {
+  color: #FF6B6B !important;
 }
 
 @keyframes fadeIn {
@@ -262,36 +203,119 @@ const handleSubmit = async () => {
 
 /* Responsividade */
 @media (max-width: 600px) {
-  .custom-form {
-    padding: 2.5rem 1.5rem 1.5rem;
-    max-width: 340px;
+  .custom-form-container {
+    padding: 1.5rem;
+    margin: 1rem;
   }
 
-  .title {
-    font-size: 24px;
+  .logo-wrapper {
+    top: -40px;
+  }
+
+  .logo {
+    width: 60px;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
     margin-bottom: 1.5rem;
-  }
-
-  .logo-container {
-    top: -2.5rem;
   }
 }
 
 @media (min-width: 601px) and (max-width: 960px) {
-  .custom-form {
+  .custom-form-container {
     max-width: 400px;
   }
 }
-
-@media (min-width: 961px) and (max-width: 1264px) {
-  .custom-form {
-    max-width: 440px;
-  }
-}
-
-@media (min-width: 1265px) {
-  .custom-form {
-    max-width: 480px;
-  }
-}
 </style>
+
+
+<script setup lang="ts">
+  import { ref } from 'vue'
+  import api from '../controller/api'
+  import { toast } from 'vue3-toastify'
+  import { useRouter } from 'vue-router'
+
+  const router = useRouter()
+
+    const nome = ref('')
+    const email = ref('')
+    const password = ref('')
+    const telefone = ref('')
+    const cpf = ref('')
+    const form = ref()
+    const loading = ref(false)
+    const showPassword = ref(false)
+
+    function validarCPF(cpf: string): boolean {
+      cpf = cpf.replace(/\D/g, '')
+      if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false
+      let sum = 0, rest
+      for (let i = 1; i <= 9; i++) sum += parseInt(cpf.substring(i - 1, i)) * (11 - i)
+      rest = (sum * 10) % 11
+      if (rest === 10 || rest === 11) rest = 0
+      if (rest !== parseInt(cpf.substring(9, 10))) return false
+      sum = 0
+      for (let i = 1; i <= 10; i++) sum += parseInt(cpf.substring(i - 1, i)) * (12 - i)
+      rest = (sum * 10) % 11
+      if (rest === 10 || rest === 11) rest = 0
+      if (rest !== parseInt(cpf.substring(10, 11))) return false
+      return true
+    }
+
+  const validateForm = (): boolean => {
+    if (!nome || !email || !password || !telefone) {
+      toast.error("Preencha todos os campos obrigatórios.")
+      return false
+    }
+    if (password.value.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.")
+      return false
+    }
+    if (telefone.value.replace(/\D/g, "").length !== 11) {
+      toast.error("Telefone deve ter 11 dígitos (DDD + número).")
+      return false
+    }
+    return true
+  }
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return
+
+    loading.value = true
+    try {
+      const res = await api.post("/usuario", {
+        nome: nome.value,
+        email: email.value,
+        password: password.value,
+        telefone: telefone.value.replace(/\D/g, ""),
+        cpf: cpf.value.replace(/\D/g, ""),
+      })
+
+      if (res.status === 201) {
+        toast.success("Usuário cadastrado com sucesso!")
+        setTimeout(() => router.push("/login"), 1600)
+      }
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Erro no backend:", error.response.data)
+
+        const msg = error.response.data.message
+        if (typeof msg === "string") {
+          toast.error(msg)
+        } else if (typeof msg === "object") {
+          const firstError = Object.values(msg)[0]
+          toast.error(String(firstError))
+        } else {
+          toast.error("Erro ao cadastrar usuário")
+        }
+      } else {
+        console.error(error)
+        toast.error("Erro de conexão com servidor")
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+</script>
+
