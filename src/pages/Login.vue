@@ -63,7 +63,7 @@
   font-family: 'Poppins', sans-serif;
   padding: var(--spacing-md);
   background-image: 
-    linear-gradient(45deg, #FF6B6B, #8C52FF),
+    linear-gradient(45deg,  #fdaf69, #FF6B6B, #372b73, #372b73),
     url('https://www.transparenttextures.com/patterns/cream-pixels.png');
   background-blend-mode: overlay;
   background-size: auto;
