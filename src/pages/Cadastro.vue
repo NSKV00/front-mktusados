@@ -692,7 +692,7 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    const res = await api.post('/usuario', {
+    const res = await api.create().post('/usuario', {
       nome: nome.value,
       email: email.value,
       password: password.value,

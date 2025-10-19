@@ -277,7 +277,7 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    const res = await api.post('/login', {
+    const res = await api.create().post('/login', {
       email: email.value,
       password: password.value,
     })
@@ -306,7 +306,7 @@ const handleGoogleLogin = async () => {
     const { access_token } = await googleTokenLogin()
     const googleUserInfo = await getGoogleUserInfo(access_token)
     
-    const res = await api.post('/login/google', {
+    const res = await api.googleAuth.login({
       email: googleUserInfo.email,
       name: googleUserInfo.name,
       googleId: googleUserInfo.id,
