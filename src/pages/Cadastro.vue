@@ -105,8 +105,8 @@
 }
 
 .form {
-  background: var(--preto-intenso);
-  backdrop-filter: blur(0.2rem);
+  background: var(--preto-intenso-tr);
+  backdrop-filter: blur(0.1rem);
   border-radius: 20px;
   padding: 40px;
   width: 100%;
@@ -130,9 +130,6 @@
   width: 8rem;
   height: auto;
   display: block;
-  border-radius: 50%;
-  background: linear-gradient(90deg,#6a11cb,#2575fc);
-  padding: 8px;
 }
 
 .title {
@@ -145,7 +142,6 @@
   top: 1.6rem;
 }
 
-/* Vuetify overrides */
 :deep(.v-field) {
   background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
@@ -163,7 +159,6 @@
   margin-top: 0.4rem;
 }
 
-/* Botão */
 .submit-btn {
   margin-top: 0.4rem;
   background: linear-gradient(90deg,#6a11cb,#2575fc) !important;
@@ -173,7 +168,6 @@
   font-weight: 600;
 }
 
-/* Links abaixo */
 .login-link {
   color: #fff;
   font-size: 14px;
@@ -187,7 +181,6 @@
   color: #ffcc70 !important;
 }
 
-/* Animação */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -199,7 +192,6 @@
   }
 }
 
-/* Responsividade */
 @media (max-width: 600px) {
   .form {
     padding: 20px;

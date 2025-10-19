@@ -9,6 +9,7 @@ import * as directives from 'vuetify/directives'
 import '@mdi/font/css/materialdesignicons.css'
 import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
+import VueTheMask from 'vue-the-mask'
 
 const vuetify = createVuetify({
   components,
@@ -22,4 +23,5 @@ createApp(App)
     autoClose: 2500,
     position: toast.POSITION.TOP_RIGHT,
   })
+  .use(VueTheMask as any)
   .mount('#app')

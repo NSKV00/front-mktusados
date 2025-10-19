@@ -65,7 +65,7 @@
 }
 
 .form {
-  background: var(--preto-intenso);
+  background: var(--preto-intenso-tr);
   backdrop-filter: blur(0.2rem);
   border-radius: 20px;
   padding: 40px;
@@ -76,7 +76,7 @@
   flex-direction: column;
   gap: 18px;
   animation: fadeIn 0.6s ease-in-out;
-  position: relative; /* para .logo absoluto */
+  position: relative;
   overflow: visible;
 }
 
@@ -87,12 +87,9 @@
 }
 
 .Logo {
-  width: 8rem;
+  width: 10rem;
   height: auto;
   display: block;
-  border-radius: 50%;
-  background: linear-gradient(90deg,#6a11cb,#2575fc);
-  padding: 8px;
 }
 
 .title {
@@ -105,7 +102,6 @@
   top: 1.7rem;
 }
 
-/* Vuetify field overrides */
 :deep(.v-field) {
   background: rgba(255, 255, 255, 0.06);
   border-radius: 10px;
@@ -123,7 +119,6 @@
   margin-top: 0.6rem;
 }
 
-/* Botão */
 .submit-btn {
   margin-top: 0.5rem;
   background: linear-gradient(90deg,#6a11cb,#2575fc) !important;
@@ -133,7 +128,6 @@
   font-weight: 600;
 }
 
-/* Links abaixo */
 .login-link {
   color: #fff;
   font-size: 14px;
@@ -147,7 +141,6 @@
   color: #ffcc70 !important;
 }
 
-/* Animação suave */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -159,7 +152,6 @@
   }
 }
 
-/* Responsividade */
 @media (max-width: 600px) {
   .form {
     padding: 20px;
