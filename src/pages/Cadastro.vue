@@ -21,13 +21,12 @@
         v-model="email"
         label="E-mail"
         type="email"
-        :rules="[
-          v => !!v || 'E-mail é obrigatório',
-          v => /.+@.+\\..+/.test(v) || 'E-mail deve ser válido'
-        ]"
+        :rules="emailRules"
         variant="outlined"
         prepend-inner-icon="mdi-email"
         class="custom-input"
+        @input="validateEmailFormat"
+        :error-messages="emailError"
         required
       />
 
@@ -35,10 +34,7 @@
         v-model="password"
         label="Senha"
         :type="showPassword ? 'text' : 'password'"
-        :rules="[
-          v => !!v || 'Senha é obrigatória',
-          v => v.length >= 6 || 'Senha deve ter pelo menos 6 caracteres'
-        ]"
+        :rules="passwordRules"
         variant="outlined"
         prepend-inner-icon="mdi-lock"
         :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -47,18 +43,30 @@
         required
       />
 
+      <template v-if="password">
+        <div class="password-strength">
+          <v-progress-linear
+            :model-value="(getPasswordStrength(password).strength / 6) * 100"
+            :color="getPasswordStrength(password).color"
+            height="4"
+          />
+          <span :class="['strength-text', `text-${getPasswordStrength(password).color}`]">
+            {{ getPasswordStrength(password).text }}
+          </span>
+        </div>
+      </template>
+
       <v-text-field
         v-model="telefone"
         label="Telefone"
         maxlength="15"
-        :rules="[
-          v => !!v || 'Telefone é obrigatório',
-          v => v.replace(/\\D/g, '').length === 11 || 'Telefone deve ter 11 dígitos'
-        ]"
+        :rules="regrasTelefone"
         variant="outlined"
         prepend-inner-icon="mdi-phone"
         class="custom-input"
         v-mask="'(##) #####-####'"
+        @input="validarTelefone"
+        :error-messages="erroTelefone"
         required
       />
 
@@ -281,6 +289,35 @@
   cursor: not-allowed;
 }
 
+.password-strength {
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+.strength-text {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+  text-align: right;
+}
+
+.text-error {
+  color: #ff5252;
+}
+
+.text-warning {
+  color: #ffd740;
+}
+
+.text-info {
+  color: #2196f3;
+}
+
+.text-success {
+  color: #4caf50;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -350,6 +387,197 @@ const form = ref()
 const loading = ref(false)
 const showPassword = ref(false)
 const googleLoading = ref(false)
+const emailError = ref('')
+const erroTelefone = ref('')
+
+// Constantes para validação do telefone
+const PADRAO_TELEFONE = /^\(\d{2}\)\s\d{5}-\d{4}$/
+const TAMANHO_MINIMO_TELEFONE = 11
+
+// Lista de DDDs válidos por região
+const dddsValidos = {
+  SP: ['11', '12', '13', '14', '15', '16', '17', '18', '19'],
+  RJ: ['21', '22', '24'],
+  ES: ['27', '28'],
+  MG: ['31', '32', '33', '34', '35', '37', '38'],
+  PR: ['41', '42', '43', '44', '45', '46'],
+  SC: ['47', '48', '49'],
+  RS: ['51', '53', '54', '55'],
+  DF: ['61'],
+  GO: ['62', '64'],
+  TO: ['63'],
+  MT: ['65', '66'],
+  MS: ['67'],
+  AC: ['68'],
+  RO: ['69'],
+  BA: ['71', '73', '74', '75', '77'],
+  SE: ['79'],
+  PE: ['81', '87'],
+  AL: ['82'],
+  PB: ['83'],
+  RN: ['84'],
+  CE: ['85', '88'],
+  PI: ['86', '89'],
+  PA: ['91', '93', '94'],
+  AM: ['92', '97'],
+  RR: ['95'],
+  AP: ['96'],
+  MA: ['98', '99']
+}
+
+// Função para obter todos os DDDs válidos
+const obterTodosDDDs = () => {
+  return Object.values(dddsValidos).flat()
+}
+
+// Função para verificar se um DDD é válido
+const verificarDDD = (ddd: string): boolean => {
+  return obterTodosDDDs().includes(ddd)
+}
+
+// Regras de validação do telefone
+const regrasTelefone = [
+  (v: string) => !!v || 'Telefone é obrigatório',
+  (v: string) => {
+    const numeros = v.replace(/\D/g, '')
+    return numeros.length === TAMANHO_MINIMO_TELEFONE || 'Telefone deve ter 11 dígitos'
+  },
+  (v: string) => PADRAO_TELEFONE.test(v) || 'Formato inválido. Use (XX) XXXXX-XXXX',
+  (v: string) => {
+    const ddd = v.replace(/\D/g, '').substring(0, 2)
+    if (!verificarDDD(ddd)) {
+      const estado = Object.entries(dddsValidos).find(([, ddds]) => ddds.includes(ddd))?.[0]
+      return estado ? `DDD ${ddd} pertence ao estado ${estado}` : 'DDD inválido'
+    }
+    return true
+  }
+]
+
+// Função de validação do telefone
+const validarTelefone = () => {
+  if (!telefone.value) {
+    erroTelefone.value = ''
+    return
+  }
+
+  const numeros = telefone.value.replace(/\D/g, '')
+  
+  if (numeros.length !== TAMANHO_MINIMO_TELEFONE) {
+    erroTelefone.value = 'Telefone deve ter 11 dígitos (DDD + número)'
+    return
+  }
+
+  if (!PADRAO_TELEFONE.test(telefone.value)) {
+    erroTelefone.value = 'Formato inválido. Use (XX) XXXXX-XXXX'
+    return
+  }
+
+  const ddd = numeros.substring(0, 2)
+  if (!verificarDDD(ddd)) {
+    erroTelefone.value = 'DDD inválido'
+    return
+  }
+
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1+$/.test(numeros)) {
+    erroTelefone.value = 'Número de telefone inválido (dígitos repetidos)'
+    return
+  }
+
+  erroTelefone.value = ''
+}
+
+const emailRegex = /^(?=[a-zA-Z0-9@._%+-]{6,254}$)[a-zA-Z0-9._%+-]{1,64}@(?:[a-zA-Z0-9-]{1,63}\.){1,8}[a-zA-Z]{2,63}$/
+
+const commonDomains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com']
+
+const emailRules = [
+  (v: string) => !!v || 'E-mail é obrigatório',
+  (v: string) => v.length <= 254 || 'E-mail muito longo',
+  (v: string) => v.includes('@') || 'E-mail deve conter @',
+  (v: string) => {
+    if (!v.includes('@')) return true
+    const [localPart] = v.split('@')
+    return localPart.length <= 64 || 'Parte local do e-mail muito longa'
+  },
+  (v: string) => {
+    if (!v.includes('@')) return true
+    const [, domain] = v.split('@')
+    if (!domain) return true
+    return domain.length <= 255 || 'Domínio do e-mail muito longo'
+  },
+  (v: string) => {
+    if (!v) return true
+    return emailRegex.test(v) || 'Formato de e-mail inválido'
+  }
+]
+
+const validateEmailFormat = () => {
+  if (!email.value) {
+    emailError.value = ''
+    return
+  }
+
+  if (!email.value.includes('@')) {
+    emailError.value = ''
+    return
+  }
+
+  const [localPart, domain] = email.value.split('@')
+
+  if (domain) {
+    const similarDomain = commonDomains.find(d => 
+      getLevenshteinDistance(domain.toLowerCase(), d) <= 2
+    )
+    
+    if (similarDomain && domain.toLowerCase() !== similarDomain) {
+      emailError.value = `Você quis dizer ${localPart}@${similarDomain}?`
+      return
+    }
+  }
+
+  if (email.value.includes('..')) {
+    emailError.value = 'E-mail não pode conter pontos consecutivos'
+    return
+  }
+
+  if (email.value.startsWith('.') || email.value.endsWith('.')) {
+    emailError.value = 'E-mail não pode começar ou terminar com ponto'
+    return
+  }
+
+  if (localPart && localPart.length > 64) {
+    emailError.value = 'Parte local do e-mail muito longa'
+    return
+  }
+
+  emailError.value = ''
+}
+
+const getLevenshteinDistance = (a: string, b: string): number => {
+  if (a.length === 0) return b.length
+  if (b.length === 0) return a.length
+
+  const matrix = Array(b.length + 1).fill(null).map(() => 
+    Array(a.length + 1).fill(null)
+  )
+
+  for (let i = 0; i <= a.length; i++) matrix[0][i] = i
+  for (let j = 0; j <= b.length; j++) matrix[j][0] = j
+
+  for (let j = 1; j <= b.length; j++) {
+    for (let i = 1; i <= a.length; i++) {
+      const substitute = matrix[j - 1][i - 1] + (a[i - 1] !== b[j - 1] ? 1 : 0)
+      matrix[j][i] = Math.min(
+        matrix[j - 1][i] + 1,
+        matrix[j][i - 1] + 1,
+        substitute
+      )
+    }
+  }
+
+  return matrix[b.length][a.length]
+}
 
 function validarCPF(cpfStr: string): boolean {
   const s = (cpfStr || '').replace(/\D/g, '')
@@ -366,6 +594,55 @@ function validarCPF(cpfStr: string): boolean {
   return rev === parseInt(s[10])
 }
 
+const passwordRules = [
+  (v: string) => !!v || 'Senha é obrigatória',
+  (v: string) => v.length >= 8 || 'Senha deve ter no mínimo 8 caracteres',
+  (v: string) => /[A-Z]/.test(v) || 'Senha deve conter pelo menos uma letra maiúscula',
+  (v: string) => /[a-z]/.test(v) || 'Senha deve conter pelo menos uma letra minúscula',
+  (v: string) => /[0-9]/.test(v) || 'Senha deve conter pelo menos um número',
+  (v: string) => /[!@#$%^&*(),.?":{}|<>]/.test(v) || 'Senha deve conter pelo menos um caractere especial',
+  (v: string) => !/\s/.test(v) || 'Senha não pode conter espaços em branco',
+  (v: string) => {
+    const hasSequential = /(?:012|123|234|345|456|567|678|789|987|876|765|654|543|432|321|210)/.test(v)
+    return !hasSequential || 'Senha não pode conter sequências numéricas'
+  },
+  (v: string) => {
+    const hasRepeating = /(.)\1{2,}/.test(v)
+    return !hasRepeating || 'Senha não pode conter caracteres repetidos em sequência'
+  }
+]
+
+const getPasswordStrength = (password: string): {
+  strength: number,
+  color: string,
+  text: string
+} => {
+  let strength = 0
+  
+  if (password.length >= 8) strength++
+  if (/[A-Z]/.test(password)) strength++
+  if (/[a-z]/.test(password)) strength++
+  if (/[0-9]/.test(password)) strength++
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++
+  if (password.length >= 12) strength++
+  
+  const strengthMap = {
+    0: { color: 'error', text: 'Muito fraca' },
+    1: { color: 'error', text: 'Fraca' },
+    2: { color: 'warning', text: 'Média' },
+    3: { color: 'info', text: 'Boa' },
+    4: { color: 'success', text: 'Forte' },
+    5: { color: 'success', text: 'Muito forte' },
+    6: { color: 'success', text: 'Excelente' }
+  }
+
+  return {
+    strength: strength,
+    color: strengthMap[strength as keyof typeof strengthMap].color,
+    text: strengthMap[strength as keyof typeof strengthMap].text
+  }
+}
+
 const validateForm = (): boolean => {
   if (!nome.value || !email.value || !password.value || !telefone.value) {
     toast.error('Preencha todos os campos obrigatórios.')
@@ -375,10 +652,30 @@ const validateForm = (): boolean => {
     toast.error('A senha deve ter pelo menos 6 caracteres.')
     return false
   }
-  if (telefone.value.replace(/\D/g, '').length !== 11) {
+
+  // Validação completa do telefone
+  const numerosTelefone = telefone.value.replace(/\D/g, '')
+  if (numerosTelefone.length !== TAMANHO_MINIMO_TELEFONE) {
     toast.error('Telefone deve ter 11 dígitos (DDD + número).')
     return false
   }
+
+  if (!PADRAO_TELEFONE.test(telefone.value)) {
+    toast.error('Formato de telefone inválido.')
+    return false
+  }
+
+  const ddd = numerosTelefone.substring(0, 2)
+  if (!verificarDDD(ddd)) {
+    toast.error('DDD inválido.')
+    return false
+  }
+
+  if (/^(\d)\1+$/.test(numerosTelefone)) {
+    toast.error('Número de telefone inválido (dígitos repetidos).')
+    return false
+  }
+
   if (!validarCPF(cpf.value)) {
     toast.error('CPF inválido.')
     return false

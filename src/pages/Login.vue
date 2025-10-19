@@ -205,7 +205,7 @@
   }
 }
 
-@media (max-width: 37.5rem) { /* 600px */
+@media (max-width: 37.5rem) {
   .main {
     padding: 0.5rem;
   }
