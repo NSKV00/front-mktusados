@@ -246,7 +246,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import api from '../controller/api'
+import api, { googleAuth } from '../controller/api'
 import { toast } from 'vue3-toastify'
 import { useRouter } from 'vue-router'
 import { googleTokenLogin } from 'vue3-google-login'
@@ -277,9 +277,9 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    const res = await api.create().post('/login', {
+    const res = await api.post('/login', {
       email: email.value,
-      password: password.value,
+      senha: password.value,
     })
 
     if (res.status === 200 || res.status === 201) {

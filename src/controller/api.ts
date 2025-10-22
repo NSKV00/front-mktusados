@@ -34,7 +34,5 @@ const googleAuth = {
   }
 }
 
-export default {
-  ...api,
-  googleAuth
-}
+export { googleAuth }
+export default api;
