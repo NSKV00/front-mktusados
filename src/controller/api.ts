@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5056';
+declare const VITE_API_BASE: string | undefined;
+
+const API_BASE = (typeof VITE_API_BASE !== 'undefined' && VITE_API_BASE) ? VITE_API_BASE : 'http://localhost:5056';
 
 const api = axios.create({
     baseURL: API_BASE,
