@@ -46,7 +46,6 @@
       <v-list>
         <v-list-item-title class="filter-title">Filtros</v-list-item-title>
         <v-divider />
-        <v-select v-model="selectedCategory" :items="categories" label="Categoria" />
         <v-select v-model="sortBy" :items="sortOptions" label="Ordenar por" />
         <v-btn block color="primary" class="mt-4" @click="filterDrawer = false">Aplicar</v-btn>
       </v-list>
@@ -95,16 +94,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 interface Product {
-  name: string
-  price: number
-  type: string
-  image: string
+  id: number
+  name: string        
+  description: string 
+  price: number       
+  image: string       
+  discount?: number
+  categoryId?: number
+  active?: boolean
 }
 
+interface CarrinhoItem {
+  id: number
+  produtoId: number
+  qtd: number
+  usuarioId: number
+  ativo?: boolean
+}
 const router = useRouter()
 
 const navDrawer = ref(false)
@@ -112,61 +123,122 @@ const filterDrawer = ref(false)
 const carrinhoDrawer = ref(false)
 
 const search = ref('')
-const selectedCategory = ref('Todos')
 const sortBy = ref('Padrão')
 
-const categories = ['Todos', 'Periféricos', 'Monitores', 'Eletrônicos']
-const sortOptions = ['Padrão', 'Menor preço', 'Maior preço', 'Nome (A-Z)']
+const sortOptions = ['Padrão', 'Menor preço', 'Maior preço', 'name (A-Z)']
 
 const avatarSrc = 'smirk.png'
 
-const products = ref([
-  { 
-    name: 'Headset Gamer RGB', 
-    price: 199.90, 
-    image: 'https://http2.mlstatic.com/D_NQ_NP_2X_995664-MLA50930745743_072022-F.webp',
-    description: 'Headset gamer com iluminação RGB e som surround de alta qualidade. Ideal para jogos e comunicação online.'
-  },
-  { 
-    name: 'Teclado Mecânico', 
-    price: 299.00, 
-    image: 'https://http2.mlstatic.com/D_NQ_NP_2X_696440-MLA50199160146_062022-F.webp',
-    description: 'Teclado mecânico com switches vermelhos e retroiluminação RGB personalizável. Excelente para digitação e jogos.'
-  },
-  { 
-    name: 'Mouse Sem Fio', 
-    price: 89.99, 
-    image: 'https://http2.mlstatic.com/D_NQ_NP_2X_732496-MLA50621842279_072022-F.webp',
-    description: 'Mouse sem fio ergonômico com sensor de alta precisão e bateria recarregável.'
-  },
-  { 
-    name: 'Monitor 27” Full HD', 
-    price: 1249.00, 
-    image: 'https://http2.mlstatic.com/D_NQ_NP_2X_602893-MLA50063234834_052022-F.webp',
-    description: 'Monitor de 27 polegadas Full HD com painel IPS e taxa de atualização de 75Hz. Ideal para produtividade e entretenimento.'
-  },
-])
 
+
+
+const products = ref<Product[]>([])
+const isLoading = ref(true)
+
+onMounted(() => {
+  axios.get('http://localhost:5056/produto')
+    .then((res) => {
+      products.value = res.data.map((p: any) => ({
+        id: p.id,
+        name: p.nome,
+        description: p.descricao,
+        price: Number(p.valor),
+        image: p.img || '', 
+        discount: p.desconto,
+        categoryId: p.categoriaId,
+        active: p.ativo
+      }))
+      isLoading.value = false
+    })
+    .catch((err) => {
+      console.error('Erro ao buscar produtos:', err)
+      isLoading.value = false
+    })
+})
+
+const apiBase = 'http://localhost:5056/Itemcarrinho'; 
+
+
+async function getCarrinho(usuarioId: number) {
+  const res = await axios.get(`${apiBase}?usuarioId=${usuarioId}`);
+  return res.data; 
+}
+
+
+async function addCarrinho(item: { produtoId: number, qtd: number, usuarioId: number }) {
+  const res = await axios.post(apiBase, item);
+  return res.data;
+}
+
+
+async function updateCarrinho(itemId: number, patch: { qtd?: number, ativo?: boolean }) {
+  const res = await axios.patch(`${apiBase}/${itemId}`, patch);
+  return res.data;
+}
+
+async function removeCarrinho(itemId: number) {
+  const res = await axios.delete(`${apiBase}/${itemId}`);
+  return res.data;
+}
+const carrinho = ref<CarrinhoItem[]>([])
+const usuarioId = 1; 
+
+
+onMounted(() => {
+  getCarrinho(usuarioId)
+    .then((items) => {
+      carrinho.value = items
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+})
+
+async function addToCart(productId: number) {
+  try {
+    const item = await addCarrinho({ produtoId: productId, qtd: 1, usuarioId })
+    carrinho.value.push(item)
+  } catch (err) {
+    console.error(err)
+  }
+}
+function removeCarrinhoItem(index: number) {
+  const item = carrinho.value[index]
+  if (!item) return
+  return removeCarrinho(item.id)
+    .then(() => {
+      carrinho.value.splice(index, 1)
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+}
 const cart = ref<Product[]>([])
-
 const removeFromCart = (index: number) => cart.value.splice(index, 1)
-const cartTotal = computed<number>(() => cart.value.reduce((sum: number, item: Product) => sum + item.price, 0))
+const cartTotal = computed<number>(() =>
+  cart.value.reduce((sum: number, item: Product) => sum + item.price, 0)
+)
+
 
 const filteredProducts = computed(() =>
   products.value.filter((p: Product) => {
-    const matchCategory = selectedCategory.value === 'Todos' || p.type === selectedCategory.value
-    const matchSearch = p.name.toLowerCase().indexOf(search.value.toLowerCase()) !== -1
-    return matchCategory && matchSearch
+    const matchSearch =
+      p.name.toLowerCase().indexOf(search.value.toLowerCase()) !== -1
+    return matchSearch
   })
 )
 
 const sortedProducts = computed(() => {
   const list = [...filteredProducts.value]
   switch (sortBy.value) {
-    case 'Menor preço': return list.sort((a, b) => a.price - b.price)
-    case 'Maior preço': return list.sort((a, b) => b.price - a.price)
-    case 'Nome (A-Z)': return list.sort((a, b) => a.name.localeCompare(b.name))
-    default: return list
+    case 'Menor preço':
+      return list.sort((a, b) => a.price - b.price)
+    case 'Maior preço':
+      return list.sort((a, b) => b.price - a.price)
+    case 'name (A-Z)':
+      return list.sort((a, b) => a.name.localeCompare(b.name))
+    default:
+      return list
   }
 })
 
@@ -177,12 +249,11 @@ const goToDetails = (product: Product) => {
     params: { name: encodeURIComponent(product.name) },
     query: {
       price: product.price.toString(),
-      type: product.type,
+      description: product.description,
       image: product.image,
     },
   })
 }
-
 </script>
 
 <style scoped>
@@ -195,11 +266,11 @@ const goToDetails = (product: Product) => {
   position: relative;
   top: 0;
   background-color: #f5f5f5;
-  color: rgb(255, 128, 0);
+  color: #ffaf04;
   display: flex;
   align-items: center;
   padding: 0.5rem 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+   box-shadow: 0 2px 4px #d100ff;
 }
 .header-content {
   display: flex;
@@ -220,7 +291,7 @@ const goToDetails = (product: Product) => {
   gap: 0.5rem;
   background-color: white;
   padding: 2rem;
-  box-shadow: 0 2px 4px rgba(212, 0, 255, 0.18);
+ 
 }
 
 .search-bar {
