@@ -93,29 +93,39 @@
       />
       <div v-if="idade >= 18" class="idade-tag maior18">Maior de 18 anos</div>
       <div v-else-if="idade >= 16" class="idade-tag maior16">Maior de 16 anos</div>
-      <!-- <v-text-field
-        v-model="idade"
-        label="Idade"
-        :rules="[v => !!v || 'Idade é obrigatória', v => validarIdade(v) || 'Você precisa ter 16 anos ou mais para se cadastrar']"
-        variant="outlined"
-        prepend-inner-icon='mdi-cake'
-        class="custom-input"
-        type="int"
-        required
-      /> -->
 
-      <!-- <v-checkbox
-        v-model="maior16"
+      <v-checkbox
+        v-model="aceitaTermos"
         color="primary"
-        class="age-checkbox"
-        :rules="[v => v || 'Você precisa ter 16 anos ou mais para se cadastrar']"
+        class="terms-checkbox"
+        :rules="[v => !!v || 'Você deve aceitar os Termos e Condições para continuar']"
       >
         <template v-slot:label>
           <div class="checkbox-label">
-            Declaro que tenho 16 anos ou mais
+            Eu li e aceito os 
+            <a @click.stop="mostrarTermos = true" class="link-termos">
+              Termos e Condições de Uso
+            </a>.
           </div>
         </template>
-      </v-checkbox> -->
+      </v-checkbox>
+
+      <!-- Modal com os Termos -->
+      <v-dialog v-model="mostrarTermos" max-width="800px" persistent>
+        <v-card>
+          <v-card-title class="text-h6 font-weight-bold">
+            Termos e Condições de Uso
+          </v-card-title>
+          <v-card-text style="max-height: 70vh; overflow-y: auto; white-space: pre-line;">
+            {{ textoTermos }}
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="mostrarTermos = false">Fechar</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
 
       <v-btn type="submit" :loading="carregando" class="submit-btn" block>
         Cadastrar-se
@@ -454,6 +464,10 @@ const validarFormulario = (): boolean => {
     toast.error(erroTelefone.value)
     return false
   }
+  if (!aceitaTermos.value) {
+  toast.error('Você deve aceitar os Termos e Condições para continuar.')
+  return false
+}
 
   return true
 }
@@ -493,6 +507,47 @@ const handleSubmit = async () => {
     carregando.value = false
   }
 }
+
+const aceitaTermos = ref(false)
+const mostrarTermos = ref(false)
+
+const textoTermos = `
+🔹 1. Introdução
+Bem-vindo à nossa plataforma de vendas de produtos novos e usados. Ao se cadastrar e utilizar o site, você concorda com os presentes Termos e Condições de Uso.
+
+🔹 2. Cadastro e Responsabilidade
+O usuário deve fornecer informações verdadeiras, atualizadas e completas. O uso indevido de dados falsos ou de terceiros é proibido e pode resultar na exclusão da conta.
+
+🔹 3. Compra e Venda
+- O vendedor é responsável pela veracidade e condição dos produtos anunciados.
+- O comprador deve verificar atentamente a descrição, preço e estado do item antes de efetuar a compra.
+- A plataforma atua apenas como intermediadora de contato e pagamento, não sendo parte direta da negociação.
+
+🔹 4. Produtos Usados
+Itens classificados como "usados" devem conter informações claras sobre defeitos, desgaste e funcionalidade. Produtos falsificados, roubados ou ilícitos são estritamente proibidos.
+
+🔹 5. Pagamentos e Segurança
+Os pagamentos devem ser realizados apenas por meios autorizados e seguros pela plataforma. Tentativas de fraude, chargeback indevido ou uso de cartões de terceiros resultarão em bloqueio imediato da conta.
+
+🔹 6. Entregas e Devoluções
+O prazo de envio é de responsabilidade do vendedor. O comprador pode abrir disputa em caso de não recebimento ou produto divergente. Devoluções devem seguir as políticas da plataforma.
+
+🔹 7. Propriedade Intelectual
+Todo o conteúdo (imagens, textos, logos) é protegido por direitos autorais. O uso sem autorização é proibido.
+
+🔹 8. Privacidade e Proteção de Dados
+As informações pessoais são coletadas apenas para fins de operação da plataforma e respeitam a Lei Geral de Proteção de Dados (LGPD).
+
+🔹 9. Penalidades e Suspensões
+A plataforma se reserva o direito de suspender ou excluir contas que violem estes termos, realizem fraudes ou prejudiquem outros usuários.
+
+🔹 10. Alterações dos Termos
+Os Termos de Uso podem ser atualizados a qualquer momento. O uso contínuo da plataforma implica aceitação das novas condições.
+
+🔹 11. Contato
+Dúvidas ou reclamações podem ser enviadas pelo canal de suporte disponível na plataforma.
+`
+
 
 /* ----------------------
    Cadastro via Google
@@ -651,6 +706,26 @@ const irParaLogin = () => router.push('/login')
 
 .custom-input {
   margin-top: 0.375rem;
+}
+
+.terms-checkbox {
+  margin-top: 8px;
+  color: #fff;
+}
+
+.checkbox-label {
+  color: #fff;
+  font-size: 14px;
+}
+
+.link-termos {
+  color: #ffcc70;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-termos:hover {
+  color: #ffd98e;
 }
 
 .submit-btn,
