@@ -273,8 +273,8 @@
 
 .modal-buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: center;
+  gap: 30px;
   margin-top: 12px;
 }
 
@@ -335,7 +335,7 @@ onMounted(async () => {
      console.log("onMounted foi chamado!")
   try {
     const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjEyNjUyNjUsImV4cCI6MTc2MTI3MjQ2NSwiaWF0IjoxNzYxMjY1MjY1fQ.xSRTGrf9TFn1ceAO6uRbAo_sRHj4nPkL6leHi6YHpvo`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE2NzY4NDgsImV4cCI6MTc2MTY4NDA0OCwiaWF0IjoxNzYxNjc2ODQ4fQ.3c6wxkAER2svWMW9zv4orijhpBs81l5KKb7MtZ5Gn80`
     };
 
     const [response, response2, response3] = await Promise.all([
@@ -379,11 +379,32 @@ onMounted(async () => {
 const abrirModal = () => modalAberto.value = true
 const fecharModal = () => modalAberto.value = false
 
-const salvarDados = () => {
-  // Aqui você pode chamar a API para atualizar os dados
+const salvarDados = async() => {
+  const inicio = { ...usuario.value }
+try {
+  const headers = {
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE2NzY4NDgsImV4cCI6MTc2MTY4NDA0OCwiaWF0IjoxNzYxNjc2ODQ4fQ.3c6wxkAER2svWMW9zv4orijhpBs81l5KKb7MtZ5Gn80`
+    };
   console.log('Dados atualizados:', form.value)
-  // Atualiza o objeto principal
   usuario.value = { ...usuario.value, ...form.value }
-  fecharModal()
+  await apiController.patch(
+    `usuarios/${usuario.value.id}`,
+    { ...form.value },
+    {
+      params: { id: usuario.value.id },
+      headers
+    }
+  );
+
+fecharModal()
+} catch (error) {
+  console.error("Erro ao salvar dados do usuário")
+  form.value = {
+    nome: inicio.nome || '',
+    telefone: inicio.telefone || inicio.telefones || '',
+    cpf: inicio.cpf || '',
+    idade: inicio.idade || inicio.age || ''
+  }
+}
 }
 </script>
