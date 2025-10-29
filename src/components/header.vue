@@ -1,13 +1,12 @@
 <template>
-  <v-app-bar app color="primary" dark>
-    <span class="logo">
-        <img class="Logo" src="../assets/logo.png" alt="Logo" />
-    </span>
+  <v-app-bar flat color="white" elevation="1">
+    <v-app-bar-nav-icon @click="drawer = !drawer" class="me-2" />
 
-    <v-app-bar-nav-icon @click="drawer = !drawer" />
- 
+    <div class="logo">
+      <img class="Logo" src="../assets/logo.png" alt="Logo" />
+    </div>
+
     <v-spacer></v-spacer>
-
     <v-text-field
       v-model="search"
       placeholder="Buscar..."
@@ -15,8 +14,8 @@
       hide-details
       dense
       flat
+      class="search-bar"
     />
-
     <v-spacer></v-spacer>
 
     <v-menu
@@ -94,8 +93,6 @@
   <v-navigation-drawer v-model="drawer" temporary app color="grey-lighten-4">
     <v-list nav dense>
       <v-list-item :to="{ path: '/' }" title="Home" prepend-icon="mdi-home" />
-      <v-list-item :to="{ path: '/agendamento' }" title="Agendamento" prepend-icon="mdi-notebook" />
-      <v-list-item :to="{ path: '/servicos' }" title="Serviços" prepend-icon="mdi-scissors-cutting" />
     </v-list>
   </v-navigation-drawer>
 </template>
@@ -108,7 +105,7 @@ import api from '../controller/api'
 
 const router = useRouter()
 
-interface returnUser {
+interface ReturnUser {
   id: number
   nome: string
   email: string
@@ -119,9 +116,10 @@ interface returnUser {
 
 const drawer = ref(false)
 const menuUsuario = ref(false)
-const cliente = ref<returnUser[]>([])
+const cliente = ref<ReturnUser[]>([])
 const inputFile = ref<HTMLInputElement | null>(null)
 const fotoPerfil = ref<string>('/default-profile.png')
+const search = ref('')
 
 const pegarUsuario = async () => {
   try {
@@ -143,9 +141,7 @@ const pegarUsuario = async () => {
   }
 }
 
-const abrirUpload = () => {
-  inputFile.value?.click()
-}
+const abrirUpload = () => inputFile.value?.click()
 
 const handleFotoChange = async (e: Event) => {
   const target = e.target as HTMLInputElement
@@ -175,19 +171,18 @@ const handleFotoChange = async (e: Event) => {
 const logout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('usuario')
+  router.push('/login')
 }
 
-onMounted(() => {
-  pegarUsuario()
-})
+onMounted(pegarUsuario)
 </script>
 
 <style scoped>
 .logo {
-  position: fixed;
-  left: 12%;
-  top: -1.225rem;
-  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  position: absolute;
+  margin-left: 5.5rem;
 }
 
 .Logo {
@@ -195,62 +190,16 @@ onMounted(() => {
   height: auto;
 }
 
+.search-bar {
+  max-width: 600px;
+  flex-grow: 1;
+}
+
 .cursor-pointer {
   cursor: pointer;
 }
 
+.hidden {
+  display: none;
+}
 </style>
-
-
-
-<!-- <template>
-  <v-app-bar app color="primary" dark>
-    <v-app-bar-nav-icon @click="drawer = !drawer" />
-
-    <v-toolbar-title>Meu App</v-toolbar-title>
-
-    <v-spacer></v-spacer>
-
-    <v-text-field
-      v-model="search"
-      placeholder="Buscar..."
-      prepend-inner-icon="mdi-magnify"
-      hide-details
-      dense
-      flat
-    />
-
-    <v-btn icon @click="dialog = true">
-      <v-icon>mdi-account-circle</v-icon>
-    </v-btn>
-  </v-app-bar>
-
-  <v-navigation-drawer v-model="drawer" app temporary>
-    <v-list>
-      <v-list-item title="Início" to="/" />
-      <v-list-item title="Perfil" to="/perfil" />
-      <v-list-item title="Configurações" to="/config" />
-    </v-list>
-  </v-navigation-drawer>
-
-  <v-dialog v-model="dialog" max-width="400">
-    <v-card>
-      <v-card-title>Perfil</v-card-title>
-      <v-card-text>
-        <p>Nome: Nícolas</p>
-        <p>Email: nicolas@example.com</p>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn color="primary" @click="dialog = false">Fechar</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-</template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-
-const drawer = ref(false) 
-const dialog = ref(false) 
-const search = ref('')
-</script> -->
