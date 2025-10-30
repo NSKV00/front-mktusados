@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-page">
+  <div v-if="!isCarregando" class="profile-page">
     <div v-if="usuario" class="profile-container">
 
     <button class="config-btn" aria-label="Configurações" @click="abrirModal">
@@ -31,7 +31,7 @@
       <div class="profile-details">
         <div class="detail-card">
           <strong>Telefone</strong>
-          <p>{{ usuario.telefone || usuario.telefones || '-' }}</p>
+          <p>{{ usuario.telefone || '-' }}</p>
         </div>
         <div class="detail-card">
           <strong>CPF</strong>
@@ -39,7 +39,7 @@
         </div>
         <div class="detail-card">
           <strong>Idade</strong>
-          <p>{{ usuario.idade || usuario.age || '-' }}</p>
+          <p>{{ usuario.idade || '-' }}</p>
         </div>
         <div class="detail-card">
           <strong>Email</strong>
@@ -48,10 +48,35 @@
       </div>
     </div>
 
+    
     <div v-else class="loading">
       Carregando perfil...
     </div>
+    
+    <div class="products-list">
+        <h3 class="products-title">Meus Produtos</h3>
 
+        <div class="products-grid">
+          <div
+            v-for="produto in produtos"
+            :key="produto.id || produto.produtoId || produto.titulo"
+            class="product-card"
+          >
+<img :src="produtoSrc(produto.img)" class="product-img" />
+            <div class="product-info">
+              <strong>{{ produto.nome || produto.titulo || 'Produto' }}</strong>
+              <p class="product-desc">{{ produto.descricao || produto.description || '-' }}</p>
+              <span class="product-price">Preço: {{ (produto.preco ?? produto.valor) }}</span>
+              <span v-if="produto.valor && produto.valor !== produto.preco" class="product-value">Valor: {{(produto.valor) }}</span>
+            </div>
+          </div>
+
+          <!-- Item final: botão que leva para outra página -->
+          <router-link class="product-card add-new" to="/cadastrar-produto">
+            <div class="add-inner">+ Cadastrar produto</div>
+          </router-link>
+        </div>
+    </div>
 
     <div v-if="modalAberto" class="modal-overlay" @click.self="fecharModal">
       <div class="modal-container">
@@ -81,39 +106,50 @@
       </div>
     </div>
   </div>
+
+  <div v-else class="loading-full">
+    <div class="spinner-wrapper" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+     <div class="loading-text">Carregando perfil...</div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
 .profile-page {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 24px;
-  box-sizing: border-box;
-  background-color: #fff;
+  position: relative; 
   display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: auto;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 24px;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  overflow-x: hidden;
 }
 
+/* Mantém o conteúdo centralizado e com altura limitada para permitir scroll interno */
 .profile-container {
-  position: relative; 
-  width: 80%;
+  margin: 0 auto;
+  width: min(1200px, 100%);
   max-width: 1200px;
-  min-height: 300px;
   background-color: #fff;
   border-radius: 12px;
   border: 2px solid #fed5aa;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* limita altura para caber na viewport e permitir scroll interno se necessário */
+  max-height: calc(100vh - 0px);
+  overflow: auto;
 }
 
+/* Botão de Configurações */
 .config-btn {
   position: absolute;
   top: 16px;
@@ -125,20 +161,22 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #000000;
+  color: #000;
+  border-radius: 8px;
   transition: background 0.15s ease, transform 0.12s ease;
 }
-
 .config-btn:hover {
   background-color: #fed5aa;
   transform: scale(1.05);
 }
 
+/* Cabeçalho do perfil */
 .profile-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .avatar-wrapper {
@@ -172,65 +210,118 @@
   border-radius: 50%;
 }
 
+/* Informações */
 .user-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 0 0 auto; 
-  min-width: 0;
+  text-align: center;
 }
-
 .user-name {
-  margin: 0;
   font-size: 20px;
   font-weight: 600;
   color: #333;
 }
-
 .user-email {
-  margin: 0;
   color: #666;
   font-size: 14px;
 }
 
+/* Detalhes do perfil */
 .profile-details {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
 }
-
 .detail-card {
   flex: 1 1 calc(50% - 16px);
   background-color: #f5f5f5;
   border-radius: 8px;
   padding: 12px 16px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
-
 .detail-card strong {
   font-weight: 600;
-  margin-bottom: 4px;
   color: #333;
   font-size: 14px;
 }
-
 .detail-card p {
   margin: 0;
   color: #555;
   font-size: 14px;
 }
 
-.loading {
-  width: 80%;
-  text-align: center;
-  color: #666;
+/* Lista de produtos */
+.products-list {
+  margin-top: 20px;
+  width: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.products-title {
+  margin-bottom: 12px;
   font-size: 18px;
+  color: #333;
+  font-weight: 600;
 }
 
+/* Grid responsivo que preenche o container */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* sempre 2 por linha */
+  gap: 16px;
+  width: 100%;
+  align-items: start;
+}
+
+/* Card do produto com altura consistente */
+.product-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  min-height: 320px; /* garante alinhamento visual */
+  box-sizing: border-box;
+}
+
+/* Imagem com tamanho fixo e corte consistente */
+.product-img {
+  width: 100%;
+  max-width: 280px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  background-color: #fff;
+  flex: 0 0 auto;
+}
+
+/* Botão de novo produto */
+.add-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #333;
+  background: linear-gradient(180deg, #fff7ed, #fff2e6);
+  border: 2px dashed #f9c78c;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.add-new:hover {
+  background: linear-gradient(180deg, #fff2e6, #ffe9d0);
+}
+
+/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -240,7 +331,6 @@
   align-items: center;
   z-index: 1000;
 }
-
 .modal-container {
   background: #fff;
   padding: 24px;
@@ -251,57 +341,60 @@
   flex-direction: column;
   gap: 12px;
 }
-
-.modal-container h2 {
-  margin: 0 0 12px 0;
-}
-
-.modal-container label {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.modal-container input {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin-top: 4px;
-}
-
 .modal-buttons {
   display: flex;
-  justify-content: center;
-  gap: 30px;
+  justify-content: space-between;
   margin-top: 12px;
 }
-
 .modal-buttons button {
   padding: 8px 12px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
 }
-
 .modal-buttons button:first-child {
   background: #f3f3f3;
 }
-
 .modal-buttons button:last-child {
   background: #fed5aa;
 }
 
+/* Loader */
+.spinner-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid rgba(0,0,0,0.12);
+  border-top-color: #fed5aa;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.loading-text {
+  color: #222;
+  font-size: 16px;
+}
+
+/* Responsividade */
 @media (max-width: 720px) {
   .profile-container {
-    width: 95%;
-    min-height: auto;
-    padding: 18px;
+    width: calc(100% - 32px);
+    padding: 16px;
+    max-height: calc(100vh - 32px);
   }
-  .avatar-wrapper { width: 88px; height: 88px; }
-  .profile-details { flex-direction: column; gap: 12px; }
-  .detail-card { flex: 1 1 100%; }
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  .product-img {
+    height: 140px;
+  }
 }
 </style>
 
@@ -313,6 +406,7 @@ const produtos = ref([])
 const usuario = ref(null)
 const imagemBase64 = ref('')
 const modalAberto = ref(false)
+const isCarregando = ref(true)
 
 
 const form = ref({
@@ -322,20 +416,59 @@ const form = ref({
   idade: ''
 })
 
+const detectarTipoImagem = (base64) => {
+  if (base64.startsWith('UklG')) return 'image/webp'
+  if (base64.startsWith('/9j/')) return 'image/jpeg'
+  if (base64.startsWith('iVBOR')) return 'image/png'
+  return 'image/png'
+}
+
 const fotoSrc = computed(() => {
   const b = imagemBase64.value
   if (!b || typeof b !== 'string') return null
   const trimmed = b.trim()
   if (trimmed.startsWith('data:')) return trimmed
   if (trimmed.startsWith('http') || trimmed.startsWith('/')) return trimmed
-  return `data:image/png;base64,${trimmed}`
+  const tipo = detectarTipoImagem(trimmed)
+  return `data:${tipo};base64,${trimmed}`
 })
+
+const produtoSrc = (imagem) => {
+  if (!imagem) return null;
+  if (Array.isArray(imagem) && imagem.length > 0) imagem = imagem[0];
+  if (typeof imagem === "object" && imagem !== null)
+    imagem =
+      imagem.url ||
+      imagem.imagem ||
+      imagem.base64 ||
+      imagem.path ||
+      imagem.src ||
+      "";
+
+  if (!imagem || typeof imagem !== "string") return null;
+  let trimmed = imagem.replace(/^"|"$/g, "").replace(/\r?\n|\s+/g, "").trim();
+
+  if (/^data:image\/[a-zA-Z]+;base64,/.test(trimmed)) return trimmed;
+
+  if (trimmed.startsWith("http") || trimmed.startsWith("/")) return trimmed;
+
+  if (trimmed.startsWith("UklG")) return `data:image/webp;base64,${trimmed}`;
+  if (trimmed.startsWith("/9j/")) return `data:image/jpeg;base64,${trimmed}`;
+  if (trimmed.startsWith("iVBOR")) return `data:image/png;base64,${trimmed}`;
+
+  return `data:image/png;base64,${trimmed}`;
+};
 
 onMounted(async () => {
      console.log("onMounted foi chamado!")
+
+  
+
   try {
+
+    isCarregando.value = true
     const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE2NzY4NDgsImV4cCI6MTc2MTY4NDA0OCwiaWF0IjoxNzYxNjc2ODQ4fQ.3c6wxkAER2svWMW9zv4orijhpBs81l5KKb7MtZ5Gn80`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NTAxOTksImV4cCI6MTc2MTg1NzM5OSwiaWF0IjoxNzYxODUwMTk5fQ.Lq_avsrvyqtBkHCphiPKJ_xHCMZRvoEgjhWiUTe5mp8`
     };
 
     const [response, response2, response3] = await Promise.all([
@@ -357,10 +490,11 @@ onMounted(async () => {
     if (response?.data) {
       produtos.value = response.data;
     }
-
     if (response3?.data) {
       imagemBase64.value = response3.data.imagem;
     }
+
+    console.log("Produto SRC FINAL:", produtoSrc(produtos.value[0]?.img));
 
     form.value = {
     nome: usuario.value.nome || '',
@@ -369,9 +503,11 @@ onMounted(async () => {
     idade: usuario.value.idade || usuario.value.age || ''
     }
 
+    isCarregando.value = false
 
   } catch (error) {
     console.error("Erro ao buscar produtos:", error)
+    isCarregando.value = false
   }
 })
 
@@ -383,7 +519,7 @@ const salvarDados = async() => {
   const inicio = { ...usuario.value }
 try {
   const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE2NzY4NDgsImV4cCI6MTc2MTY4NDA0OCwiaWF0IjoxNzYxNjc2ODQ4fQ.3c6wxkAER2svWMW9zv4orijhpBs81l5KKb7MtZ5Gn80`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NTAxOTksImV4cCI6MTc2MTg1NzM5OSwiaWF0IjoxNzYxODUwMTk5fQ.Lq_avsrvyqtBkHCphiPKJ_xHCMZRvoEgjhWiUTe5mp8`
     };
   console.log('Dados atualizados:', form.value)
   usuario.value = { ...usuario.value, ...form.value }
@@ -407,4 +543,6 @@ fecharModal()
   }
 }
 }
+
+
 </script>
