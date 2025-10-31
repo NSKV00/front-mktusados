@@ -9,7 +9,7 @@
             </div>
             <p class="company-description">
               Sua plataforma confiável para compra e venda de produtos usados.
-              Conectando pessoas com segurança e praticidade desde 2024.
+              Conectando pessoas com segurança e praticidade desde 2025.
             </p>
           </div>
         </v-col>
