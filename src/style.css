@@ -7,6 +7,7 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   
+  --gradiant-base: linear-gradient(40deg, #372b73, #372b73, #FF6B6B, #372b73);
   --color-primary: #6a11cb;
   --color-secondary: #2575fc;
   --color-background: #1a1a1a;

@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar flat color="white" elevation="1">
+  <v-app-bar class="header" style=".header" flat color="white">
     <v-app-bar-nav-icon @click="drawer = !drawer" class="me-2" />
 
     <div class="logo">
@@ -178,6 +178,20 @@ onMounted(pegarUsuario)
 </script>
 
 <style scoped>
+.header {
+  position: relative !important;
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(40deg, #372b73, #FF6B6B, #372b73);
+}
+
 .logo {
   display: flex;
   align-items: center;

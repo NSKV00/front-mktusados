@@ -59,6 +59,7 @@ import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 import { googleTokenLogin } from 'vue3-google-login'
 import api, { googleAuth } from '../controller/api'
+import { encrypt, encryptJSON } from "../utils/crypto"
 
 const router = useRouter()
 const email = ref('')
@@ -87,7 +88,8 @@ const retrieveUsuario = async (token: string) => {
     })
 
     if (status === 200 && data) {
-      localStorage.setItem('usuario', JSON.stringify(data))
+      //localStorage.setItem('usuario', JSON.stringify(data))
+      localStorage.setItem("usuario", encryptJSON(data))
     } else {
       toast.warn('Não foi possível recuperar os dados do usuário.')
     }
@@ -111,7 +113,7 @@ const handleSubmit = async () => {
     if (status === 200 || status === 201) {
       toast.success('Login realizado com sucesso!')
       const token = data.token
-      localStorage.setItem('token', token)
+      localStorage.setItem("token", encrypt(token))
 
       await retrieveUsuario(token)
 

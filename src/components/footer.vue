@@ -2,7 +2,6 @@
   <v-footer class="footer">
     <v-container class="footer-container">
       <v-row class="footer-content" justify="center">
-        <!-- Company Info Section -->
         <v-col cols="12" class="text-center">
           <div class="company-info">
             <div class="logo-container">
@@ -19,7 +18,6 @@
       <v-row class="footer-links-row" justify="center">
         <v-col cols="12" lg="10">
           <v-row justify="center">
-            <!-- Quick Links Section -->
             <v-col cols="12" md="4" class="text-center">
               <h3 class="footer-heading">Links Rápidos</h3>
               <v-list class="footer-links" align="center">
@@ -36,7 +34,6 @@
               </v-list>
             </v-col>
 
-            <!-- Help & Support Section -->
             <v-col cols="12" md="4" class="text-center">
               <h3 class="footer-heading">Ajuda & Suporte</h3>
               <v-list class="footer-links" align="center">
@@ -53,7 +50,6 @@
               </v-list>
             </v-col>
 
-            <!-- Contact Section -->
             <v-col cols="12" md="4" class="text-center">
               <h3 class="footer-heading">Contato</h3>
               <div class="contact-info">
@@ -71,7 +67,6 @@
         </v-col>
       </v-row>
 
-      <!-- Social Media Section -->
       <v-row justify="center" class="social-media-row">
         <v-col cols="12" class="text-center">
           <div class="social-media-inline">
@@ -89,7 +84,6 @@
         </v-col>
       </v-row>
 
-      <!-- Bottom Section -->
       <v-divider class="footer-divider" />
       
       <v-row class="footer-bottom" justify="center">
