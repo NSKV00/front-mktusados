@@ -4,11 +4,11 @@
       <v-col cols="12" md="10" class="full-height">
         <v-card class="detalhes-card" elevation="12">
           <v-row class="full-height">
+
             
-          
             <v-col cols="12" md="6" class="image-section">
               <v-img
-                :src="product.image || 'https://via.placeholder.com/400x400?text=Imagem+do+Produto'"
+                :src="product?.img || 'https://via.placeholder.com/400x400?text=Imagem+do+Produto'"
                 class="product-image"
                 contain
               />
@@ -16,12 +16,14 @@
 
             
             <v-col cols="12" md="6" class="info-section">
-              <h1 class="product-title">{{ product.name }}</h1>
-              <p class="product-description">{{ product.description }}</p>
-              <p class="product-price">R$ {{ product.price.toFixed(2) }}</p>
+              <h1 class="product-title">{{ product?.nome || 'Produto não encontrado' }}</h1>
+              <p class="product-description">{{ product?.descricao || 'Descrição não disponível.' }}</p>
+              <p v-if="product" class="product-price">
+                R$ {{ (product.valor / 100).toFixed(2).replace('.', ',') }}
+              </p>
 
               <div class="button-group">
-                <v-btn class="btnAdd" @click="addToCart">
+                <v-btn class="btnAdd" @click="addToCart" :disabled="!product">
                   Adicionar ao carrinho
                 </v-btn>
                 <v-btn class="btnBack" @click="$router.back()">
@@ -34,7 +36,7 @@
       </v-col>
     </v-row>
 
-  
+   
     <v-snackbar v-model="showToast" color="green" timeout="2000" rounded="pill">
       Produto adicionado ao carrinho!
     </v-snackbar>
@@ -42,19 +44,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import axios from 'axios'
 
 const route = useRoute()
-
-const product = (route as any).state?.product || {
-  name: decodeURIComponent(route.params.name as string),
-  price: Number(route.query.price) || 0,
-  description: route.query.description || 'Descrição não disponível.',
-  image: route.query.image || '',
-}
-
+const product = ref<any>(null)
 const showToast = ref(false)
+
+
+onMounted(async () => {
+  const id = route.params.id
+  try {
+    const response = await axios.get(`http://localhost:5056/produto?id=${id}`)
+    product.value = Array.isArray(response.data) ? response.data[0] : response.data
+    console.log('Produto carregado:', product.value)
+  } catch (error) {
+    console.error('Erro ao carregar produto:', error)
+  }
+})
+
 
 function addToCart() {
   showToast.value = true
@@ -62,7 +71,6 @@ function addToCart() {
 </script>
 
 <style scoped>
-
 .detalhes-produto {
   min-height: 100vh;
   background-color: #ffffff;
@@ -76,7 +84,6 @@ function addToCart() {
   height: 100%;
 }
 
-
 .detalhes-card {
   display: flex;
   flex-direction: column;
@@ -88,7 +95,6 @@ function addToCart() {
   box-shadow: #00000033 6px 6px 20px, #0000001a -4px -4px 10px;
   height: 100%;
 }
-
 
 .image-section {
   display: flex;
@@ -109,7 +115,6 @@ function addToCart() {
   transform: scale(1.03);
   box-shadow: #00000055 6px 6px 15px;
 }
-
 
 .info-section {
   display: flex;
@@ -142,7 +147,6 @@ function addToCart() {
   color: #000000;
 }
 
-
 .button-group {
   display: flex;
   justify-content: center;
@@ -168,7 +172,6 @@ function addToCart() {
   background-color: #333333;
 }
 
-
 .btnBack {
   background-color: #000000;
   color: #f5f5f5;
@@ -178,55 +181,5 @@ function addToCart() {
 .btnBack:hover {
   background-color: #000000;
   color: #ffffff;
-}
-
-@media(min-width:1000px){
-  .detalhes-produto {
-  padding: 1.5rem 0;
-}
-  .detalhes-card {
-  padding: 1.5rem;
-  gap: 1.5rem;
-}
-
-}
-@media (min-width: 768px) {
-  .detalhes-card {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .info-section {
-    text-align: left;
-  }
-
-  .image-section {
-    margin-right: 2rem;
-  }
-}
-@media (max-width: 500px) {
-  .detalhes-card {
-    flex-direction: column;
-  }
-
-  .image-section {
-    margin-bottom: 1.5rem;
-  }
-}
-@media (max-width: 400px) {
-  .product-title {
-    font-size: 1.8rem;
-  }
-  .product-price {
-    font-size: 1.3rem;
-  }
-  .product-description {
-    font-size: 0.8rem;
-  }
-  .button-group .v-btn {
-    min-width: 45px;
-    height: 30px;
-    font-size: 0.6rem;
-  }
 }
 </style>

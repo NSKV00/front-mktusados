@@ -1,16 +1,20 @@
 <template>
   <main class="home">
     <header class="header">
-  <div class="header-content">
-    <h1 class="logo-text">Chuuko Vendas</h1>
-    <v-btn icon @click="navDrawer = true">
-      <v-icon>mdi-menu</v-icon>
-    </v-btn>
-  </div>
-</header>
+      <div class="header-content">
+        <h1 class="logo-text">Chuuko Vendas</h1>
+        <v-btn icon @click="navDrawer = true">
+          <v-icon>mdi-menu</v-icon>
+        </v-btn>
+      </div>
+    </header>
 
-    
-    <v-navigation-drawer v-model="navDrawer" location="right" temporary class="nav-drawer">
+    <v-navigation-drawer
+      v-model="navDrawer"
+      location="right"
+      temporary
+      class="nav-drawer"
+    >
       <v-list>
         <v-list-item-title class="drawer-title">Navegação</v-list-item-title>
         <v-divider />
@@ -20,7 +24,6 @@
       </v-list>
     </v-navigation-drawer>
 
-    
     <div class="search-container">
       <v-text-field
         v-model="search"
@@ -34,36 +37,50 @@
       <v-btn color="primary" class="filter-btn" @click="filterDrawer = true">
         <v-icon start>mdi-filter-variant</v-icon>Filtro
       </v-btn>
-      <v-btn color="primary" class="carrinho-btn" @click="carrinhoDrawer = true">
-        <v-badge :content="cart.length" color="red" overlap>
-          <v-avatar :src="avatarSrc" size="60" />
-        </v-badge>
+      <v-btn
+        color="primary"
+        class="carrinho-btn"
+        @click="carrinhoDrawer = true"
+      >
+        <v-badge :content="carrinho.length" color="red" overlap> </v-badge>
       </v-btn>
     </div>
 
-    
-    <v-navigation-drawer v-model="filterDrawer" location="right" temporary class="filter-drawer">
+    <v-navigation-drawer
+      v-model="filterDrawer"
+      location="right"
+      temporary
+      class="filter-drawer"
+    >
       <v-list>
         <v-list-item-title class="filter-title">Filtros</v-list-item-title>
         <v-divider />
         <v-select v-model="sortBy" :items="sortOptions" label="Ordenar por" />
-        <v-btn block color="primary" class="mt-4" @click="filterDrawer = false">Aplicar</v-btn>
+        <v-btn block color="primary" class="mt-4" @click="filterDrawer = false"
+          >Aplicar</v-btn
+        >
       </v-list>
     </v-navigation-drawer>
 
-    
-    <v-navigation-drawer v-model="carrinhoDrawer" location="right" temporary class="carrinho-drawer">
+    <v-navigation-drawer
+      v-model="carrinhoDrawer"
+      location="right"
+      temporary
+      class="carrinho-drawer"
+    >
       <v-list>
         <v-list-item-title class="drawer-title">Carrinho</v-list-item-title>
         <v-divider />
-        <div v-if="cart.length === 0" class="empty-cart">Seu carrinho está vazio.</div>
+        <div v-if="carrinho.length === 0" class="empty-cart">
+          Seu carrinho está vazio.
+        </div>
 
-        <v-list-item v-for="(item, index) in cart" :key="index">
+        <v-list-item v-for="(item, index) in carrinho" :key="index">
           <v-img :src="item.image" width="60" height="60" class="mr-3" />
           <div class="cart-info">
             <h4>{{ item.name }}</h4>
             <p>R$ {{ item.price.toFixed(2) }}</p>
-            <v-btn icon size="small" @click="removeFromCart(index)">
+            <v-btn icon size="small" @click="removerCarrinho(index)">
               <v-icon color="red">mdi-delete</v-icon>
             </v-btn>
           </div>
@@ -71,19 +88,32 @@
 
         <v-divider class="my-4" />
         <h3 class="cart-total">Total: R$ {{ cartTotal.toFixed(2) }}</h3>
-        <v-btn block color="green" class="mt-3" :disabled="cart.length === 0">Finalizar Compra</v-btn>
+        <v-btn
+          block
+          color="green"
+          class="mt-3"
+          :disabled="carrinho.length === 0"
+          >Finalizar Compra</v-btn
+        >
       </v-list>
     </v-navigation-drawer>
 
     <section class="products">
       <v-container>
         <v-row>
-          <v-col v-for="(product, index) in sortedProducts" :key="index" cols="12" sm="6" md="4" lg="3">
+          <v-col
+            v-for="(product, index) in sortedProducts"
+            :key="index"
+            cols="12"
+            sm="6"
+            md="4"
+            lg="3"
+          >
             <v-card class="product-card" @click="goToDetails(product)">
-              <v-img :src="product.image" height="180px" />
+              <v-img :src="product.img" height="180px" />
               <v-card-text>
-                <h3>{{ product.name }}</h3>
-                <p class="price">R$ {{ product.price }}</p>
+                <h3>{{ product.nome }}</h3>
+                <p class="price">R$ {{ product.valor }}</p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -94,166 +124,144 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import apiController from "../controller/api";
 
 interface Product {
-  id: number
-  name: string        
-  description: string 
-  price: number       
-  image: string       
-  discount?: number
-  categoryId?: number
-  active?: boolean
+  id: number;
+  nome: string;
+  description: string;
+  price: number;
+  image: string;
 }
 
 interface CarrinhoItem {
-  id: number
-  produtoId: number
-  qtd: number
-  usuarioId: number
-  ativo?: boolean
-}
-const router = useRouter()
-
-const navDrawer = ref(false)
-const filterDrawer = ref(false)
-const carrinhoDrawer = ref(false)
-
-const search = ref('')
-const sortBy = ref('Padrão')
-
-const sortOptions = ['Padrão', 'Menor preço', 'Maior preço', 'name (A-Z)']
-
-const avatarSrc = 'smirk.png'
-
-
-
-
-const products = ref<Product[]>([])
-const isLoading = ref(true)
-
-onMounted(() => {
-  axios.get('http://localhost:5056/produto')
-    .then((res) => {
-      products.value = res.data.map((p: any) => ({
-        id: p.id,
-        name: p.nome,
-        description: p.descricao,
-        price: Number(p.valor),
-        image: p.img || '', 
-        discount: p.desconto,
-        categoryId: p.categoriaId,
-        active: p.ativo
-      }))
-      isLoading.value = false
-    })
-    .catch((err) => {
-      console.error('Erro ao buscar produtos:', err)
-      isLoading.value = false
-    })
-})
-
-const apiBase = 'http://localhost:5056/Itemcarrinho'; 
-
-
-async function getCarrinho(usuarioId: number) {
-  const res = await axios.get(`${apiBase}?usuarioId=${usuarioId}`);
-  return res.data; 
+  id: number;
+  produtoId: number;
+  qtd: number;
+  usuarioId: number;
 }
 
+const router = useRouter();
+const usuarioId = 1;
 
-async function addCarrinho(item: { produtoId: number, qtd: number, usuarioId: number }) {
-  const res = await axios.post(apiBase, item);
-  return res.data;
-}
+const navDrawer = ref(false);
+const filterDrawer = ref(false);
+const carrinhoDrawer = ref(false);
 
+const search = ref("");
+const sortBy = ref("Padrão");
+const sortOptions = ["Padrão", "Menor preço", "Maior preço", "name (A-Z)"];
 
-async function updateCarrinho(itemId: number, patch: { qtd?: number, ativo?: boolean }) {
-  const res = await axios.patch(`${apiBase}/${itemId}`, patch);
-  return res.data;
-}
+const products = ref<Product[]>([]);
+const carrinho = ref<CarrinhoItem[]>([]);
 
-async function removeCarrinho(itemId: number) {
-  const res = await axios.delete(`${apiBase}/${itemId}`);
-  return res.data;
-}
-const carrinho = ref<CarrinhoItem[]>([])
-const usuarioId = 1; 
+const apiProduto = "/produto";
+const apiCarrinho = "/itemCarrinho";
 
-
-onMounted(() => {
-  getCarrinho(usuarioId)
-    .then((items) => {
-      carrinho.value = items
-    })
-    .catch((err) => {
-      console.error(err)
-    })
-})
-
-async function addToCart(productId: number) {
+const headers = {
+  Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE2NzY4NDgsImV4cCI6MTc2MTY4NDA0OCwiaWF0IjoxNzYxNjc2ODQ4fQ.3c6wxkAER2svWMW9zv4orijhpBs81l5KKb7MtZ5Gn80`,
+};
+async function carregarCarrinhoEProdutos() {
   try {
-    const item = await addCarrinho({ produtoId: productId, qtd: 1, usuarioId })
-    carrinho.value.push(item)
+    const resProdutos = await apiController.get(apiProduto, {
+      headers,
+    });
+    products.value = resProdutos.data;
+    console.log("wwww->", products.value);
+
+    const resCarrinho = await apiController.get(apiCarrinho, {
+      params: { usuarioId },
+      headers,
+    });
+    //console.log('yyy->',resCarrinho)
+    carrinho.value = resCarrinho.data;
   } catch (err) {
-    console.error(err)
+    console.error("Erro ao carregar dados:", err);
   }
 }
-function removeCarrinhoItem(index: number) {
-  const item = carrinho.value[index]
-  if (!item) return
-  return removeCarrinho(item.id)
-    .then(() => {
-      carrinho.value.splice(index, 1)
-    })
-    .catch((err) => {
-      console.error(err)
-    })
-}
-const cart = ref<Product[]>([])
-const removeFromCart = (index: number) => cart.value.splice(index, 1)
-const cartTotal = computed<number>(() =>
-  cart.value.reduce((sum: number, item: Product) => sum + item.price, 0)
-)
 
+async function adicionarCarrinho(productId: number) {
+  const existente = carrinho.value.find(
+    (i: { produtoId: number }) => i.produtoId === productId
+  );
+
+  try {
+    if (existente) {
+      const atualizado = await apiController.patch(
+        `${apiCarrinho}/${existente.id}`,
+        { qtd: existente.qtd + 1 },
+        { headers }
+      );
+      existente.qtd = atualizado.data.qtd;
+    } else {
+      const novoItem = await apiController.post(
+        apiCarrinho,
+        { produtoId: productId, qtd: 1, usuarioId },
+        { headers }
+      );
+      carrinho.value.push(novoItem.data);
+    }
+  } catch (err) {
+    console.error("Erro ao adicionar ao carrinho:", err);
+  }
+}
+
+async function removerCarrinho(index: number) {
+  const item = carrinho.value[index];
+  if (!item) return;
+  try {
+    await apiController.delete(`${apiCarrinho}/${item.id}`, { headers });
+    carrinho.value.splice(index, 1);
+  } catch (err) {
+    console.error("Erro ao remover item:", err);
+  }
+}
+
+const cartTotal = computed(() =>
+  carrinho.value.reduce(
+    (sum: number, item: { produtoId: any; qtd: number }) => {
+      const product = products.value.find(
+        (p: { id: any }) => p.id === item.produtoId
+      );
+      return sum + (product ? product.price * item.qtd : 0);
+    },
+    0
+  )
+);
 
 const filteredProducts = computed(() =>
-  products.value.filter((p: Product) => {
-    const matchSearch =
-      p.name.toLowerCase().indexOf(search.value.toLowerCase()) !== -1
-    return matchSearch
-  })
-)
+  products.value.filter((p) =>
+    p.nome.toLowerCase().includes(search.value.toLowerCase())
+  )
+);
 
 const sortedProducts = computed(() => {
-  const list = [...filteredProducts.value]
+  console.log("Produtos filtrados:", filteredProducts.value);
+  const list = [...filteredProducts.value];
   switch (sortBy.value) {
-    case 'Menor preço':
-      return list.sort((a, b) => a.price - b.price)
-    case 'Maior preço':
-      return list.sort((a, b) => b.price - a.price)
-    case 'name (A-Z)':
-      return list.sort((a, b) => a.name.localeCompare(b.name))
+    case "Menor preço":
+      return list.sort((a, b) => a.price - b.price);
+    case "Maior preço":
+      return list.sort((a, b) => b.price - a.price);
+    case "name (A-Z)":
+      return list.sort((a, b) => a.nome.localeCompare(b.nome));
     default:
-      return list
+      return list;
   }
-})
+});
 
-
-const goToDetails = (product: Product) => {
+const goToDetails = (produto: Product) => {
   router.push({
     name: 'DetalhesProdutos',
-    params: { name: encodeURIComponent(product.name) },
-    query: {
-      price: product.price.toString(),
-      description: product.description,
-      image: product.image,
-    },
-  })
-}
+    params: { id: produto.id.toString() },
+  });
+};
+
+
+onMounted(() => carregarCarrinhoEProdutos());
+
 </script>
 
 <style scoped>
@@ -270,7 +278,7 @@ const goToDetails = (product: Product) => {
   display: flex;
   align-items: center;
   padding: 0.5rem 2rem;
-   box-shadow: 0 2px 4px #d100ff;
+  box-shadow: 0 2px 4px #d100ff;
 }
 .header-content {
   display: flex;
@@ -291,7 +299,6 @@ const goToDetails = (product: Product) => {
   gap: 0.5rem;
   background-color: white;
   padding: 2rem;
- 
 }
 
 .search-bar {
@@ -303,15 +310,14 @@ const goToDetails = (product: Product) => {
   height: 40px;
 }
 
-
 .filter-drawer {
   width: 280px;
   padding: 1rem;
 }
-.Categorias{
+.Categorias {
   gap: 12px;
 }
-.Ordenador{
+.Ordenador {
   gap: 12px;
 }
 
@@ -324,7 +330,6 @@ const goToDetails = (product: Product) => {
   width: 250px;
   padding: 1rem;
 }
-
 
 .cart-item {
   display: flex;
@@ -349,7 +354,6 @@ const goToDetails = (product: Product) => {
   font-size: 1.2rem;
 }
 
-
 .products {
   padding: 2rem 1rem;
 }
@@ -361,7 +365,7 @@ const goToDetails = (product: Product) => {
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .price {
@@ -370,12 +374,9 @@ const goToDetails = (product: Product) => {
   font-weight: bold;
 }
 
-
 .empty-cart {
   padding: 1rem;
   text-align: center;
   color: #666;
 }
 </style>
-
-

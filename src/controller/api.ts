@@ -7,7 +7,7 @@ const API_BASE = (typeof VITE_API_BASE !== 'undefined' && VITE_API_BASE) ? VITE_
 const api = axios.create({
     baseURL: API_BASE,
     headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
+    withCredentials: false,
 })
 
 export default api;
