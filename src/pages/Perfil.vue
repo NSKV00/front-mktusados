@@ -1,111 +1,76 @@
 <template>
   <div v-if="!isCarregando" class="profile-page">
     <div v-if="usuario" class="profile-container">
+      <button class="config-btn" aria-label="Configurações" @click="abrirModal">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>
+      </button>
 
-    <button class="config-btn" aria-label="Configurações" @click="abrirModal">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-      </svg>
-    </button>
-
-      <div class="profile-header">
+      <header class="profile-header">
         <div class="avatar-wrapper">
-          <img v-if="fotoSrc" :src="fotoSrc" alt="avatar" class="avatar-img"/>
+          <img v-if="fotoSrc" :src="fotoSrc" alt="avatar" class="avatar-img" />
           <div v-else class="avatar-placeholder">
             {{ usuario.nome ? usuario.nome.charAt(0).toUpperCase() : 'U' }}
           </div>
         </div>
-
         <div class="user-info">
           <h2 class="user-name">{{ usuario.nome || '-' }}</h2>
           <p class="user-email">{{ usuario.email || '-' }}</p>
         </div>
-      </div>
+      </header>
 
-      <div class="profile-details">
-        <div class="detail-card">
-          <strong>Telefone</strong>
-          <p>{{ usuario.telefone || '-' }}</p>
+      <section class="profile-details">
+        <div class="detail-card" v-for="(valor, campo) in {Telefone: usuario.telefone, CPF: usuario.cpf, Idade: usuario.idade, Email: usuario.email}" :key="campo">
+          <strong>{{ campo }}</strong>
+          <p>{{ valor || '-' }}</p>
         </div>
-        <div class="detail-card">
-          <strong>CPF</strong>
-          <p>{{ usuario.cpf || '-' }}</p>
-        </div>
-        <div class="detail-card">
-          <strong>Idade</strong>
-          <p>{{ usuario.idade || '-' }}</p>
-        </div>
-        <div class="detail-card">
-          <strong>Email</strong>
-          <p>{{ usuario.email || '-' }}</p>
-        </div>
-      </div>
+      </section>
     </div>
 
-    
-    <div v-else class="loading">
-      Carregando perfil...
-    </div>
-    
-    <div class="products-list">
-        <h3 class="products-title">Meus Produtos</h3>
+    <div v-else class="loading">Carregando perfil...</div>
 
+    <section class="products-list">
+      <h3 class="products-title">Meus Produtos</h3>
       <div class="products-grid">
-        <div
-          v-for="produto in produtos"
-          :key="produto.id || produto.produtoId || produto.titulo"
-          class="product-card"
-        >
+        <div v-for="produto in produtos" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
           <div class="product-header">
-            <span class="status-badge">
+            <span class="status-badge" :class="{ inativo: !produto.ativo }">
               {{ produto.ativo ? 'Ativo' : 'Inativo' }}
             </span>
             <img :src="produtoSrc(produto.img)" class="product-img" alt="Imagem do produto" />
           </div>
-
           <div class="product-body">
             <h3 class="product-title">{{ produto.nome || produto.titulo || 'Produto' }}</h3>
             <p class="product-desc">{{ produto.descricao || produto.description || '-' }}</p>
             <p class="product-price">R$ {{ (produto.preco ?? produto.valor) }}</p>
           </div>
-
           <div class="product-footer">
-            <span class="product-category">{{ produto.categoria || 'Eletrônicos' }}</span>
+            <span class="product-category">{{ produto.categoria || 'Sem categoria' }}</span>
             <span class="product-date">{{ produto.data || '24/10/2024' }}</span>
           </div>
         </div>
 
-        <!-- Botão final -->
         <router-link class="product-card add-new" to="/cadastrar-produto">
           <div class="add-inner">+ Cadastrar produto</div>
         </router-link>
       </div>
-    </div>
+    </section>
 
+    <!-- Modal -->
     <div v-if="modalAberto" class="modal-overlay" @click.self="fecharModal">
       <div class="modal-container">
         <h2>Editar Usuário</h2>
         <form @submit.prevent="salvarDados">
-          <label>
-            Nome:
-            <input type="text" v-model="form.nome"/>
-          </label>
-          <label>
-            Telefone:
-            <input type="text" v-model="form.telefone"/>
-          </label>
-          <label>
-            CPF:
-            <input type="text" v-model="form.cpf"/>
-          </label>
-          <label>
-            Idade:
-            <input type="number" v-model="form.idade"/>
-          </label>
+          <label>Nome:<input type="text" v-model="form.nome" /></label>
+          <label>Telefone:<input type="text" v-model="form.telefone" /></label>
+          <label>CPF:<input type="text" v-model="form.cpf" /></label>
+          <label>Idade:<input type="number" v-model="form.idade" /></label>
           <div class="modal-buttons">
-            <button type="button" @click="fecharModal">Cancelar</button>
-            <button type="submit">Salvar</button>
+            <button type="button" @click="fecharModal" class="btn-cancelar">Cancelar</button>
+            <button type="submit" class="btn-salvar">Salvar</button>
           </div>
         </form>
       </div>
@@ -113,12 +78,13 @@
   </div>
 
   <div v-else class="loading-full">
-    <div class="spinner-wrapper" role="status" aria-live="polite">
-      <div class="spinner" aria-hidden="true"></div>
-     <div class="loading-text">Carregando perfil...</div>
+    <div class="spinner-wrapper">
+      <div class="spinner"></div>
+      <div class="loading-text">Carregando perfil...</div>
     </div>
   </div>
 </template>
+
 
 <style scoped>
 .profile-page {
@@ -135,7 +101,7 @@
   overflow-x: hidden;
 }
 
-/* Mantém o conteúdo centralizado e com altura limitada para permitir scroll interno */
+
 .profile-container {
   margin: 0 auto;
   width: min(1200px, 100%);
@@ -147,11 +113,12 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  /* limita altura para caber na viewport e permitir scroll interno se necessário */
+  flex-direction: row;
+  gap: 5%;
+  justify-content: center;
   max-height: calc(100vh - 0px);
   overflow: auto;
+  align-items: center;
 }
 
 /* Botão de Configurações */
@@ -179,17 +146,17 @@
 .profile-header {
   display: flex;
   align-items: center;
+  flex-direction: column;
   justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
 }
 
 .avatar-wrapper {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  width: 300px;
+  height: 300px;
   border: 3px solid #fed5aa;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -232,29 +199,47 @@
   font-size: 14px;
 }
 
+.user-info h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+.user-info p {
+  font-size: 15px;
+  color: #6b7280;
+}
+
 /* Detalhes do perfil */
 .profile-details {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 16px;
   justify-content: space-between;
 }
 .detail-card {
-  flex: 1 1 calc(50% - 16px);
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  width: 400px;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+.detail-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 .detail-card strong {
+  display: block;
+  color: #374151;
   font-weight: 600;
-  color: #333;
-  font-size: 14px;
+  margin-bottom: 6px;
 }
 .detail-card p {
-  margin: 0;
-  color: #555;
-  font-size: 14px;
+  color: #111827;
+  font-size: 15px;
 }
+
 
 /* Lista de produtos */
 .products-grid {
@@ -527,7 +512,7 @@ onMounted(async () => {
 
     isCarregando.value = true
     const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NzExNTYsImV4cCI6MTc2MTg3ODM1NiwiaWF0IjoxNzYxODcxMTU2fQ.EImg5YQpCeYdGzATsldeW_A8jh1MUlhzCnsSWQj0zlw`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjIyODc1NDcsImV4cCI6MTc2MjI5NDc0NywiaWF0IjoxNzYyMjg3NTQ3fQ.i7v6VNfkx6YG01eMY_NdUgQQ1KDAdJGT6cRailjgpiw`
     };
 
     const [response, response2, response3] = await Promise.all([
@@ -578,7 +563,7 @@ const salvarDados = async() => {
   const inicio = { ...usuario.value }
 try {
   const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NzExNTYsImV4cCI6MTc2MTg3ODM1NiwiaWF0IjoxNzYxODcxMTU2fQ.EImg5YQpCeYdGzATsldeW_A8jh1MUlhzCnsSWQj0zlw`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjIyODc1NDcsImV4cCI6MTc2MjI5NDc0NywiaWF0IjoxNzYyMjg3NTQ3fQ.i7v6VNfkx6YG01eMY_NdUgQQ1KDAdJGT6cRailjgpiw`
     };
   console.log('Dados atualizados:', form.value)
   usuario.value = { ...usuario.value, ...form.value }
