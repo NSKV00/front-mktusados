@@ -1,14 +1,8 @@
 <template>
   <main class="home">
-    <header class="header">
-      <div class="header-content">
-        <h1 class="logo-text">Chuuko Vendas</h1>
-        <v-btn icon @click="navDrawer = true">
-          <v-icon>mdi-menu</v-icon>
-        </v-btn>
-      </div>
-    </header>
-
+    <v-btn icon @click="navDrawer = true">
+      <v-icon>mdi-filter</v-icon>
+    </v-btn>
     <v-navigation-drawer
       v-model="navDrawer"
       location="right"
@@ -16,50 +10,39 @@
       class="nav-drawer"
     >
       <v-list>
-        <v-list-item-title class="drawer-title">Navegação</v-list-item-title>
-        <v-divider />
-        <v-list-item to="/">Home</v-list-item>
-        <v-list-item to="/Cadastro">Cadastro</v-list-item>
-        <v-list-item to="/Login">Login</v-list-item>
-      </v-list>
-    </v-navigation-drawer>
+  <v-list-item-title class="filter-title">Filtros</v-list-item-title>
+  <v-divider />
 
-    <div class="search-container">
-      <v-text-field
-        v-model="search"
-        placeholder="Buscar produtos, marcas e muito mais..."
-        variant="solo"
-        density="comfortable"
-        prepend-inner-icon="mdi-magnify"
-        hide-details
-        class="search-bar"
-      />
-      <v-btn color="primary" class="filter-btn" @click="filterDrawer = true">
-        <v-icon start>mdi-filter-variant</v-icon>Filtro
-      </v-btn>
-      <v-btn
-        color="primary"
-        class="carrinho-btn"
-        @click="carrinhoDrawer = true"
-      >
-        <v-badge :content="carrinho.length" color="red" overlap> </v-badge>
-      </v-btn>
-    </div>
+  
+  <v-text-field
+    v-model.number="minPrice"
+    label="Preço mínimo"
+    type="number"
+    prefix="R$"
+    clearable
+  />
 
-    <v-navigation-drawer
-      v-model="filterDrawer"
-      location="right"
-      temporary
-      class="filter-drawer"
-    >
-      <v-list>
-        <v-list-item-title class="filter-title">Filtros</v-list-item-title>
-        <v-divider />
-        <v-select v-model="sortBy" :items="sortOptions" label="Ordenar por" />
-        <v-btn block color="primary" class="mt-4" @click="filterDrawer = false"
-          >Aplicar</v-btn
-        >
-      </v-list>
+  
+  <v-text-field
+    v-model.number="maxPrice"
+    label="Preço máximo"
+    type="number"
+    prefix="R$"
+    clearable
+  />
+
+  
+  <v-select
+    v-model="sortBy"
+    :items="sortOptions"
+    label="Ordenar por"
+  />
+
+  <v-btn block color="primary" class="mt-4" @click="filterDrawer = false">
+    Aplicar
+  </v-btn>
+</v-list>
+
     </v-navigation-drawer>
 
     <v-navigation-drawer
@@ -128,6 +111,9 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import apiController from "../controller/api";
 
+const minPrice = ref<number | null>(null);
+const maxPrice = ref<number | null>(null);
+
 interface Product {
   id: number;
   nome: string;
@@ -152,7 +138,9 @@ const carrinhoDrawer = ref(false);
 
 const search = ref("");
 const sortBy = ref("Padrão");
-const sortOptions = ["Padrão", "Menor preço", "Maior preço", "name (A-Z)"];
+const sortOptions = ["Padrão", "Menor preço", "Maior preço", "Nome (A-Z)", "Nome (Z-A)"];
+
+
 
 const products = ref<Product[]>([]);
 const carrinho = ref<CarrinhoItem[]>([]);
@@ -231,25 +219,33 @@ const cartTotal = computed(() =>
   )
 );
 
-const filteredProducts = computed(() =>
-  products.value.filter((p) =>
-    p.nome.toLowerCase().includes(search.value.toLowerCase())
-  )
-);
+const filteredProducts = computed(() => {
+  return products.value.filter((p) => {
+    const nomeMatch = p.nome.toLowerCase().includes(search.value.toLowerCase());
+
+    // Aplica filtro de preço
+    const precoMinOk = minPrice.value === null || p.valor >= minPrice.value;
+    const precoMaxOk = maxPrice.value === null || p.valor <= maxPrice.value;
+
+    return nomeMatch && precoMinOk && precoMaxOk;
+  });
+});
 
 const sortedProducts = computed(() => {
   console.log("Produtos filtrados:", filteredProducts.value);
   const list = [...filteredProducts.value];
   switch (sortBy.value) {
-    case "Menor preço":
-      return list.sort((a, b) => a.price - b.price);
-    case "Maior preço":
-      return list.sort((a, b) => b.price - a.price);
-    case "name (A-Z)":
-      return list.sort((a, b) => a.nome.localeCompare(b.nome));
-    default:
-      return list;
-  }
+  case "Menor preço":
+    return list.sort((a, b) => a.valor - b.valor);
+  case "Maior preço":
+    return list.sort((a, b) => b.valor - a.valor);
+  case "Nome (A-Z)":
+    return list.sort((a, b) => a.nome.localeCompare(b.nome));
+  case "Nome (Z-A)":
+    return list.sort((a, b) => b.nome.localeCompare(a.nome));
+  default:
+    return list;
+}
 });
 
 const goToDetails = (produto: Product) => {
