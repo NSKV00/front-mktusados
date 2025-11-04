@@ -17,6 +17,13 @@
 </template>
 
 <script setup lang="ts">
+  // import { decrypt, decryptJSON } from "../utils/crypto";
+
+  // const token = decrypt(localStorage.getItem("token"));
+  // const usuario = decryptJSON(localStorage.getItem("usuario"));
+
+  // console.log("Token:", token);
+  // console.log("Usuario:", usuario);
 
 </script>
 
