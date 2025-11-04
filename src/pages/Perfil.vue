@@ -11,12 +11,7 @@
 
       <div class="profile-header">
         <div class="avatar-wrapper">
-          <img
-            v-if="fotoSrc"
-            :src="fotoSrc"
-            alt="avatar"
-            class="avatar-img"
-          />
+          <img v-if="fotoSrc" :src="fotoSrc" alt="avatar" class="avatar-img"/>
           <div v-else class="avatar-placeholder">
             {{ usuario.nome ? usuario.nome.charAt(0).toUpperCase() : 'U' }}
           </div>
@@ -56,26 +51,36 @@
     <div class="products-list">
         <h3 class="products-title">Meus Produtos</h3>
 
-        <div class="products-grid">
-          <div
-            v-for="produto in produtos"
-            :key="produto.id || produto.produtoId || produto.titulo"
-            class="product-card"
-          >
-<img :src="produtoSrc(produto.img)" class="product-img" />
-            <div class="product-info">
-              <strong>{{ produto.nome || produto.titulo || 'Produto' }}</strong>
-              <p class="product-desc">{{ produto.descricao || produto.description || '-' }}</p>
-              <span class="product-price">Preço: {{ (produto.preco ?? produto.valor) }}</span>
-              <span v-if="produto.valor && produto.valor !== produto.preco" class="product-value">Valor: {{(produto.valor) }}</span>
-            </div>
+      <div class="products-grid">
+        <div
+          v-for="produto in produtos"
+          :key="produto.id || produto.produtoId || produto.titulo"
+          class="product-card"
+        >
+          <div class="product-header">
+            <span class="status-badge">
+              {{ produto.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+            <img :src="produtoSrc(produto.img)" class="product-img" alt="Imagem do produto" />
           </div>
 
-          <!-- Item final: botão que leva para outra página -->
-          <router-link class="product-card add-new" to="/cadastrar-produto">
-            <div class="add-inner">+ Cadastrar produto</div>
-          </router-link>
+          <div class="product-body">
+            <h3 class="product-title">{{ produto.nome || produto.titulo || 'Produto' }}</h3>
+            <p class="product-desc">{{ produto.descricao || produto.description || '-' }}</p>
+            <p class="product-price">R$ {{ (produto.preco ?? produto.valor) }}</p>
+          </div>
+
+          <div class="product-footer">
+            <span class="product-category">{{ produto.categoria || 'Eletrônicos' }}</span>
+            <span class="product-date">{{ produto.data || '24/10/2024' }}</span>
+          </div>
         </div>
+
+        <!-- Botão final -->
+        <router-link class="product-card add-new" to="/cadastrar-produto">
+          <div class="add-inner">+ Cadastrar produto</div>
+        </router-link>
+      </div>
     </div>
 
     <div v-if="modalAberto" class="modal-overlay" @click.self="fecharModal">
@@ -252,54 +257,98 @@
 }
 
 /* Lista de produtos */
-.products-list {
-  margin-top: 20px;
-  width: 100%;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.products-title {
-  margin-bottom: 12px;
-  font-size: 18px;
-  color: #333;
-  font-weight: 600;
-}
-
-/* Grid responsivo que preenche o container */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* sempre 2 por linha */
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
   width: 100%;
-  align-items: start;
 }
 
-/* Card do produto com altura consistente */
+/* Card principal */
 .product-card {
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.04);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  text-align: center;
-  min-height: 320px; /* garante alinhamento visual */
-  box-sizing: border-box;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
 }
 
-/* Imagem com tamanho fixo e corte consistente */
+/* Header com imagem */
+.product-header {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #fafafa;
+}
 .product-img {
   width: 100%;
-  max-width: 280px;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  background-color: #fff;
-  flex: 0 0 auto;
+}
+.status-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #22c55e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+/* Corpo do produto */
+.product-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.product-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+.product-desc {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.4;
+  margin: 0;
+}
+.product-price {
+  color: #16a34a;
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+/* Rodapé com categoria e data */
+.product-footer {
+  margin-top: auto;
+  padding: 10px 16px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+.product-category {
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 500;
+}
+.product-date {
+  color: #9ca3af;
 }
 
 /* Botão de novo produto */
@@ -311,11 +360,12 @@
   color: #333;
   background: linear-gradient(180deg, #fff7ed, #fff2e6);
   border: 2px dashed #f9c78c;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 600;
   font-size: 16px;
   cursor: pointer;
   transition: background 0.2s ease;
+  min-height: 320px;
 }
 .add-new:hover {
   background: linear-gradient(180deg, #fff2e6, #ffe9d0);
@@ -395,6 +445,15 @@
   .product-img {
     height: 140px;
   }
+
+  @media (max-width: 720px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  .product-header {
+    height: 160px;
+  }
+}
 }
 </style>
 
@@ -468,7 +527,7 @@ onMounted(async () => {
 
     isCarregando.value = true
     const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NTAxOTksImV4cCI6MTc2MTg1NzM5OSwiaWF0IjoxNzYxODUwMTk5fQ.Lq_avsrvyqtBkHCphiPKJ_xHCMZRvoEgjhWiUTe5mp8`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NzExNTYsImV4cCI6MTc2MTg3ODM1NiwiaWF0IjoxNzYxODcxMTU2fQ.EImg5YQpCeYdGzATsldeW_A8jh1MUlhzCnsSWQj0zlw`
     };
 
     const [response, response2, response3] = await Promise.all([
@@ -519,7 +578,7 @@ const salvarDados = async() => {
   const inicio = { ...usuario.value }
 try {
   const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NTAxOTksImV4cCI6MTc2MTg1NzM5OSwiaWF0IjoxNzYxODUwMTk5fQ.Lq_avsrvyqtBkHCphiPKJ_xHCMZRvoEgjhWiUTe5mp8`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE4NzExNTYsImV4cCI6MTc2MTg3ODM1NiwiaWF0IjoxNzYxODcxMTU2fQ.EImg5YQpCeYdGzATsldeW_A8jh1MUlhzCnsSWQj0zlw`
     };
   console.log('Dados atualizados:', form.value)
   usuario.value = { ...usuario.value, ...form.value }
