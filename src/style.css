@@ -1,3 +1,9 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 :root {
   font-size: 16px;
   
@@ -28,12 +34,6 @@
 
   --transition-quick: 0.2s ease;
   --transition-normal: 0.3s ease;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
 }
 
 #app {
