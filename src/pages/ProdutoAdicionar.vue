@@ -1,21 +1,8 @@
 <template>
   <div class="page-container">
-    <!-- HEADER -->
-    <header class="header">
-      <div class="header-container">
-        <div class="header-left">
-          <button class="icon-button" title="Voltar">
-            <span class="icon arrow-left"></span>
-          </button>
-        </div>
-        <button class="icon-button" title="Ajuda">
-          <span class="icon help-circle"></span>
-        </button>
-      </div>
-    </header>
-
-    <!-- MAIN -->
     <main class="main-content">
+
+      <!-- Banner de Dicas -->
       <div class="tips-banner">
         <h3>💡 Dicas para um anúncio de sucesso</h3>
         <ul>
@@ -25,32 +12,71 @@
         </ul>
       </div>
 
+      <!-- Formulário de Anúncio -->
       <div class="form-container">
         <form @submit.prevent="submitForm">
-          <div class="form-group">
-            <label for="titulo">Título do Produto</label>
-            <input v-model="form.titulo" id="titulo" type="text" placeholder="Ex: Notebook Dell Inspiron" />
-          </div>
 
-          <div class="form-group">
-            <label for="descricao">Descrição</label>
-            <textarea v-model="form.descricao" id="descricao" rows="4" placeholder="Descreva o produto..."></textarea>
-          </div>
+          <!-- SEÇÃO 1: Informações básicas -->
+          <section class="form-section">
+            <h4>Informações do Produto</h4>
 
-          <div class="form-group">
-            <label for="preco">Preço</label>
-            <input v-model="form.preco" id="preco" type="number" step="0.01" placeholder="Ex: 1299.99" />
-          </div>
+            <div class="form-group">
+              <label for="titulo">Título do Produto</label>
+              <input
+                v-model="form.titulo"
+                id="titulo"
+                type="text"
+                placeholder="Ex: Notebook Dell Inspiron"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="descricao">Descrição</label>
+              <textarea
+                v-model="form.descricao"
+                id="descricao"
+                rows="4"
+                placeholder="Descreva o produto..."
+                required
+              ></textarea>
+            </div>
+          </section>
+
+          <!-- SEÇÃO 2: Preço e Localização -->
+          <section class="form-section">
+            <h4>Preço e Localização</h4>
+
+            <div class="form-group">
+              <label for="preco">Preço</label>
+              <input
+                v-model="form.preco"
+                id="preco"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Ex: 1299.99"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="localizacao">Localização</label>
+              <input
+                v-model="form.localizacao"
+                id="localizacao"
+                type="text"
+                placeholder="Ex: São Paulo, SP"
+                required
+              />
+            </div>
+          </section>
 
           <button type="submit" class="submit-button">Publicar Anúncio</button>
         </form>
       </div>
-    </main>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-      <p>Ao publicar, você concorda com nossos Termos de Uso e Política de Privacidade</p>
-    </footer>
+    </main>
   </div>
 </template>
 
@@ -87,31 +113,6 @@ body, html {
   padding: 0;
   background: #f9fafb;
   color: #111827;
-}
-
-.header-container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-title h1 {
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.header-title p {
-  font-size: 0.875rem;
-  color: #6b7280;
 }
 
 .icon-button {
@@ -191,9 +192,10 @@ body, html {
 }
 
 .form-group label {
-  display: block;
   font-weight: 500;
   margin-bottom: 6px;
+  color: black;
+  display: flex;
 }
 
 .form-group input,
