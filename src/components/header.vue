@@ -23,70 +23,13 @@
       offset-y
       :close-on-content-click="false"
       transition="slide-y-transition"
+      cli
     >
       <template #activator="{ props }">
         <v-btn icon v-bind="props">
           <v-icon>mdi-account-circle</v-icon>
         </v-btn>
       </template>
-
-      <v-card width="260">
-        <v-card-text v-if="cliente.length > 0" class="text-center">
-          <v-avatar size="70" class="mx-auto mb-2">
-            <v-img
-              :src="fotoPerfil"
-              alt="Foto de perfil"
-              @click="abrirUpload"
-              class="cursor-pointer"
-            />
-          </v-avatar>
-
-          <v-btn text color="primary" size="small" @click="abrirUpload">
-            Trocar Foto
-          </v-btn>
-
-          <input
-            ref="inputFile"
-            type="file"
-            accept="image/*"
-            class="hidden"
-            @change="handleFotoChange"
-          />
-        </v-card-text>
-
-        <v-divider />
-
-        <v-list dense nav>
-          <v-list-item
-            v-if="cliente[0]?.ativo"
-            :to="{ path: '/meusAgendamentos' }"
-            title="Meus Agendamentos"
-            prepend-icon="mdi-calendar-check"
-          />
-
-          <template v-if="cliente[0]?.admin">
-            <v-list-item :to="{ path: '/clientes' }" title="Clientes" prepend-icon="mdi-account-group" />
-            <v-list-item :to="{ path: '/agendamentos' }" title="Agendamentos" prepend-icon="mdi-clock" />
-            <v-list-item :to="{ path: '/funcionarios' }" title="Funcionários" prepend-icon="mdi-briefcase-account" />
-            <v-list-item :to="{ path: '/semana' }" title="Semana" prepend-icon="mdi-calendar" />
-          </template>
-
-          <v-divider />
-
-          <v-list-item
-            v-if="cliente.length > 0"
-            @click="logout"
-            title="Logout"
-            prepend-icon="mdi-logout"
-          />
-          <v-list-item
-            v-else
-            :to="{ path: '/login' }"
-            title="Login"
-            prepend-icon="mdi-login"
-          />
-        </v-list>
-      </v-card>
     </v-menu>
   </v-app-bar>
 
@@ -130,7 +73,7 @@ const pegarUsuario = async () => {
     const id = userData.id || userData.usuario?.id
     if (!id) return
 
-    const { data } = await api.get('/usuario', { params: { id } })
+    const { data } = await api.get('/usuarioImagem', { params: { id } })
     cliente.value = data
 
     fotoPerfil.value = data[0]?.imagem
@@ -139,39 +82,6 @@ const pegarUsuario = async () => {
   } catch (error) {
     console.error('Erro ao buscar usuário:', error)
   }
-}
-
-const abrirUpload = () => inputFile.value?.click()
-
-const handleFotoChange = async (e: Event) => {
-  const target = e.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    const file = target.files[0]
-    try {
-      const formData = new FormData()
-      formData.append('imagem', file)
-
-      const userStorage = localStorage.getItem('usuario')
-      if (!userStorage) return
-      const { id } = JSON.parse(userStorage)
-
-      await api.patch(`/usuario/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-
-      toast.success('Foto atualizada com sucesso!')
-      await pegarUsuario()
-    } catch (error) {
-      console.error('Erro ao salvar foto:', error)
-      toast.error('Erro ao salvar foto.')
-    }
-  }
-}
-
-const logout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('usuario')
-  router.push('/login')
 }
 
 onMounted(pegarUsuario)
