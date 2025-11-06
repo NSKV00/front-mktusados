@@ -113,7 +113,7 @@ const handleSubmit = async () => {
     if (status === 200 || status === 201) {
       toast.success('Login realizado com sucesso!')
       const token = data.token
-      localStorage.setItem("token", encrypt(token))
+      localStorage.setItem("token", token)
 
       await retrieveUsuario(token)
 
