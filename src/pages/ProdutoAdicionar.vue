@@ -1,21 +1,9 @@
 <template>
   <div class="page-container">
-    <!-- HEADER -->
-    <header class="header">
-      <div class="header-container">
-        <div class="header-left">
-          <button class="icon-button" title="Voltar">
-            <span class="icon arrow-left"></span>
-          </button>
-        </div>
-        <button class="icon-button" title="Ajuda">
-          <span class="icon help-circle"></span>
-        </button>
-      </div>
-    </header>
 
     <!-- MAIN -->
     <main class="main-content">
+      <!-- DICAS -->
       <div class="tips-banner">
         <h3>💡 Dicas para um anúncio de sucesso</h3>
         <ul>
@@ -25,32 +13,88 @@
         </ul>
       </div>
 
+      <!-- FORM 1: FOTO -->
       <div class="form-container">
-        <form @submit.prevent="submitForm">
-          <div class="form-group">
-            <label for="titulo">Título do Produto</label>
-            <input v-model="form.titulo" id="titulo" type="text" placeholder="Ex: Notebook Dell Inspiron" />
+        <h4>📸 Foto do Produto</h4>
+        <div class="photo-upload" @click="selecionarImagem">
+          <img v-if="form.fotoPreview" :src="form.fotoPreview" alt="Prévia" class="upload-image" />
+          <div v-else class="upload-placeholder">
+            <p>+ Cadastrar produto</p>
           </div>
+          <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
+        </div>
+      </div>
 
-          <div class="form-group">
-            <label for="descricao">Descrição</label>
-            <textarea v-model="form.descricao" id="descricao" rows="4" placeholder="Descreva o produto..."></textarea>
-          </div>
+      <!-- FORM 2: INFORMAÇÕES -->
+      <div class="form-container">
+        <h4>🛍️ Informações do Produto</h4>
 
-          <div class="form-group">
-            <label for="preco">Preço</label>
-            <input v-model="form.preco" id="preco" type="number" step="0.01" placeholder="Ex: 1299.99" />
-          </div>
+        <div class="form-group">
+          <label for="titulo">Título</label>
+          <input
+            v-model="form.titulo"
+            id="titulo"
+            type="text"
+            placeholder="Ex: Notebook Dell Inspiron"
+          />
+        </div>
 
-          <button type="submit" class="submit-button">Publicar Anúncio</button>
-        </form>
+        <div class="form-group">
+          <label for="descricao">Descrição</label>
+          <textarea
+            v-model="form.descricao"
+            id="descricao"
+            rows="4"
+            placeholder="Descreva o produto..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="categoria">Categoria</label>
+          <select v-model="form.categoria" id="categoria">
+            <option value="">Selecione...</option>
+            <option v-for="cat in categorias" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="estado">Estado do Produto</label>
+          <select v-model="form.estado" id="estado">
+            <option value="">Selecione...</option>
+            <option value="Novo">Novo</option>
+            <option value="Usado">Usado</option>
+            <option value="Semi-novo">Semi-novo</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FORM 3: PREÇO E LOCALIZAÇÃO -->
+      <div class="form-container">
+        <h4>💰 Preço e Localização</h4>
+
+        <div class="form-group">
+          <label for="preco">Preço</label>
+          <input
+            v-model.number="form.preco"
+            id="preco"
+            type="number"
+            step="0.01"
+            placeholder="Ex: 1299.99"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="cep">CEP</label>
+          <input
+            v-model="form.cep"
+            id="cep"
+            type="text"
+            placeholder="Ex: 01001-000"
+            maxlength="9"
+          />
+        </div>
       </div>
     </main>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-      <p>Ao publicar, você concorda com nossos Termos de Uso e Política de Privacidade</p>
-    </footer>
   </div>
 </template>
 
@@ -60,18 +104,62 @@ export default {
   data() {
     return {
       form: {
+        foto: null,
+        fotoPreview: null,
         titulo: "",
         descricao: "",
-        preco: ""
-      }
+        categoria: "",
+        estado: "",
+        preco: "",
+        cep: ""
+      },
+      categorias: [
+        "Roupas Femininas",
+        "Roupas Masculinas",
+        "Calçados",
+        "Celulares e Smartphones",
+        "Eletrodomésticos",
+        "Móveis",
+        "Beleza e Cuidados Pessoais",
+        "Informática",
+        "Games",
+        "Automotivo"
+      ]
     };
   },
-  methods: {
-    submitForm() {
-      console.log("Anúncio enviado:", this.form);
-      alert("Anúncio criado com sucesso!");
+  watch: {
+    form: {
+      deep: true,
+      handler(novo) {
+        localStorage.setItem("draftProduto", JSON.stringify(novo));
+      }
     }
-  }
+  },
+  mounted() {
+    const salvo = localStorage.getItem("draftProduto");
+    if (salvo) this.form = JSON.parse(salvo);
+  },
+  methods: {
+    selecionarImagem() {
+      this.$refs.fileInput.click();
+    },
+    handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.form.foto = file;
+        this.form.fotoPreview = URL.createObjectURL(file);
+      }
+    },
+    removerImagem() {
+      this.form.foto = null;
+      this.form.fotoPreview = null;
+    }
+  },
+
+   beforeUnmount() {
+    this.limparLocalStorage();
+    window.removeEventListener("beforeunload", this.limparLocalStorage);
+  },
 };
 </script>
 
@@ -79,13 +167,13 @@ export default {
 /* ======== BASE ======== */
 * {
   box-sizing: border-box;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
 body, html {
   margin: 0;
   padding: 0;
-  background: #f9fafb;
+  background: #868686;
   color: #111827;
 }
 
@@ -96,22 +184,6 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-title h1 {
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.header-title p {
-  font-size: 0.875rem;
-  color: #6b7280;
 }
 
 .icon-button {
@@ -127,7 +199,6 @@ body, html {
   background: #f3f4f6;
 }
 
-/* ÍCONES */
 .icon {
   display: inline-block;
   width: 20px;
@@ -155,8 +226,8 @@ body, html {
 
 /* DICAS */
 .tips-banner {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: #9dc0ef;
+  border: 1px solid #97c1f4;
   border-radius: 10px;
   padding: 16px 20px;
   margin-bottom: 24px;
@@ -171,6 +242,8 @@ body, html {
   list-style: none;
   color: #1e40af;
   font-size: 0.9rem;
+  margin: 0;
+  padding: 0;
 }
 
 .tips-banner li {
@@ -184,6 +257,12 @@ body, html {
   border-radius: 10px;
   padding: 24px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+}
+
+.form-container h4 {
+  margin-bottom: 16px;
+  color: #393838;
 }
 
 .form-group {
@@ -197,7 +276,8 @@ body, html {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 10px;
   border: 1px solid #d1d5db;
@@ -205,34 +285,60 @@ body, html {
   font-size: 1rem;
 }
 
-.form-group textarea {
-  resize: vertical;
-}
-
-/* BOTÃO */
-.submit-button {
-  background-color: #111827;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  font-weight: 500;
+/* FOTO UPLOAD */
+.photo-upload {
+  border: 2px dashed #f4b37f;
+  background: #fff7ef;
+  border-radius: 12px;
+  width: 200px;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: 0.3s;
 }
 
-.submit-button:hover {
-  background-color: #1f2937;
+.photo-upload img {
+  width: 200px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 12px;
 }
 
-/* ======== FOOTER ======== */
-.footer {
-  background: #fff;
-  border-top: 1px solid #e5e7eb;
+.photo-upload:hover {
+  background: #fff3e5;
+}
+.upload-placeholder p {
+  font-weight: 600;
+  color: #333;
   text-align: center;
-  padding: 20px 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 32px;
+  font-size: 1.1rem;
+}
+.upload-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+}
+.remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: #e74c3c;
+}
+.hidden {
+  display: none;
 }
 </style>
