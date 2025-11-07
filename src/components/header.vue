@@ -7,6 +7,7 @@
     </div>
 
     <v-spacer></v-spacer>
+
     <v-text-field
       v-model="search"
       placeholder="Buscar..."
@@ -16,21 +17,22 @@
       flat
       class="search-bar"
     />
+
     <v-spacer></v-spacer>
 
-    <v-menu
-      v-model="menuUsuario"
-      offset-y
-      :close-on-content-click="false"
-      transition="slide-y-transition"
-      cli
-    >
-      <template #activator="{ props }">
-        <v-btn icon v-bind="props">
-          <v-icon>mdi-account-circle</v-icon>
-        </v-btn>
-      </template>
-    </v-menu>
+    <header class="profile-header">
+      <div class="avatar-wrapper" @click="irPerfil" style="cursor: pointer;">
+        <img v-if="fotoSrc" :src="fotoSrc" alt="avatar" class="avatar-img" />
+        <div v-else class="avatar-placeholder">
+          {{ usuario.nome ? usuario.nome.charAt(0).toUpperCase() : 'U' }}
+        </div>
+      </div>
+
+      <div class="user-info">
+        <h2 class="user-name">{{ usuario.nome || '-' }}</h2>
+      </div>
+    </header>
+
   </v-app-bar>
 
   <v-navigation-drawer v-model="drawer" temporary app color="grey-lighten-4">
@@ -41,53 +43,115 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { toast } from 'vue3-toastify'
 import api from '../controller/api'
+import { jwtDecode } from 'jwt-decode'
 
-const router = useRouter()
-
-interface ReturnUser {
-  id: number
-  nome: string
-  email: string
-  admin: boolean
-  ativo: boolean
-  imagem?: string
-}
-
-const drawer = ref(false)
-const menuUsuario = ref(false)
-const cliente = ref<ReturnUser[]>([])
-const inputFile = ref<HTMLInputElement | null>(null)
-const fotoPerfil = ref<string>('/default-profile.png')
 const search = ref('')
+const router = useRouter()
+const drawer = ref(false)
+const tokenLocal = localStorage.getItem('token')
+const usuario = ref(tokenLocal ? jwtDecode(tokenLocal) as any : { nome: '' })
+const imagemBase64 = ref('')
+const isCarregando = ref(true)
+const form = ref({
+  id: '',
+  nome: '' as string
+})
 
-const pegarUsuario = async () => {
-  try {
-    const valor = localStorage.getItem('usuario')
-    if (!valor) return
+//const irParaLogin = () => router.push('/login')
+const irPerfil = () => router.push('/perfil')
+//function irPerfil() {
+//  router.push({ path: '/perfil' })
+//}
 
-    const userData = JSON.parse(valor)
-    const id = userData.id || userData.usuario?.id
-    if (!id) return
-
-    const { data } = await api.get('/usuarioImagem', { params: { id } })
-    cliente.value = data
-
-    fotoPerfil.value = data[0]?.imagem
-      ? `data:image/png;base64,${data[0].imagem}`
-      : '/default-profile.png'
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error)
-  }
+const detectarTipoImagem = (base64: any) => {
+  if (base64.startsWith('UklG')) return 'image/webp'
+  if (base64.startsWith('/9j/')) return 'image/jpeg'
+  if (base64.startsWith('iVBOR')) return 'image/png'
+  return 'image/png'
 }
 
-onMounted(pegarUsuario)
+const fotoSrc = computed(() => {
+  if (!imagemBase64.value) return null
+  const cleanedBase64 = imagemBase64.value.replace(/\s/g, '')
+  const tipo = detectarTipoImagem(cleanedBase64)
+  return `data:${tipo};base64,${cleanedBase64}`
+})
+
+onMounted(async () => {
+     console.log("onMounted foi chamado!")
+     console.log("Token local:", tokenLocal)
+     console.log("ID do usuário:", usuario.value.id)
+  try {
+    isCarregando.value = true
+    const headers = {
+      Authorization: `Bearer ${tokenLocal}`
+    };
+
+    const [response, response2] = await Promise.all([
+      api.get("usuarios", {
+        params: { id:usuario.value.id },
+        headers
+      }),
+      api.get(`usuarioImagem/${usuario.value.id}`, { headers })
+    ]);
+
+    if (response?.data) {
+      usuario.value = response.data[0];
+    }
+    if (response2?.data) {
+      imagemBase64.value = response2.data.imagem;
+      console.log("Response2 completo:", response2.data)
+    }
+  } catch (error) {
+    console.error("Erro ao buscar produtos:", error)
+    isCarregando.value = false
+  }
+})
 </script>
 
 <style scoped>
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ccc;
+  font-size: 24px;
+  color: white;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-info .user-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+
 .header {
   position: relative !important;
 }
