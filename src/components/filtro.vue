@@ -1,182 +1,136 @@
 <template>
-  <div class="search-container">
-    <!-- Campo de pesquisa -->
+  <div class="search-filter">
     <v-text-field
       v-model="search"
-      placeholder="Buscar produtos, marcas e muito mais..."
-      variant="solo"
-      density="comfortable"
-      prepend-inner-icon="mdi-magnify"
+      variant="solo-filled"
+      flat
       hide-details
-      clearable
-      class="search-bar"
-      @keyup.enter="emitSearch"
+      density="comfortable"
+      placeholder="Buscar produtos..."
+      prepend-inner-icon="mdi-magnify"
+      append-inner-icon="mdi-filter-variant"
+      @click:append-inner="toggleFilter"
+      @input="emitUpdate"
+      class="search-input"
     />
 
-    <!-- Botão de filtro -->
-    <v-btn color="primary" class="filter-btn" @click="toggleFilterDrawer">
-      <v-icon start>mdi-filter-variant</v-icon>
-      Filtro
-    </v-btn>
-
-    <!-- Botão de carrinho -->
-    <v-btn color="primary" class="carrinho-btn" @click="$emit('open-carrinho')">
-      <v-badge
-        :content="carrinhoCount"
-        color="red"
-        overlap
-        v-if="carrinhoCount > 0"
-      >
-        <v-icon>mdi-cart</v-icon>
-      </v-badge>
-      <template v-else>
-        <v-icon>mdi-cart-outline</v-icon>
-      </template>
-    </v-btn>
-
-    <!-- Drawer de Filtros -->
-    <v-navigation-drawer
-      v-model="filterDrawer"
-      location="right"
-      temporary
-      class="filter-drawer"
+    <v-menu
+      v-model="filterMenu"
+      activator="parent"
+      transition="scale-transition"
+      width="260"
+      offset-y
     >
-      <v-list>
-        <v-list-item-title class="filter-title">Filtros</v-list-item-title>
-        <v-divider class="my-2" />
+      <v-card class="filter-card" elevation="6">
+        <v-card-text>
+          <v-select
+            v-model="selectedCategory"
+            :items="categories"
+            label="Categoria"
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="mt-1"
+            @update:modelValue="emitUpdate"
+          />
 
-        <!-- Ordenação -->
-        <v-select
-          v-model="sortBy"
-          :items="sortOptions"
-          label="Ordenar por"
-          variant="outlined"
-          density="comfortable"
-        />
+          <v-range-slider
+            v-model="priceRange"
+            :min="0"
+            :max="5000"
+            step="50"
+            label="Faixa de preço (R$)"
+            thumb-label="always"
+            color="deep-purple-accent-4"
+            hide-details
+            class="mt-4"
+            @end="emitUpdate"
+          />
 
-        <!-- Categoria (exemplo adicional) -->
-        <v-select
-          v-model="categoria"
-          :items="categorias"
-          label="Categoria"
-          variant="outlined"
-          density="comfortable"
-          class="mt-3"
-        />
-
-        <!-- Faixa de preço -->
-        <v-range-slider
-          v-model="precoRange"
-          :max="1000"
-          :step="10"
-          label="Faixa de preço"
-          class="mt-4"
-          thumb-label
-        />
-
-        <!-- Botões -->
-        <div class="mt-4 d-flex flex-column gap-2">
-          <v-btn block color="primary" @click="applyFilters">Aplicar</v-btn>
-          <v-btn block variant="outlined" color="grey" @click="resetFilters">
-            Limpar
+          <v-btn
+            block
+            color="deep-purple-accent-4"
+            variant="flat"
+            class="mt-4 text-white"
+            @click="applyAndClose"
+          >
+            Aplicar filtro
           </v-btn>
-        </div>
-      </v-list>
-    </v-navigation-drawer>
+        </v-card-text>
+      </v-card>
+    </v-menu>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
-
-interface FilterEvent {
-  search: string;
-  sortBy: string;
-  categoria: string | null;
-  precoRange: [number, number];
-}
-
-const props = defineProps<{
-  carrinhoCount: number;
-}>();
+import { ref } from 'vue'
 
 const emit = defineEmits<{
-  (e: "update", filters: FilterEvent): void;
-  (e: "open-carrinho"): void;
-}>();
+  (e: 'update', filters: {
+    search: string
+    category: string
+    priceRange: [number, number]
+  }): void
+}>()
 
-// Estados locais
-const search = ref("");
-const sortBy = ref("Padrão");
-const categoria = ref<string | null>(null);
-const precoRange = ref<[number, number]>([0, 1000]);
-const filterDrawer = ref(false);
+const search = ref('')
+const selectedCategory = ref('')
+const priceRange = ref<[number, number]>([0, 5000])
+const filterMenu = ref(false)
 
-// Opções
-const sortOptions = ["Padrão", "Menor preço", "Maior preço", "Nome (A-Z)"];
-const categorias = ["Eletrônicos", "Roupas", "Acessórios", "Beleza", "Outros"];
+const categories = ref([
+  'Todos',
+  'Eletrônicos',
+  'Roupas',
+  'Livros',
+  'Acessórios'
+])
 
-// Métodos
-const toggleFilterDrawer = () => (filterDrawer.value = !filterDrawer.value);
+const toggleFilter = () => {
+  filterMenu.value = !filterMenu.value
+}
 
-const applyFilters = () => {
-  emit("update", {
+const emitUpdate = () => {
+  emit('update', {
     search: search.value,
-    sortBy: sortBy.value,
-    categoria: categoria.value,
-    precoRange: precoRange.value,
-  });
-  filterDrawer.value = false;
-};
+    category: selectedCategory.value === 'Todos' ? '' : selectedCategory.value,
+    priceRange: priceRange.value
+  })
+}
 
-const resetFilters = () => {
-  search.value = "";
-  sortBy.value = "Padrão";
-  categoria.value = null;
-  precoRange.value = [0, 1000];
-  applyFilters();
-};
-
-const emitSearch = () => applyFilters();
-
-// Atualiza dinamicamente ao digitar
-watch(search, () => {
-  emit("update", {
-    search: search.value,
-    sortBy: sortBy.value,
-    categoria: categoria.value,
-    precoRange: precoRange.value,
-  });
-});
+const applyAndClose = () => {
+  emitUpdate()
+  filterMenu.value = false
+}
 </script>
 
 <style scoped>
-.search-container {
+.search-filter {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  background-color: white;
-  padding: 0.5rem 1rem;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
 }
 
-.search-bar {
-  min-width: 40%;
+.search-input {
+  border-radius: 25px !important;
+  background-color: #f5f5f5;
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
 }
 
-.filter-btn,
-.carrinho-btn {
-  height: 40px;
+.search-input:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.filter-drawer {
-  width: 320px;
-  padding: 1rem;
+.search-input:focus-within {
+  box-shadow: 0 0 0 2px #7e57c2;
+  transform: scale(1.01);
 }
 
-.filter-title {
-  font-weight: 600;
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
+.filter-card {
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
 }
 </style>

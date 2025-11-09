@@ -8,11 +8,7 @@
 
     <v-spacer></v-spacer>
 
-    <SearchFilter
-      :carrinho-count="carrinho.length"
-      @update="handleFilterUpdate"
-      @open-carrinho="abrirCarrinho"
-    />
+    <SearchFilter @update="handleFilterUpdate" />
 
     <v-spacer></v-spacer>
 
@@ -44,29 +40,25 @@ import { useRouter } from 'vue-router'
 import api from '../controller/api'
 import { jwtDecode } from 'jwt-decode'
 import SearchFilter from '../components/filtro.vue'
+import emitter from '../utils/emitter'
 
-const search = ref('')
 const router = useRouter()
 const drawer = ref(false)
-const carrinho = ref<any[]>([])
 const tokenLocal = localStorage.getItem('token')
 const usuario = ref(tokenLocal ? jwtDecode(tokenLocal) as any : { nome: '' })
 const imagemBase64 = ref('')
 const isCarregando = ref(true)
-const form = ref({
-  id: '',
-  nome: '' as string
-})
+// const form = ref({
+//   id: '',
+//   nome: '' as string
+// })
 
 const irPerfil = () => router.push('/perfil')
-const abrirCarrinho = () => console.log('Abrir carrinho')
 
 const handleFilterUpdate = (filters: any) => {
   console.log('Filtros aplicados:', filters)
-  // Exemplo: atualizar listagem de produtos via API
-  // api.get('/produtos', { params: filters })
+  emitter.emit('applyFilters', filters)
 }
-
 
 const detectarTipoImagem = (base64: any) => {
   if (base64.startsWith('UklG')) return 'image/webp'
