@@ -8,14 +8,10 @@
 
     <v-spacer></v-spacer>
 
-    <v-text-field
-      v-model="search"
-      placeholder="Buscar..."
-      prepend-inner-icon="mdi-magnify"
-      hide-details
-      dense
-      flat
-      class="search-bar"
+    <SearchFilter
+      :carrinho-count="carrinho.length"
+      @update="handleFilterUpdate"
+      @open-carrinho="abrirCarrinho"
     />
 
     <v-spacer></v-spacer>
@@ -47,10 +43,12 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../controller/api'
 import { jwtDecode } from 'jwt-decode'
+import SearchFilter from '../components/filtro.vue'
 
 const search = ref('')
 const router = useRouter()
 const drawer = ref(false)
+const carrinho = ref<any[]>([])
 const tokenLocal = localStorage.getItem('token')
 const usuario = ref(tokenLocal ? jwtDecode(tokenLocal) as any : { nome: '' })
 const imagemBase64 = ref('')
@@ -60,11 +58,15 @@ const form = ref({
   nome: '' as string
 })
 
-//const irParaLogin = () => router.push('/login')
 const irPerfil = () => router.push('/perfil')
-//function irPerfil() {
-//  router.push({ path: '/perfil' })
-//}
+const abrirCarrinho = () => console.log('Abrir carrinho')
+
+const handleFilterUpdate = (filters: any) => {
+  console.log('Filtros aplicados:', filters)
+  // Exemplo: atualizar listagem de produtos via API
+  // api.get('/produtos', { params: filters })
+}
+
 
 const detectarTipoImagem = (base64: any) => {
   if (base64.startsWith('UklG')) return 'image/webp'
