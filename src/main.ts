@@ -11,6 +11,7 @@ import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import VueTheMask from 'vue-the-mask'
 import vue3GoogleLogin from 'vue3-google-login'
+import { createPinia } from 'pinia'
 
 const vuetify = createVuetify({
   components,
@@ -33,6 +34,7 @@ const vuetify = createVuetify({
 createApp(App)
   .use(vuetify)
   .use(router)
+  .use(createPinia())
   .use(Vue3Toastify, {
     autoClose: 2500,
     position: toast.POSITION.TOP_RIGHT,

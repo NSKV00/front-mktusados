@@ -200,7 +200,7 @@ onMounted(pegarUsuario)
 }
 
 .Logo {
-  width: var(--logo-size-desktop);
+  width: var(--logo-size-mobile);
   height: auto;
 }
 
@@ -215,5 +215,19 @@ onMounted(pegarUsuario)
 
 .hidden {
   display: none;
+}
+@media (max-width: 600px) {
+  .header > [class*="col-"] {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-lg) 0 var(--spacing-md);
+  }
+
+  .logo {
+    margin-left: 4rem;
+  }
+  .search-bar {
+    flex-grow: 0;
+    
+  }
 }
 </style>

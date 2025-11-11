@@ -1,9 +1,12 @@
 <template>
   <v-app class="app">
-    <app-header v-if="isHomePage" />
+    <app-header v-if="showHeader" />
+
     <v-main class="main-content">
       <router-view />
     </v-main>
+
+    
     <app-footer v-if="isHomePage" />
   </v-app>
 </template>
@@ -15,7 +18,15 @@ import AppFooter from './components/footer.vue'
 import AppHeader from './components/header.vue'
 
 const route = useRoute()
+
+
 const isHomePage = computed(() => route.path === '/')
+
+
+const isDetalhesProduto = computed(() => route.path.startsWith('/produtos/'))
+
+
+const showHeader = computed(() => isHomePage.value || isDetalhesProduto.value)
 </script>
 
 <style>
@@ -28,5 +39,6 @@ const isHomePage = computed(() => route.path === '/')
 
 .main-content {
   padding: 0 !important;
+  background-color: #fff;
 }
 </style>

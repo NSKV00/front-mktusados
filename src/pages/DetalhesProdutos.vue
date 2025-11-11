@@ -4,31 +4,53 @@
       <v-col cols="12" md="10" class="full-height">
         <v-card class="detalhes-card" elevation="12">
           <v-row class="full-height">
-
-            
+            <!-- IMAGEM E TÍTULO -->
             <v-col cols="12" md="6" class="image-section">
-              <v-img
-                :src="product?.img || 'https://via.placeholder.com/400x400?text=Imagem+do+Produto'"
-                class="product-image"
-                contain
-              />
+              <div class="image-wrapper">
+                <h1 class="product-title">
+                  {{ product?.nome || 'Produto não encontrado' }}
+                </h1>
+                <v-img :src="product?.img" class="product-image" contain />
+              </div>
             </v-col>
 
-            
+            <!-- INFORMAÇÕES -->
             <v-col cols="12" md="6" class="info-section">
-              <h1 class="product-title">{{ product?.nome || 'Produto não encontrado' }}</h1>
-              <p class="product-description">{{ product?.descricao || 'Descrição não disponível.' }}</p>
-              <p v-if="product" class="product-price">
-                R$ {{ (product.valor / 100).toFixed(2).replace('.', ',') }}
-              </p>
+              <div v-if="product" class="info-content">
+                <p class="product-price">
+                  R$ {{ product.valor.toFixed(2).replace('.', ',') }}
+                </p>
 
+                <div class="rating-section">
+                  <p class="rating-title">Avaliação média:</p>
+                  <div class="stars">
+                    <v-icon
+                      v-for="i in 5"
+                      :key="i"
+                      color="yellow darken-3"
+                      size="30"
+                    >
+                      {{ i <= Math.round(averageRating) ? 'mdi-star' : 'mdi-star-outline' }}
+                    </v-icon>
+                    <span class="rating-value">{{ averageRating.toFixed(1) }}/5</span>
+                  </div>
+                </div>
+
+                <p class="product-description">
+                  {{ product.descricao || 'Descrição não disponível.' }}
+                </p>
+
+                <div class="product-category">
+                  <strong>Categoria:</strong> {{ categoriaNome || 'Não especificada' }}
+                </div>
+              </div>
+
+              <!-- BOTÕES -->
               <div class="button-group">
-                <v-btn class="btnAdd" @click="addToCart" :disabled="!product">
-                  Adicionar ao carrinho
+                <v-btn class="btnAdd" @click="adicionarAoCarrinho">
+                  Adicionar ao Carrinho
                 </v-btn>
-                <v-btn class="btnBack" @click="$router.back()">
-                  Voltar
-                </v-btn>
+                <v-btn class="btnBack" @click="$router.back()">Voltar</v-btn>
               </div>
             </v-col>
           </v-row>
@@ -36,8 +58,17 @@
       </v-col>
     </v-row>
 
-   
-    <v-snackbar v-model="showToast" color="green" timeout="2000" rounded="pill">
+    <!-- TOAST BONITO -->
+    <v-snackbar
+      v-model="showToast"
+      color="green-darken-2"
+      timeout="2000"
+      location="bottom right"
+      elevation="24"
+      rounded="pill"
+      class="toast"
+    >
+      <v-icon start>mdi-cart-check</v-icon>
       Produto adicionado ao carrinho!
     </v-snackbar>
   </v-container>
@@ -47,115 +78,161 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { useCartStore } from '../stores/cart'
 
 const route = useRoute()
 const product = ref<any>(null)
 const showToast = ref(false)
-
+const averageRating = ref(0)
+const categoriaNome = ref('')
+const cart = useCartStore()
 
 onMounted(async () => {
   const id = route.params.id
+
   try {
     const response = await axios.get(`http://localhost:5056/produto?id=${id}`)
     product.value = Array.isArray(response.data) ? response.data[0] : response.data
-    console.log('Produto carregado:', product.value)
+
+    if (product.value?.categoriaId) {
+      const cat = await axios.get(`http://localhost:5056/categoria?id=${product.value.categoriaId}`)
+      categoriaNome.value = cat.data[0]?.nome || 'Não especificada'
+    }
+
+    const avaliacaoRes = await axios.get(`http://localhost:5056/avaliacao?produtoId=${id}`)
+    averageRating.value = avaliacaoRes.data.media || 0
   } catch (error) {
     console.error('Erro ao carregar produto:', error)
   }
 })
 
-
-function addToCart() {
-  showToast.value = true
+function adicionarAoCarrinho() {
+  if (product.value) {
+    cart.addToCart({
+      id: product.value.id,
+      nome: product.value.nome,
+      preco: product.value.valor,
+      imagem: product.value.img,
+    })
+    showToast.value = true
+  }
 }
 </script>
 
 <style scoped>
 .detalhes-produto {
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #f4f4f4;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 0;
-}
-
-.full-height {
-  height: 100%;
+  padding: 3rem 1rem;
 }
 
 .detalhes-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 16px;
-  padding: 2rem;
-  gap: 2rem;
+  border-radius: 18px;
+  padding: 2rem 2.5rem;
   background-color: #ffffff;
-  color: #000000;
-  box-shadow: #00000033 6px 6px 20px, #0000001a -4px -4px 10px;
-  height: 100%;
+  color: #000;
+  box-shadow: 0 8px 20px #00000022;
 }
 
 .image-section {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+}
+
+.image-wrapper {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: 1.2rem;
+}
+
+.product-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
 }
 
 .product-image {
   width: 100%;
   max-width: 400px;
-  border-radius: 16px;
+  height: auto;
+  border-radius: 12px;
   background-color: #fff;
-  box-shadow: #00000033 4px 4px 8px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.product-image:hover {
-  transform: scale(1.03);
-  box-shadow: #00000055 6px 6px 15px;
+  box-shadow: 0 4px 12px #00000030;
+  object-fit: contain;
 }
 
 .info-section {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 400px;
-  gap: 1rem;
-  padding: 1rem;
+  justify-content: flex-start;
+  gap: 1.8rem;
+  padding: 1.5rem 1rem;
 }
 
-.product-title {
-  font-size: 2.8rem;
-  font-weight: 800;
-  color: #000000;
+.product-price {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #111;
+  margin-bottom: 0.8rem;
+  text-align: left;
+}
+
+.rating-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rating-title {
+  font-weight: 600;
+  font-size: 1rem;
+  padding-right: 80px;
+}
+
+.stars {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.rating-value {
+  font-size: 0.95rem;
+  color: #555;
+  margin-left: 0.4rem;
 }
 
 .product-description {
   font-size: 1.1rem;
-  color: #333333;
+  color: #333;
   line-height: 1.6;
-  background-color: #ffffff;
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  background-color: #fafafa;
+  padding: 1rem 1.3rem;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  text-align: justify;
 }
 
-.product-price {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #000000;
+.product-category {
+  font-size: 1rem;
+  color: #555;
+  margin-top: 0.8rem;
 }
 
 .button-group {
   display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 2rem;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 2.5rem;
 }
 
 .button-group .v-btn {
-  min-width: 180px;
+  min-width: 150px;
   height: 55px;
   font-size: 1rem;
   font-weight: 600;
@@ -164,22 +241,27 @@ function addToCart() {
 }
 
 .btnAdd {
-  background-color: #000000;
-  color: #ffffff;
-  box-shadow: #ffaf04 4px 4px 8px;
+  background-color: #111;
+  color: #fff;
+  box-shadow: 0 4px 0 #ffaf04;
 }
 .btnAdd:hover {
-  background-color: #333333;
+  background-color: #333;
 }
 
 .btnBack {
-  background-color: #000000;
-  color: #f5f5f5;
-  border: 2px solid #000000;
-  box-shadow: #d100ff 4px 4px 8px;
+  background-color: #000;
+  color: #fff;
+  box-shadow: 0 4px 0 #d100ff;
 }
 .btnBack:hover {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #222;
+}
+
+.toast {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  padding: 10px 18px;
 }
 </style>
