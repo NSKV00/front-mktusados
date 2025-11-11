@@ -139,6 +139,7 @@ const categoriasAPI = ref<string[]>([]);
 const form = ref({
   foto: null,
   fotoPreview: null,
+  fotosAngulos: [] as File[],
   titulo: "",
   descricao: "",
   categoriaId: null,
