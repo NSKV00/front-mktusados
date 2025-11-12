@@ -1,9 +1,10 @@
 <template>
   <v-navigation-drawer
     v-model="aberto"
-    location="right"
+    :location="location"
+    :width="drawerWidth"
     temporary
-    class="carrinho-drawer"
+    :class="drawerClasses"
   >
     <v-list>
       <v-list-item-title class="drawer-title">Carrinho</v-list-item-title>
@@ -64,9 +65,17 @@
 import { computed, ref } from 'vue'
 import { useCartStore } from '../stores/cart'
 
-const props = defineProps<{
-  aberto?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    aberto?: boolean
+    posicao?: 'left' | 'right' | 'top' | 'bottom' | 'start' | 'end'
+    largura?: number | string
+  }>(),
+  {
+    posicao: 'right',
+    largura: 350,
+  },
+)
 
 const emit = defineEmits<{
   (event: 'update:aberto', value: boolean): void
@@ -75,6 +84,31 @@ const emit = defineEmits<{
 const stateAberto = ref(false)
 
 const cart = useCartStore()
+
+const location = computed(() => props.posicao)
+
+const horizontalLocations = ['left', 'right', 'start', 'end'] as const
+
+const drawerWidth = computed(() => {
+  const isHorizontal =
+    horizontalLocations.indexOf(location.value as (typeof horizontalLocations)[number]) !== -1
+  if (!isHorizontal) return undefined
+
+  if (typeof props.largura === 'number') {
+    return props.largura
+  }
+
+  if (typeof props.largura === 'string' && props.largura.trim().length > 0) {
+    return props.largura
+  }
+
+  return 350
+})
+
+const drawerClasses = computed(() => [
+  'carrinho-drawer',
+  `carrinho-drawer--${location.value}`,
+])
 
 const aberto = computed({
   get: () => (props.aberto ?? stateAberto.value),
@@ -108,8 +142,21 @@ function finalizarCompra() {
 
 <style scoped>
 .carrinho-drawer {
-  width: 350px;
   padding: 1rem;
+}
+
+.carrinho-drawer--left,
+.carrinho-drawer--right,
+.carrinho-drawer--start,
+.carrinho-drawer--end {
+  max-width: min(90vw, 420px);
+}
+
+.carrinho-drawer--top,
+.carrinho-drawer--bottom {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
 }
 
 .cart-item {
