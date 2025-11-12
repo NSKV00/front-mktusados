@@ -14,7 +14,7 @@
       </div>
 
       <v-list-item
-        v-for="(item, index) in cart.items"
+        v-for="item in cart.items"
         :key="item.id"
         class="cart-item"
       >
@@ -61,11 +61,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useCartStore } from '../stores/cart'
 
+const props = defineProps<{
+  aberto?: boolean
+}>()
+
+const emit = defineEmits<{
+  (event: 'update:aberto', value: boolean): void
+}>()
+
+const stateAberto = ref(false)
+
 const cart = useCartStore()
-const aberto = ref(false) // controle de abrir/fechar o drawer
+
+const aberto = computed({
+  get: () => (props.aberto ?? stateAberto.value),
+  set: (value: boolean) => {
+    stateAberto.value = value
+    if (props.aberto !== undefined) {
+      emit('update:aberto', value)
+    }
+  },
+})
 
 // Ações
 function removerItem(id: number) {
