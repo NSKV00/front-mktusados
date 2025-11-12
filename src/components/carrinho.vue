@@ -73,14 +73,11 @@ function removerItem(id: number) {
 }
 
 function aumentarQuantidade(id: number) {
-  const item = cart.items.find(i => i.id === id)
-  if (item) item.quantidade++
+  cart.incrementQuantity(id)
 }
 
 function diminuirQuantidade(id: number) {
-  const item = cart.items.find(i => i.id === id)
-  if (item && item.quantidade > 1) item.quantidade--
-  else cart.removeFromCart(id)
+  cart.decrementQuantity(id)
 }
 
 function finalizarCompra() {
