@@ -8,7 +8,17 @@
 
     <v-spacer></v-spacer>
 
-    <SearchFilter @update="handleFilterUpdate" />
+    <v-text-field
+      v-model="search"
+      variant="solo-filled"
+      flat
+      hide-details
+      density="comfortable"
+      placeholder="Buscar produtos..."
+      prepend-inner-icon="mdi-magnify"
+      @input="emitUpdate"
+      class="search-input"
+    />
 
     <v-spacer></v-spacer>
 
@@ -27,7 +37,7 @@
 
   </v-app-bar>
 
-  <v-navigation-drawer v-model="drawer" temporary app color="grey-lighten-4">
+  <v-navigation-drawer v-model="drawer" class="list" style=".list" temporary app color="grey-lighten-4">
     <v-list nav dense>
       <v-list-item :to="{ path: '/' }" title="Home" prepend-icon="mdi-home" />
     </v-list>
@@ -39,7 +49,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../controller/api'
 import { jwtDecode } from 'jwt-decode'
-import SearchFilter from '../components/filtro.vue'
 import emitter from '../utils/emitter'
 
 const router = useRouter()
@@ -47,18 +56,16 @@ const drawer = ref(false)
 const tokenLocal = localStorage.getItem('token')
 const usuario = ref(tokenLocal ? jwtDecode(tokenLocal) as any : { nome: '' })
 const imagemBase64 = ref('')
+const search = ref('')
 const isCarregando = ref(true)
-// const form = ref({
-//   id: '',
-//   nome: '' as string
-// })
+
+const emit = defineEmits<{
+  (e: 'update', filters: {
+    search: string
+  }): void
+}>()
 
 const irPerfil = () => router.push('/perfil')
-
-const handleFilterUpdate = (filters: any) => {
-  console.log('Filtros aplicados:', filters)
-  emitter.emit('applyFilters', filters)
-}
 
 const detectarTipoImagem = (base64: any) => {
   if (base64.startsWith('UklG')) return 'image/webp'
@@ -104,11 +111,18 @@ onMounted(async () => {
     isCarregando.value = false
   }
 })
+
+const emitUpdate = () => {
+  emitter.emit('applyFilters', {
+    search: search.value
+  })
+}
 </script>
 
 <style scoped>
 .profile-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 12px;
 }
@@ -145,8 +159,8 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-
 .header {
+
   position: relative !important;
 }
 
@@ -183,5 +197,34 @@ onMounted(async () => {
 
 .hidden {
   display: none;
+}
+
+.search-filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+}
+
+.search-input {
+  border-radius: 25px !important;
+  background-color: #f5f5f5;
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.search-input:focus-within {
+  box-shadow: 0 0 0 2px #7e57c2;
+  transform: scale(1.01);
+}
+
+.filter-card {
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
 }
 </style>
