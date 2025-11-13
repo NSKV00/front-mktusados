@@ -120,7 +120,7 @@ const aberto = computed({
   },
 })
 
-// Ações
+
 function removerItem(id: number) {
   cart.removeFromCart(id)
 }

@@ -38,9 +38,9 @@
             <v-card class="product-card" @click="goToDetails(product)">
               <v-img :src="product.img" height="180px" />
               <v-card-text>
-                <h3>{{ product.nome }}</h3>
+                <h3>Nome:{{ product.nome }}</h3>
                 <p class="price">R$ {{ product.valor }}</p>
-                <p class="categoria">{{ product.categoria }}</p>
+                <p class="categoria">categoria: {{ product.categoria }}</p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -102,32 +102,6 @@ async function carregarCarrinhoEProdutos() {
     console.error("Erro ao carregar dados:", err);
   }
 }
-
-
-async function adicionarCarrinho(productId: number) {
-  const existente = carrinho.value.find((i) => i.produtoId === productId);
-
-  try {
-    if (existente) {
-      const atualizado = await apiController.patch(
-        `${apiCarrinho}/${existente.id}`,
-        { qtd: existente.qtd + 1 },
-        { headers }
-      );
-      existente.qtd = atualizado.data.qtd;
-    } else {
-      const novoItem = await apiController.post(
-        apiCarrinho,
-        { produtoId: productId, qtd: 1, usuarioId },
-        { headers }
-      );
-      carrinho.value.push(novoItem.data);
-    }
-  } catch (err) {
-    console.error("Erro ao adicionar ao carrinho:", err);
-  }
-}
-
 async function removerCarrinho(index: number) {
   const item = carrinho.value[index];
   if (!item) return;
@@ -138,7 +112,6 @@ async function removerCarrinho(index: number) {
     console.error("Erro ao remover item:", err);
   }
 }
-
 const sortedProducts = computed(() => {
   const list = [...products.value];
   return list.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -161,10 +134,10 @@ onMounted(() => carregarCarrinhoEProdutos());
   position: relative;
 }
 .cart-button {
-  position: fixed;
-  top: 20px;
+  position:absolute;
+  top: 15px;   
   right: 20px;
-  z-index: 50;
+  z-index: 999;
 }
 .header {
   position: relative;
@@ -182,97 +155,33 @@ onMounted(() => carregarCarrinhoEProdutos());
   align-items: center;
   width: 100%;
 }
-.logo-text {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-left: 10px;
-}
-
-.search-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: white;
-  padding: 2rem;
-}
-
-.search-bar {
-  min-width: 40%;
-}
-
-.filter-btn,
-.carrinho-btn {
-  height: 40px;
-}
-
-.filter-drawer {
-  width: 280px;
-  padding: 1rem;
-}
-.Categorias {
-  gap: 12px;
-}
-.Ordenador {
-  gap: 12px;
-}
-
-.carrinho-drawer {
-  width: 350px;
-  padding: 1rem;
-}
-
-.nav-drawer {
-  width: 250px;
-  padding: 1rem;
-}
-
-.cart-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.cart-info h4 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.cart-info p {
-  margin: 0;
-  color: #00a650;
-}
-
-.cart-total {
-  text-align: center;
-  margin-top: 1rem;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
 .products {
   padding: 2rem 1rem;
 }
-
-
+.product-card h3,
+.product-card .price,
+.product-card .categoria {
+  margin-left: 0;
+  text-align: left;
+}
 .product-card {
   transition: all 0.2s ease;
   cursor: pointer;
+  border-radius: 18px;
+  padding: 2rem 2rem;
+  background-color: #ffffff;
+  color: #000;
+  box-shadow: 0 8px 20px #00000022;
+  height: 340px;
 }
-
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(204, 0, 255, 0.441);
 }
-
 .price {
   font-size: 1.2rem;
-  color: #00a650;
-  font-weight: bold;
-}
-.empty-cart {
-  padding: 1rem;
-  text-align: center;
-  color: #666;
+  color: #fcca00;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 </style>
