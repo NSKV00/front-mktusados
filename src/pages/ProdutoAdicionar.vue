@@ -16,17 +16,36 @@
       <!-- FORM 1: FOTO -->
       <div class="form-container">
         <div class="form-info">
-          <h4>📦 Foto do Produto</h4>
-          <h5>Adicione uma foto de qualidade ao seu produto</h5>
+          <h4>📦 Fotos do Produto</h4>
+          <h5>Adicione fotos de qualidade do seu produto</h5>
         </div>
-        <div class="photo-upload" @click="selecionarImagem">
-          <img v-if="form.fotoPreview" :src="form.fotoPreview" alt="Prévia" class="upload-image" />
-          <div v-else class="upload-placeholder">
-            <p>🗁 Adicionar foto</p>
+
+        <div class="photos-grid">
+          <div class="photo-item" v-if="form.fotoPreview">
+            <img :src="form.fotoPreview" alt="Foto principal" />
+            <button class="remove-btn" @click="removeFotoPrincipal">✕</button>
           </div>
-          <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
+
+          <div v-for="(foto, index) in form.fotosAngulosPreview" :key="index" class="photo-item">
+            <img :src="foto" alt="Foto extra" />
+            <button class="remove-btn" @click="removeFoto(index)">✕</button>
+          </div>
+
+          <div class="photo-add" @click="selecionarImagemExtra" v-if="form.fotosAngulosPreview.length < 5">
+            🗁 Adicionar foto
+          </div>
         </div>
-          <h5 class="form-h5">Essa será a foto principal do anuncio</h5>
+
+        <input
+          ref="fileInputExtra"
+          type="file"
+          accept="image/*"
+          class="hidden"
+          @change="handleExtraUpload"
+        />
+        <div class="form-info">
+          <h5>Adicione até 5 fotos. A primeira será a foto principal do anúncio.</h5>
+        </div>
       </div>
 
       <!-- FORM 2: INFORMAÇÕES -->
@@ -59,20 +78,26 @@
         <div class="select">
           <div class="form-group">
             <label for="categoria">Categoria <span class="asterisco">*</span></label>
-              <select v-model="form.categoriaId" id="categoria">
-                <option :value="null">Selecione...</option>
-                <option v-for="cat in categoriasAPI" :key="cat.id" :value="cat.id">{{ cat.nome }}</option>
-              </select>
+            <v-select
+              v-model="form.categoriaId"
+              :options="categoriasAPI"
+              label="nome"
+              :clearable="false"
+              placeholder="Selecione..."
+              class="styled-select"
+            />
           </div>
-  
+
           <div class="form-group">
             <label for="estado">Estado do Produto <span class="asterisco">*</span></label>
-            <select v-model="form.estado" id="estado">
-              <option value="">Selecione...</option>
-              <option value="Novo">Novo</option>
-              <option value="Usado">Usado</option>
-              <option value="Semi-novo">Semi-novo</option>
-            </select>
+            <v-select
+              v-model="form.estado"
+              :options="estadoOpcoes"
+              label="label"
+              :clearable="false"
+              placeholder="Selecione..."
+              class="styled-select"
+            />
           </div>
         </div>
 
@@ -93,7 +118,7 @@
               id="preco"
               type="number"
               step="0.01"
-              placeholder="Ex: 1299.99"
+              placeholder="Ex: R$1299.99 "
             />
           </div>
   
@@ -103,7 +128,7 @@
               v-model.number="form.quantidade"
               id="quantidade"
               type="number"
-              step="0.01"
+              step="1"
               placeholder="Ex: 1"
             />
           </div>
@@ -126,36 +151,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { jwtDecode } from "jwt-decode";
+import vSelect from "vue-select"
+import "vue-select/dist/vue-select.css"
+import { ref, onMounted } from "vue"
+import { jwtDecode } from "jwt-decode"
 import  apiController  from "../controller/api"
 
-const tokenLocal = localStorage.getItem("token") || "";
-const token = ref(tokenLocal);
-const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null);
+const tokenLocal = localStorage.getItem("token") || ""
+const token = ref(tokenLocal)
+const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
 
-const categoriasAPI = ref<string[]>([]);
+const categoriasAPI = ref<string[]>([])
+
+
+const estadoOpcoes = ref([
+  { label: 'Novo', value: 'Novo' },
+  { label: 'Semi-novo', value: 'Semi-novo' },
+  { label: 'Usado', value: 'Usado' }
+])
 
 const form = ref({
   foto: null,
   fotoPreview: null,
   fotosAngulos: [] as File[],
+  fotosAngulosPreview: [] as string[],
   titulo: "",
   descricao: "",
   categoriaId: null,
   categoria: "",
-  estado: "",
+  estado: null,
   preco: "",
   quantidade: "",
   cep: ""
-});
+})
 
-const fileInput = ref<HTMLInputElement | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null)
+const fileInputExtra = ref<HTMLInputElement | null>(null)
+
+
+function selecionarImagemExtra() {
+  fileInputExtra.value?.click()
+}
 
 function selecionarImagem() {
-  if (fileInput.value) {
-    fileInput.value.click();
-  }
+  fileInput.value?.click()
 }
 
 function handleFileUpload(event: Event) {
@@ -171,6 +210,37 @@ function handleFileUpload(event: Event) {
     reader.readAsDataURL(file);
   }
 }
+
+function handleExtraUpload(event: Event) {
+  if (form.value.fotosAngulos.length >= 5) {
+    alert("Você só pode adicionar no máximo 5 fotos.");
+    return;
+  }
+
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (file) {
+    form.value.fotosAngulos.push(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      form.value.fotosAngulosPreview.push(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removeFoto(index: number) {
+  form.value.fotosAngulos.splice(index, 1);
+  form.value.fotosAngulosPreview.splice(index, 1);
+}
+
+function removeFotoPrincipal() {
+  form.value.foto = null;
+  form.value.fotoPreview = null;
+}
+
+
 
 onMounted(async () => {
   try {
@@ -200,6 +270,99 @@ body, html {
   padding: 0;
   background: #868686;
   color: #111827;
+}
+
+/* Estilo do v-select customizado */
+:deep(.styled-select) {
+  width: 100%;
+}
+
+:deep(.vs__dropdown-toggle) {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:deep(.vs__dropdown-toggle):hover {
+  border-color: #fed5aa;
+  box-shadow: 0 0 0 2px rgba(254, 213, 170, 0.1);
+}
+
+:deep(.vs__dropdown-toggle):focus-within {
+  border-color: #fed5aa;
+  box-shadow: 0 0 0 3px rgba(254, 213, 170, 0.2);
+  outline: none;
+}
+
+:deep(.vs__search) {
+  padding: 4px 0;
+  cursor: pointer !important;
+}
+
+:deep(.vs__actions) {
+  cursor: pointer !important;
+}
+
+:deep(.vs__search::placeholder) {
+  color: #999;
+}
+
+:deep(.vs__dropdown-menu) {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: #fff;
+}
+
+:deep(.vs__dropdown-option) {
+  padding: 10px 12px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+:deep(.vs__dropdown-option:hover) {
+  background-color: #fef3e6;
+  color: #111827;
+}
+
+:deep(.vs__dropdown-menu::-webkit-scrollbar) {
+  display: none;
+}
+
+:deep(.vs__dropdown-option--selected) {
+  background-color: #fed5aa;
+  color: #111827;
+  font-weight: 600;
+}
+
+:deep(.vs__dropdown-option--highlight) {
+  background-color: #fed5aa;
+  color: #111827;
+}
+
+:deep(.vs__clear) {
+  color: #999;
+  cursor: pointer;
+}
+
+:deep(.vs__clear:hover) {
+  color: #fed5aa;
+}
+
+/* ======== RESPONSIVE ======== */
+@media (max-width: 768px) {
+  :deep(.vs__dropdown-toggle) {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  :deep(.vs__dropdown-option) {
+    padding: 8px 10px;
+  }
 }
 
 .header-container {
@@ -314,7 +477,7 @@ body, html {
 }
 
 .form-container h5 {
-  margin-bottom: 15px;
+  margin-bottom: 2px;
   color: #919090ef;
   font-weight: 400;
   font-size: large;
@@ -381,7 +544,7 @@ body, html {
   border: 2px dashed #fcd9bdc7;
   background: #fcf1e7;
   border-radius: 12px;
-  width: 300px;
+  width: 100px;
   height: 300px;
   display: flex;
   align-items: center;
@@ -389,6 +552,56 @@ body, html {
   cursor: pointer;
   overflow: hidden; /* importante: corta partes que ultrapassam */
   transition: 0.3s;
+}
+
+.photos-grid {
+  padding-left: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.photo-item,
+.photo-add {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 230px;
+  border-radius: 12px;
+  border: 2px dashed #fcd9bdc7;
+  background: #fcf1e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+.photo-item {
+  border: 2px dashed #fcd9bdc7;
+}
+
+.photo-item:has(img) {
+  border: none !important;
+  background: none !important;
+}
+
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-add {
+  font-size: 36px;
+  font-weight: 300;
+  color: #e0863a;
+}
+
+.photo-add:hover {
+  background: #ffe5c7;
 }
 
 .photo-upload img {
@@ -429,6 +642,25 @@ body, html {
   padding: 4px 8px;
   cursor: pointer;
   color: #e74c3c;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ffffffee;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: #e74c3c;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.remove-btn:hover {
+  background: #ffe5e5;
 }
 .hidden {
   display: none;

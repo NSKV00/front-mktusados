@@ -512,7 +512,7 @@ onMounted(async () => {
 
     isCarregando.value = true
     const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjIyODc1NDcsImV4cCI6MTc2MjI5NDc0NywiaWF0IjoxNzYyMjg3NTQ3fQ.i7v6VNfkx6YG01eMY_NdUgQQ1KDAdJGT6cRailjgpiw`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjI5MDc2MDEsImV4cCI6MTc2MjkxNDgwMSwiaWF0IjoxNzYyOTA3NjAxfQ.5Eq8WVcfz-Lh6ZKuFLF2VNjd8mqjY0S_23oXySXp5HQ`
     };
 
     const [response, response2, response3] = await Promise.all([
@@ -563,7 +563,7 @@ const salvarDados = async() => {
   const inicio = { ...usuario.value }
 try {
   const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjIyODc1NDcsImV4cCI6MTc2MjI5NDc0NywiaWF0IjoxNzYyMjg3NTQ3fQ.i7v6VNfkx6YG01eMY_NdUgQQ1KDAdJGT6cRailjgpiw`
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjI5MDc2MDEsImV4cCI6MTc2MjkxNDgwMSwiaWF0IjoxNzYyOTA3NjAxfQ.5Eq8WVcfz-Lh6ZKuFLF2VNjd8mqjY0S_23oXySXp5HQ`
     };
   console.log('Dados atualizados:', form.value)
   usuario.value = { ...usuario.value, ...form.value }
