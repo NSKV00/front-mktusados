@@ -11,6 +11,7 @@ import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import VueTheMask from 'vue-the-mask'
 import vue3GoogleLogin from 'vue3-google-login'
+import { jwtDecode } from "jwt-decode"
 
 const vuetify = createVuetify({
   components,
@@ -42,3 +43,18 @@ createApp(App)
     clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID
   })
   .mount('#app')
+
+const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const payload: any = jwtDecode(token);
+
+      if (payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem("token");
+        router.push("/login");
+      }
+    } catch {
+      localStorage.removeItem("token");
+      router.push("/login");
+    }
+  }

@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar class="header" style=".header" flat color="white">
+  <v-app-bar class="header" style=".header" flat color="white" height="100">
     <v-app-bar-nav-icon @click="drawer = !drawer" class="me-2" />
 
     <div class="logo">
@@ -30,9 +30,6 @@
         </div>
       </div>
 
-      <div class="user-info">
-        <h2 class="user-name">{{ usuario.nome || '-' }}</h2>
-      </div>
     </header>
 
   </v-app-bar>
@@ -76,41 +73,27 @@ const detectarTipoImagem = (base64: any) => {
 
 const fotoSrc = computed(() => {
   if (!imagemBase64.value) return null
-  const cleanedBase64 = imagemBase64.value.replace(/\s/g, '')
+  const cleanedBase64 = imagemBase64.value.replace(/[\r\n\s]+/g, '')
   const tipo = detectarTipoImagem(cleanedBase64)
   return `data:${tipo};base64,${cleanedBase64}`
 })
 
 onMounted(async () => {
-     console.log("onMounted foi chamado!")
-     console.log("Token local:", tokenLocal)
-     console.log("ID do usuário:", usuario.value.id)
   try {
-    isCarregando.value = true
-    const headers = {
-      Authorization: `Bearer ${tokenLocal}`
-    };
+    const user = await api.get("usuarios", {
+      params: { id: usuario.value.id }
+    });
 
-    const [response, response2] = await Promise.all([
-      api.get("usuarios", {
-        params: { id:usuario.value.id },
-        headers
-      }),
-      api.get(`usuarioImagem/${usuario.value.id}`, { headers })
-    ]);
+    usuario.value = user.data[0];
 
-    if (response?.data) {
-      usuario.value = response.data[0];
-    }
-    if (response2?.data) {
-      imagemBase64.value = response2.data.imagem;
-      console.log("Response2 completo:", response2.data)
-    }
+    const img = await api.get(`usuarioImagem/${usuario.value.id}`);
+
+    imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '');
   } catch (error) {
-    console.error("Erro ao buscar produtos:", error)
-    isCarregando.value = false
+    console.error("Erro ao carregar header:", error);
   }
-})
+});
+
 
 const emitUpdate = () => {
   emitter.emit('applyFilters', {
@@ -125,6 +108,7 @@ const emitUpdate = () => {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  padding-right: 1rem;
 }
 
 .avatar-wrapper {
