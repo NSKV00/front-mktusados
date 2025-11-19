@@ -511,20 +511,28 @@ onMounted(async () => {
   try {
 
     isCarregando.value = true
-    const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjIyODc1NDcsImV4cCI6MTc2MjI5NDc0NywiaWF0IjoxNzYyMjg3NTQ3fQ.i7v6VNfkx6YG01eMY_NdUgQQ1KDAdJGT6cRailjgpiw`
-    };
+    const token = localStorage.getItem("token")
+    const tokenData = token ? jwtDecode(token) : null
+    
+    if (!token || !tokenData) {
+      console.error("Token não encontrado ou inválido")
+      isCarregando.value = false
+      return
+    }
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const usuarioId = tokenData.id
 
     const [response, response2, response3] = await Promise.all([
       apiController.get("produto", {
-        params: { usuarioId: 8 },
+        params: { usuarioId },
         headers
       }),
       apiController.get("usuarios", {
-        params: { id: 8 },
+        params: { id: usuarioId },
         headers
       }),
-      apiController.get("usuarioImagem/8", { headers })
+      apiController.get(`usuarioImagem/${usuarioId}`, { headers })
     ]);
 
     if (response2?.data) {
@@ -562,9 +570,9 @@ const fecharModal = () => modalAberto.value = false
 const salvarDados = async() => {
   const inicio = { ...usuario.value }
 try {
-  const headers = {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjIyODc1NDcsImV4cCI6MTc2MjI5NDc0NywiaWF0IjoxNzYyMjg3NTQ3fQ.i7v6VNfkx6YG01eMY_NdUgQQ1KDAdJGT6cRailjgpiw`
-    };
+  const token = localStorage.getItem("token")
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+  
   console.log('Dados atualizados:', form.value)
   usuario.value = { ...usuario.value, ...form.value }
   await apiController.patch(

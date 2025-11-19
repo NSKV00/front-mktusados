@@ -44,17 +44,19 @@ createApp(App)
   })
   .mount('#app')
 
+// Limpar dados inválidos do localStorage
 const token = localStorage.getItem("token");
-  if (token) {
-    try {
-      const payload: any = jwtDecode(token);
-
-      if (payload.exp * 1000 < Date.now()) {
-        localStorage.removeItem("token");
-        router.push("/login");
-      }
-    } catch {
+if (token) {
+  try {
+    const payload: any = jwtDecode(token);
+    if (payload.exp * 1000 < Date.now()) {
       localStorage.removeItem("token");
-      router.push("/login");
+      localStorage.removeItem("usuario");
     }
+  } catch {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
   }
+} else {
+  localStorage.removeItem("usuario");
+}

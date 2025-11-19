@@ -1,6 +1,6 @@
 <template>
   <v-app class="app">
-    <app-header v-if="isHomePage" />
+    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage" />
     <v-main class="main-content">
       <router-view />
     </v-main>
@@ -16,6 +16,10 @@ import AppHeader from './components/header.vue'
 
 const route = useRoute()
 const isHomePage = computed(() => route.path === '/')
+const isPerfilPage = computed(() => route.path === '/perfil')
+const isEnderecoPage = computed(() => route.path === '/enderecos')
+const isProdutoPage = computed(() => route.path === '/produtoCriar')
+
 </script>
 
 <style>

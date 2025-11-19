@@ -79,18 +79,37 @@ const fotoSrc = computed(() => {
 })
 
 onMounted(async () => {
+  // Verifica se há token antes de fazer requisições
+  if (!tokenLocal) {
+    isCarregando.value = false
+    return
+  }
+
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 segundos timeout
+
     const user = await api.get("usuarios", {
-      params: { id: usuario.value.id }
-    });
+      params: { id: usuario.value.id },
+      signal: controller.signal
+    })
 
-    usuario.value = user.data[0];
+    usuario.value = user.data[0]
 
-    const img = await api.get(`usuarioImagem/${usuario.value.id}`);
+    const img = await api.get(`usuarioImagem/${usuario.value.id}`, {
+      signal: controller.signal
+    })
 
-    imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '');
-  } catch (error) {
-    console.error("Erro ao carregar header:", error);
+    imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '')
+    
+    clearTimeout(timeoutId)
+  } catch (error: any) {
+    // Silencia erros de conexão se for abort ou timeout
+    if (error.code !== 'ECONNABORTED') {
+      console.error("Erro ao carregar header:", error)
+    }
+  } finally {
+    isCarregando.value = false
   }
 });
 
