@@ -18,8 +18,8 @@
       v-model="filterMenu"
       activator="parent"
       transition="scale-transition"
-      width="260"
-      offset-y
+      :width="menuWidth"
+      location="bottom"
     >
       <v-card class="filter-card" elevation="6">
         <v-card-text>
@@ -30,20 +30,19 @@
             variant="outlined"
             density="compact"
             hide-details
-            class="mt-1"
+            class="mb-4"
             @update:modelValue="emitUpdate"
           />
 
+          <div class="price-label">Faixa de preço: R$ {{ priceRange[0] }} - R$ {{ priceRange[1] }}</div>
           <v-range-slider
             v-model="priceRange"
             :min="0"
             :max="5000"
             step="50"
-            label="Faixa de preço (R$)"
-            thumb-label="always"
             color="deep-purple-accent-4"
             hide-details
-            class="mt-4"
+            class="mt-2 mb-4"
             @end="emitUpdate"
           />
 
@@ -51,10 +50,10 @@
             block
             color="deep-purple-accent-4"
             variant="flat"
-            class="mt-4 text-white"
+            class="text-white"
             @click="applyAndClose"
           >
-            Aplicar filtro
+            Aplicar
           </v-btn>
         </v-card-text>
       </v-card>
@@ -63,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const emit = defineEmits<{
   (e: 'update', filters: {
@@ -78,13 +77,18 @@ const selectedCategory = ref('')
 const priceRange = ref<[number, number]>([0, 5000])
 const filterMenu = ref(false)
 
-const categories = ref([
+const categories = [
   'Todos',
   'Eletrônicos',
   'Roupas',
   'Livros',
   'Acessórios'
-])
+]
+
+const menuWidth = computed(() => {
+  if (typeof window !== 'undefined' && window.innerWidth < 480) return 280
+  return 300
+})
 
 const toggleFilter = () => {
   filterMenu.value = !filterMenu.value
@@ -110,13 +114,14 @@ const applyAndClose = () => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 420px;
   position: relative;
 }
 
 .search-input {
   border-radius: 25px !important;
-  background-color: #f5f5f5;
+  background-color: #f5f5f5 !important;
+  max-width: 420px;
+  width: 100%;
   transition: box-shadow 0.2s ease, transform 0.1s ease;
 }
 
@@ -131,6 +136,53 @@ const applyAndClose = () => {
 
 .filter-card {
   border-radius: 16px;
-  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+}
+
+.price-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.v-select__control) {
+  border-radius: 8px;
+}
+
+:deep(.v-range-slider__thumb) {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 1024px) {
+  .search-input {
+    max-width: 100%;
+  }
+
+  .filter-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-input {
+    max-width: 100%;
+  }
+
+  .filter-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-input {
+    max-width: calc(100% - 16px);
+    margin: 0 8px;
+  }
+
+  .filter-card {
+    padding: 1rem;
+  }
 }
 </style>
