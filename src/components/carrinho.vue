@@ -1,195 +1,203 @@
 <template>
   <v-navigation-drawer
-    v-model="aberto"
-    :location="location"
-    :width="drawerWidth"
+    :model-value="aberto"
+    @update:model-value="emit('update:aberto', $event)"
+    location="right"
     temporary
-    :class="drawerClasses"
+    width="400"
+    class="carrinho-drawer"
   >
-    <v-list>
-      <v-list-item-title class="drawer-title">Carrinho</v-list-item-title>
-      <v-divider />
+    <v-list-item class="drawer-header">
+      <v-icon start>mdi-cart-outline</v-icon>
+      <v-list-item-title class="text-h6 font-weight-bold">
+        Seu Carrinho ({{ carrinho.length }})
+      </v-list-item-title>
+      <template v-slot:append>
+        <v-btn icon="mdi-close" variant="text" @click="fecharDrawer"></v-btn>
+      </template>
+    </v-list-item>
 
-      <div v-if="cart.items.length === 0" class="empty-cart">
-        Seu carrinho está vazio.
-      </div>
+    <v-divider></v-divider>
 
+    <v-list v-if="carrinho.length > 0" class="pa-0">
       <v-list-item
-        v-for="item in cart.items"
+        v-for="item in itensComDetalhes"
         :key="item.id"
-        class="cart-item"
+        class="carrinho-item pa-3"
       >
-        <v-img
-          :src="item.imagem"
-          width="60"
-          height="60"
-          class="mr-3 rounded-lg"
-        />
-        <div class="cart-info">
-          <h4>{{ item.nome }}</h4>
-          <p>R$ {{ item.preco.toFixed(2) }}</p>
-          <v-row align="center" class="mt-1">
-            <v-btn icon size="small" @click="diminuirQuantidade(item.id)">
-              <v-icon>mdi-minus</v-icon>
-            </v-btn>
-            <span class="mx-2">{{ item.quantidade }}</span>
-            <v-btn icon size="small" @click="aumentarQuantidade(item.id)">
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-            <v-btn icon size="small" @click="removerItem(item.id)">
-              <v-icon color="red">mdi-delete</v-icon>
-            </v-btn>
-          </v-row>
-        </div>
+        <v-row align="center" no-gutters>
+          <v-col cols="3">
+            <v-img :src="item.img" height="60" width="60" contain class="rounded-sm item-image-border" />
+          </v-col>
+          
+          <v-col cols="6" class="pl-2">
+            <v-list-item-title class="item-nome text-subtitle-2 font-weight-medium mb-1">
+              {{ item.nome }}
+            </v-list-item-title>
+            <v-list-item-subtitle class="item-info text-caption">
+              Qtd: {{ item.qtd }} | R$ {{ item.valorUnitario.toFixed(2).replace('.', ',') }}
+            </v-list-item-subtitle>
+            <strong class="item-subtotal text-body-2 mt-1">
+              R$ {{ item.subtotal.toFixed(2).replace('.', ',') }}
+            </strong>
+          </v-col>
+
+          <v-col cols="3" class="text-right">
+            <v-btn 
+              icon="mdi-delete" 
+              variant="flat" 
+              size="small" 
+              color="grey-lighten-4"
+              @click="removerItem(item.id)"
+            />
+          </v-col>
+        </v-row>
+        <v-divider class="my-3"></v-divider>
       </v-list-item>
-
-      <v-divider class="my-4" />
-      <h3 class="cart-total">
-        Total: R$ {{ cart.total.toFixed(2) }}
-      </h3>
-
-      <v-btn
-        block
-        color="green"
-        class="mt-3"
-        :disabled="cart.items.length === 0"
-        @click="finalizarCompra"
-      >
-        Finalizar Compra
-      </v-btn>
     </v-list>
+    
+    <div v-else class="text-center pa-4 text-medium-emphasis">
+      <v-icon size="48" color="grey">mdi-cart-off</v-icon>
+      <p class="mt-2">Seu carrinho está vazio.</p>
+    </div>
+
+
+    <template v-slot:append>
+      <div class="pa-4 bg-grey-lighten-4">
+        <v-row class="total-summary">
+          <v-col class="text-h6 font-weight-bold">Total:</v-col>
+          <v-col class="text-h6 font-weight-bold text-right text-success">
+            R$ {{ totalCarrinho.toFixed(2).replace('.', ',') }}
+          </v-col>
+        </v-row>
+        <v-btn
+          color="deep-purple-accent-4"
+          size="large"
+          block
+          :disabled="carrinho.length === 0"
+          @click="finalizarCompra"
+        >
+          Finalizar Compra
+        </v-btn>
+      </div>
+    </template>
   </v-navigation-drawer>
 </template>
 
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useCartStore } from '../stores/cart'
+<script lang="ts" setup>
+import { computed, defineProps, defineEmits } from 'vue';
+import { toast } from 'vue3-toastify';
 
-const props = withDefaults(
-  defineProps<{
-    aberto?: boolean
-    posicao?: 'left' | 'right' | 'top' | 'bottom' | 'start' | 'end'
-    largura?: number | string
-  }>(),
-  {
-    posicao: 'right',
-    largura: 350,
-  },
-)
+
+interface Product {
+  id: number;
+  nome: string;
+  valor: number;
+  img: string;
+}
+
+interface CarrinhoItem {
+  id: number; 
+  produtoId: number;
+  qtd: number;
+ 
+}
+
+const props = defineProps<{
+  aberto: boolean; 
+  carrinho: CarrinhoItem[];
+  produtos: Product[]; 
+}>();
 
 const emit = defineEmits<{
-  (event: 'update:aberto', value: boolean): void
-}>()
-
-const stateAberto = ref(false)
-
-const cart = useCartStore()
-
-const location = computed(() => props.posicao)
-
-const horizontalLocations = ['left', 'right', 'start', 'end'] as const
-
-const drawerWidth = computed(() => {
-  const isHorizontal =
-    horizontalLocations.indexOf(location.value as (typeof horizontalLocations)[number]) !== -1
-  if (!isHorizontal) return undefined
-
-  if (typeof props.largura === 'number') {
-    return props.largura
-  }
-
-  if (typeof props.largura === 'string' && props.largura.trim().length > 0) {
-    return props.largura
-  }
-
-  return 350
-})
-
-const drawerClasses = computed(() => [
-  'carrinho-drawer',
-  `carrinho-drawer--${location.value}`,
-])
-
-const aberto = computed({
-  get: () => (props.aberto ?? stateAberto.value),
-  set: (value: boolean) => {
-    stateAberto.value = value
-    if (props.aberto !== undefined) {
-      emit('update:aberto', value)
-    }
-  },
-})
+  (e: 'update:aberto', value: boolean): void; 
+  (e: 'remover', index: number): void; 
+  (e: 'finalizar'): void; 
+}>();
 
 
-function removerItem(id: number) {
-  cart.removeFromCart(id)
+const itensComDetalhes = computed(() => {
+  if (!props.carrinho) return [];
+
+  return props.carrinho.map(item => {
+    const produtoDetalhe = props.produtos.find(p => p.id === item.produtoId);
+    
+    
+    const valorUnitario = produtoDetalhe?.valor || 0; 
+    
+    return {
+      ...item,
+      nome: produtoDetalhe?.nome || 'Produto Removido',
+      valorUnitario: valorUnitario,
+      img: produtoDetalhe?.img || '',
+      subtotal: valorUnitario * item.qtd
+    };
+  });
+});
+
+const totalCarrinho = computed(() => {
+  return itensComDetalhes.value.reduce((total, item) => total + item.subtotal, 0);
+});
+
+
+
+function fecharDrawer() {
+  emit('update:aberto', false);
 }
 
-function aumentarQuantidade(id: number) {
-  cart.incrementQuantity(id)
-}
+function removerItem(itemId: number) {
 
-function diminuirQuantidade(id: number) {
-  cart.decrementQuantity(id)
+  const index = props.carrinho.findIndex(item => item.id === itemId);
+  if (index !== -1) {
+    emit('remover', index);
+    toast.info("Item removido do carrinho.");
+  }
 }
 
 function finalizarCompra() {
-  alert('Compra finalizada com sucesso!')
-  cart.clearCart()
-  aberto.value = false
+    
+    fecharDrawer();
+    emit('finalizar');
+    
 }
+
 </script>
 
 <style scoped>
 .carrinho-drawer {
-  padding: 1rem;
+  z-index: 1000 !important;
 }
-
-.carrinho-drawer--left,
-.carrinho-drawer--right,
-.carrinho-drawer--start,
-.carrinho-drawer--end {
-  max-width: min(90vw, 420px);
+.drawer-header {
+  padding: 16px;
+  background-color: #43119b; 
+  color: white;
 }
-
-.carrinho-drawer--top,
-.carrinho-drawer--bottom {
-  width: 100%;
-  height: auto;
-  max-height: 70vh;
+.drawer-header .v-list-item-title {
+  color: white;
 }
-
-.cart-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
+.item-image-border {
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
-
-.cart-info {
-  flex-grow: 1;
+.carrinho-item {
+  border-bottom: 1px solid #eee;
 }
-
-.cart-info h4 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
+.item-nome {
+  white-space: normal;
+  line-height: 1.3;
 }
-
-.cart-info p {
-  margin: 0;
-  color: #00a650;
-}
-
-.cart-total {
-  text-align: center;
-  margin-top: 1rem;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.empty-cart {
-  padding: 1rem;
-  text-align: center;
+.item-info {
   color: #666;
+  font-weight: 500;
 }
+.item-subtotal {
+  display: block;
+  color: #43119b;
+  font-weight: 700;
+}
+.total-summary {
+  padding: 8px 0;
+  border-top: 2px solid #ccc;
+}
+
 </style>

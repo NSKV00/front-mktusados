@@ -12,8 +12,9 @@
           offset-y="10"
         />
       </v-btn>
+      
     </div>
-
+    
    
     <Carrinho
       v-model:aberto="carrinhoDrawer"
@@ -54,7 +55,8 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import apiController from "../controller/api";
-import Carrinho from "../components/carrinho.vue";
+import Carrinho from "../components/carrinho.vue"; 
+
 
 interface Product {
   id: number;
@@ -84,7 +86,7 @@ const apiCarrinho = "/itemCarrinho";
 
 const headers = {
   Authorization:
-    `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJuYmYiOjE3NjE2NzY4NDgsImV4cCI6MTc2MTY4NDA0OCwiaWF0IjoxNzYxNjc2ODQ4fQ.3c6wxkAER2svWMW9zv4orijhpBs81l5KKb7MtZ5Gn80`,
+    `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZXJuYXJkb3JhYnVza2U2N0BnbWFpbC5jb20iLCJpZCI6IjEzIiwibm9tZSI6IkJlcm5hcmRvIFJhYnVza2UiLCJhZG1pbiI6IkZhbHNlIiwibmJmIjoxNzYzNTA2MTkwLCJleHAiOjE3NjM1MTMzOTAsImlhdCI6MTc2MzUwNjE5MH0.5b3O_0BkVCfOZBBE4iGLFxGAPESTucVSqfr0O2Q9fgI`,
 };
 
 

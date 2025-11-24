@@ -4,21 +4,21 @@
       <v-col cols="12" md="10" class="full-height">
         <v-card class="detalhes-card" elevation="12">
           <v-row class="full-height">
-            <!-- IMAGEM E TÍTULO -->
+           
             <v-col cols="12" md="6" class="image-section">
               <div class="image-wrapper">
                 <h1 class="product-title">
-                  {{ product?.nome || 'Produto não encontrado' }}
+                  {{ produto?.nome || 'Produto não encontrado' }}
                 </h1>
-                <v-img :src="product?.img" class="product-image" contain />
+                <v-img :src="produto?.img" class="product-image" contain />
               </div>
             </v-col>
 
-            <!-- INFORMAÇÕES -->
             <v-col cols="12" md="6" class="info-section">
-              <div v-if="product" class="info-content">
+              <div v-if="produto" class="info-content">
+                
                 <p class="product-price">
-                  R$ {{ product.valor.toFixed(2).replace('.', ',') }}
+                  R$ {{ produto.valor.toFixed(2).replace('.', ',') }}
                 </p>
 
                 <div class="rating-section">
@@ -37,18 +37,28 @@
                 </div>
 
                 <p class="product-description">
-                  {{ product.descricao || 'Descrição não disponível.' }}
+                  {{ produto.descricao || 'Descrição não disponível.' }}
                 </p>
 
                 <div class="product-category">
                   <strong>Categoria:</strong> {{ categoriaNome || 'Não especificada' }}
                 </div>
-              </div>
+                
+                <v-text-field
+                  v-model.number="quantidade"
+                  label="Quantidade"
+                  type="number"
+                  min="1"
+                  variant="outlined"
+                  density="compact"
+                  class="mt-4"
+                  style="max-width: 150px;"
+                ></v-text-field>
+                </div>
 
-              <!-- BOTÕES -->
               <div class="button-group">
-                <v-btn class="btnAdd" @click="adicionarAoCarrinho">
-                  Adicionar ao Carrinho
+                <v-btn class="btnAdd" @click="adicionarAoCarrinho" :disabled="!produto">
+                  Adicionar ao Carrinho ({{ quantidade }})
                 </v-btn>
                 <v-btn class="btnBack" @click="$router.back()">Voltar</v-btn>
               </div>
@@ -57,8 +67,6 @@
         </v-card>
       </v-col>
     </v-row>
-
-    <!-- TOAST BONITO -->
     <v-snackbar
       v-model="showToast"
       color="green-darken-2"
@@ -77,48 +85,78 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
-import { useCartStore } from '../stores/cart'
+import { toast } from 'vue3-toastify'
+import apiController from '../controller/api'
 
 const route = useRoute()
-const product = ref<any>(null)
+const produto = ref<any>(null)
 const showToast = ref(false)
 const averageRating = ref(0)
 const categoriaNome = ref('')
-const cart = useCartStore()
+const quantidade = ref(1); 
+const token = ref(localStorage.getItem('token'));
+
+
+
 
 onMounted(async () => {
-  const id = route.params.id
+  try {
+    const id = route.params.id;
+
+    const res = await apiController.get("/produto", {
+      params: { id },
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+      },
+    });
+
+   
+    produto.value = Array.isArray(res.data) ? res.data[0] : res.data;
+
+    console.log("Produto carregado:", produto.value);
+  } catch (err) {
+    console.error("Erro ao carregar produto:", err);
+  }
+});
+async function adicionarAoCarrinho() {
+  if (!produto.value) return;
+  
+  if (quantidade.value < 1) { 
+    toast.error("A quantidade deve ser pelo menos 1.");
+    return;
+  }
 
   try {
-    const response = await axios.get(`http://localhost:5056/produto?id=${id}`)
-    product.value = Array.isArray(response.data) ? response.data[0] : response.data
-
-    if (product.value?.categoriaId) {
-      const cat = await axios.get(`http://localhost:5056/categoria?id=${product.value.categoriaId}`)
-      categoriaNome.value = cat.data[0]?.nome || 'Não especificada'
+   
+    const usuarioId = 1;
+  
+    const token = localStorage.getItem('token');
+    if (!token) {
+        toast.error("Você precisa estar logado para adicionar itens ao carrinho.");
+        return;
     }
 
-    const avaliacaoRes = await axios.get(`http://localhost:5056/avaliacao?produtoId=${id}`)
-    averageRating.value = avaliacaoRes.data.media || 0
-  } catch (error) {
-    console.error('Erro ao carregar produto:', error)
-  }
-})
+    await apiController.post("/itemCarrinho",
+  {
+    UsuarioId: usuarioId,
+    ProdutoId: produto.value.id,
+    Qtd: quantidade.value 
+  },
+  { headers: { Authorization: `Bearer ${token}` } }
+);
 
-function adicionarAoCarrinho() {
-  if (product.value) {
-    cart.addToCart({
-      id: product.value.id,
-      nome: product.value.nome,
-      preco: product.value.valor,
-      imagem: product.value.img,
-    })
-    showToast.value = true
+    showToast.value = true;
+    quantidade.value = 1; 
+
+  } catch (err: any) {
+    console.error("Erro ao adicionar ao carrinho:", err.response?.data || err);
+
+   
+    toast.error(err.response?.data?.message || "Erro ao adicionar ao carrinho");
   }
 }
-</script>
 
+</script>
 <style scoped>
 .detalhes-produto {
   min-height: 100vh;
