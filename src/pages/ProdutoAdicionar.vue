@@ -4,8 +4,6 @@
     <!-- MAIN -->
     <main class="main-content">
       <!-- DICAS -->
-
-      <!-- Banner de Dicas -->
       <div class="tips-banner">
         <h3>💡 Dicas para um anúncio de sucesso</h3>
           <ul>
@@ -73,7 +71,6 @@
       </div>
 
       <!-- FORM 2: INFORMAÇÕES -->
-      <!-- Formulário de Anúncio -->
       <div class="form-container">
         <div class="form-info">
           <h4>📋 Detalhes do produto</h4>
@@ -112,22 +109,6 @@
               class="styled-select"
             />
           </div>
-        <form @submit.prevent="submitForm">
-
-          <!-- SEÇÃO 1: Informações básicas -->
-          <section class="form-section">
-            <h4>Informações do Produto</h4>
-
-            <div class="form-group">
-              <label for="titulo">Título do Produto</label>
-              <input
-                v-model="form.titulo"
-                id="titulo"
-                type="text"
-                placeholder="Ex: Notebook Dell Inspiron"
-                required
-              />
-            </div>
 
           <div class="form-group">
             <label for="estado">Estado do Produto <span class="asterisco">*</span></label>
@@ -196,51 +177,7 @@
         <button class="btn-anunciar" @click="anunciar">
           📢 Anunciar
         </button>
-            <div class="form-group">
-              <label for="descricao">Descrição</label>
-              <textarea
-                v-model="form.descricao"
-                id="descricao"
-                rows="4"
-                placeholder="Descreva o produto..."
-                required
-              ></textarea>
-            </div>
-          </section>
-
-          <!-- SEÇÃO 2: Preço e Localização -->
-          <section class="form-section">
-            <h4>Preço e Localização</h4>
-
-            <div class="form-group">
-              <label for="preco">Preço</label>
-              <input
-                v-model="form.preco"
-                id="preco"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="Ex: 1299.99"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="localizacao">Localização</label>
-              <input
-                v-model="form.localizacao"
-                id="localizacao"
-                type="text"
-                placeholder="Ex: São Paulo, SP"
-                required
-              />
-            </div>
-          </section>
-
-          <button type="submit" class="submit-button">Publicar Anúncio</button>
-        </form>
       </div>
-
     </main>
   </div>
 </template>
@@ -630,10 +567,9 @@ body, html {
 }
 
 .form-group label {
+  display: block;
   font-weight: 500;
   margin-bottom: 6px;
-  color: black;
-  display: flex;
   color: black;
   display: flex;
 }
