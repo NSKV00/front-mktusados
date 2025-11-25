@@ -1,7 +1,6 @@
 <template>
   <v-app class="app">
-    <app-header v-if="showHeader" />
-
+    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage" />
     <v-main class="main-content">
       <router-view />
     </v-main>
@@ -27,6 +26,10 @@ const isDetalhesProduto = computed(() => route.path.startsWith('/produtos/'))
 
 
 const showHeader = computed(() => isHomePage.value || isDetalhesProduto.value)
+const isPerfilPage = computed(() => route.path === '/perfil')
+const isEnderecoPage = computed(() => route.path === '/enderecos')
+const isProdutoPage = computed(() => route.path === '/produtoCriar')
+
 </script>
 
 <style>

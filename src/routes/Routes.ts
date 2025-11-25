@@ -2,18 +2,42 @@ import { createWebHistory, createRouter } from 'vue-router'
 import Home from '../pages/Home.vue'
 import Login from '../pages/Login.vue'
 import Cadastro from '../pages/Cadastro.vue'
+import Perfil from '../pages/Perfil.vue'
+import ProdutoAdicionar from '../pages/ProdutoAdicionar.vue'
+import Endereço from '../pages/Endereço.vue'
 import DetalhesProdutos from '../pages/DetalhesProdutos.vue'
 
 const routes = [
-  { path: '/', name: 'Home', component: Home },
-  { path: '/login', name: 'Login', component: Login },
-  { path: '/cadastro', name: 'Cadastro', component: Cadastro },
+  { path: '/', component: Home },
+  { path: '/login', component: Login },
+  { path: '/cadastro', component: Cadastro },
+  { path: '/perfil', component: Perfil, meta: { requiresAuth: true } },
+  { path: '/produtoCriar', component: ProdutoAdicionar, meta: { requiresAuth: true } },
   { path: '/produtos/:id', name: 'DetalhesProdutos', component: DetalhesProdutos, props: true },
+  { path: '/enderecos', component: Endereço, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem("token")
+  const requiresAuth = to.matched.some(record => record.meta?.requiresAuth)
+
+  // Se a rota requer autenticação e não há token
+  if (requiresAuth && !token) {
+    next('/login')
+  }
+  // Se está em login e tem token válido, redirecionar para home
+  else if (to.path === '/login' && token) {
+    next('/')
+  }
+  // Caso contrário, permitir navegação
+  else {
+    next()
+  }
 })
 
 export default router
