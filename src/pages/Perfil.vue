@@ -587,7 +587,7 @@ onMounted(async () => {
 
   } catch (error) {
     console.error("Erro ao buscar produtos:", error)
-    isCarregando.value = false
+    isCarregando.value = true
   }
 })
 
