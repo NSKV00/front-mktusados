@@ -550,31 +550,17 @@ onMounted(async () => {
     const headers = {
       Authorization: `Bearer ${token.value}`
     };
-    const token = localStorage.getItem("token")
-    const tokenData = token ? jwtDecode(token) : null
-    
-    if (!token || !tokenData) {
-      console.error("Token não encontrado ou inválido")
-      isCarregando.value = false
-      return
-    }
-
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    const usuarioId = tokenData.id
 
     const [response, response2, response3] = await Promise.all([
       apiController.get("produto", {
         params: { Id: 20},
-        params: { usuarioId },
         headers
       }),
       apiController.get("usuarios", {
         params: { id: user.value.id },
-        params: { id: usuarioId },
         headers
       }),
       apiController.get(`usuarioImagem/8`, { headers })
-      apiController.get(`usuarioImagem/${usuarioId}`, { headers })
     ]);
 
     if (response2?.data) {
@@ -615,9 +601,6 @@ try {
   const headers = {
       Authorization: `Bearer ${token.value}`
     };
-  const token = localStorage.getItem("token")
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  
   console.log('Dados atualizados:', form.value)
   usuario.value = { ...usuario.value, ...form.value }
   await apiController.patch(
