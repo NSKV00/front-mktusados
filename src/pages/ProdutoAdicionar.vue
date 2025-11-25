@@ -20,29 +20,51 @@
           <h5>Adicione fotos de qualidade do seu produto</h5>
         </div>
 
-        <div class="photos-grid">
-          <div class="photo-item" v-if="form.fotoPreview">
-            <img :src="form.fotoPreview" alt="Foto principal" />
-            <button class="remove-btn" @click="removeFotoPrincipal">✕</button>
+          <div class="photos-grid">
+
+            <div class="photo-add" @click="selecionarImagem" v-if="!form.fotoPreview">
+              🗁 Adicionar foto principal
+            </div>
+
+            <div class="photo-item" v-if="form.fotoPreview">
+              <img :src="form.fotoPreview" alt="Foto principal" />
+              <button class="remove-btn" @click="removeFotoPrincipal">✕</button>
+            </div>
+
+            <div
+              v-for="(foto, index) in form.fotosAngulosPreview"
+              :key="index"
+              class="photo-item"
+            >
+              <img :src="foto" alt="Foto extra" />
+              <button class="remove-btn" @click="removeFoto(index)">✕</button>
+            </div>
+
+            <div
+              class="photo-add"
+              @click="selecionarImagemExtra"
+              v-if="form.fotoPreview && form.fotosAngulosPreview.length < 4"
+            >
+              🗁 Adicionar foto
+            </div>
           </div>
 
-          <div v-for="(foto, index) in form.fotosAngulosPreview" :key="index" class="photo-item">
-            <img :src="foto" alt="Foto extra" />
-            <button class="remove-btn" @click="removeFoto(index)">✕</button>
-          </div>
+          <!-- INPUTS -->
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleFileUpload"
+          />
 
-          <div class="photo-add" @click="selecionarImagemExtra" v-if="form.fotosAngulosPreview.length < 5">
-            🗁 Adicionar foto
-          </div>
-        </div>
-
-        <input
-          ref="fileInputExtra"
-          type="file"
-          accept="image/*"
-          class="hidden"
-          @change="handleExtraUpload"
-        />
+          <input
+            ref="fileInputExtra"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleExtraUpload"
+          />
         <div class="form-info">
           <h5>Adicione até 5 fotos. A primeira será a foto principal do anúncio.</h5>
         </div>
@@ -146,6 +168,16 @@
           />
         </div>
       </div>
+
+      <div class="buttons-container">
+        <button class="btn-cancelar" @click="cancelar">
+          Cancelar
+        </button>
+
+        <button class="btn-anunciar" @click="anunciar">
+          📢 Anunciar
+        </button>
+      </div>
     </main>
   </div>
 </template>
@@ -162,7 +194,6 @@ const token = ref(tokenLocal)
 const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
 
 const categoriasAPI = ref<string[]>([])
-
 
 const estadoOpcoes = ref([
   { label: 'Novo', value: 'Novo' },
@@ -230,14 +261,47 @@ function handleExtraUpload(event: Event) {
   }
 }
 
-function removeFoto(index: number) {
-  form.value.fotosAngulos.splice(index, 1);
-  form.value.fotosAngulosPreview.splice(index, 1);
-}
-
 function removeFotoPrincipal() {
   form.value.foto = null;
   form.value.fotoPreview = null;
+
+  // 🔥 Permite reenviar a mesma imagem
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
+}
+
+function removeFoto(index: number) {
+  form.value.fotosAngulos.splice(index, 1);
+  form.value.fotosAngulosPreview.splice(index, 1);
+
+  // 🔥 Permite reenviar a mesma imagem extra
+  if (fileInputExtra.value) {
+    fileInputExtra.value.value = "";
+  }
+}
+function cancelar() {
+  form.value = {
+    foto: null,
+    fotoPreview: null,
+    fotosAngulos: [],
+    fotosAngulosPreview: [],
+    titulo: "",
+    descricao: "",
+    categoriaId: null,
+    categoria: "",
+    estado: null,
+    preco: "",
+    quantidade: "",
+    cep: ""
+  };
+
+  window.history.back();
+}
+
+function anunciar() {
+  console.log("Dados enviados:", form.value);
+  alert("Anúncio enviado com sucesso!");
 }
 
 
@@ -577,6 +641,7 @@ body, html {
   cursor: pointer;
   overflow: hidden;
   transition: 0.3s;
+  position: relative; /* <- necessário para posicionamento absoluto do botão */
 }
 
 .photo-item {
@@ -592,6 +657,7 @@ body, html {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .photo-add {
@@ -635,34 +701,83 @@ body, html {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #fff;
+  z-index: 15;
+  width: 16px;
+  height: 42px;
+  border-radius: 80%;
   border: none;
-  border-radius: 50%;
-  font-size: 1rem;
-  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: #e74c3c;
-}
 
-.remove-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #ffffffee;
-  border: none;
-  border-radius: 50%;
   font-size: 18px;
-  padding: 4px 8px;
-  cursor: pointer;
-  color: #e74c3c;
-  font-weight: bold;
-  transition: 0.2s;
+  color: #c300ff;
+
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
 }
 
 .remove-btn:hover {
-  background: #ffe5e5;
+  background: rgba(255, 255, 255, 0);
+  transform: scale(1.08);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
 }
+
 .hidden {
   display: none;
+}
+
+.buttons-container {
+  width: 75%;
+  max-width: 960px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.btn-anunciar,
+.btn-cancelar {
+  padding: 12px 24px;
+  width: 90%;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+/* Botão Anunciar */
+.btn-anunciar {
+  background-color: #8d1ca0;
+  color: white;
+  font-weight: 600;
+}
+
+.btn-anunciar:hover {
+  background-color: #460851;
+}
+
+/* Botão Cancelar */
+.btn-cancelar {
+  background-color: #b6b6b6ef;
+  color: #333;
+  font-weight: 500;
+}
+
+.btn-cancelar:hover {
+  background-color: #767676;
+}
+
+@media (max-width: 420px) {
+  .remove-btn {
+    top: 6px;
+    right: 6px;
+    padding: 5px 7px;
+    font-size: 15px;
+  }
 }
 </style>
