@@ -525,7 +525,6 @@ onMounted(async () => {
 
     const [response, response2, response3] = await Promise.all([
       apiController.get("produto", {
-        params: { usuarioId },
         headers
       }),
       apiController.get("usuarios", {

@@ -4,7 +4,7 @@ import Login from '../pages/Login.vue'
 import Cadastro from '../pages/Cadastro.vue'
 import Perfil from '../pages/Perfil.vue'
 import ProdutoAdicionar from '../pages/ProdutoAdicionar.vue'
-import Endereço from '../pages/Endereço.vue'
+import Endereco from '../pages/Endereco.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -12,7 +12,7 @@ const routes = [
   { path: '/cadastro', component: Cadastro },
   { path: '/perfil', component: Perfil, meta: { requiresAuth: true } },
   { path: '/produtoCriar', component: ProdutoAdicionar, meta: { requiresAuth: true } },
-  { path: '/enderecos', component: Endereço, meta: { requiresAuth: true } },
+  { path: '/enderecos', component: Endereco, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

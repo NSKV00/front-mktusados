@@ -111,7 +111,6 @@ import api from "../controller/api";
 import { decryptJSON, decrypt } from "../utils/crypto";
 
 const usuario = decryptJSON(localStorage.getItem("usuario"));
-const token = decrypt(localStorage.getItem("token"));
 
 const enderecos = ref([]);
 const modal = ref(false);

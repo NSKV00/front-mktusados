@@ -3,7 +3,9 @@
     <v-app-bar-nav-icon @click="drawer = !drawer" class="me-2" />
 
     <div class="logo">
-      <img class="Logo" src="../assets/logo.png" alt="Logo" />
+      <router-link to="/" aria-label="Home">
+        <img class="Logo" src="../assets/logo.png" alt="Logo" />
+      </router-link>
     </div>
 
     <v-spacer></v-spacer>
@@ -79,7 +81,6 @@ const fotoSrc = computed(() => {
 })
 
 onMounted(async () => {
-  // Verifica se há token antes de fazer requisições
   if (!tokenLocal) {
     isCarregando.value = false
     return
@@ -87,7 +88,7 @@ onMounted(async () => {
 
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 segundos timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
     const user = await api.get("usuarios", {
       params: { id: usuario.value.id },
@@ -104,7 +105,6 @@ onMounted(async () => {
     
     clearTimeout(timeoutId)
   } catch (error: any) {
-    // Silencia erros de conexão se for abort ou timeout
     if (error.code !== 'ECONNABORTED') {
       console.error("Erro ao carregar header:", error)
     }
@@ -163,7 +163,6 @@ const emitUpdate = () => {
 }
 
 .header {
-
   position: relative !important;
 }
 

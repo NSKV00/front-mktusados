@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill-height d-flex flex-column align-center justify-center bg-blue-darken-4 text-center text-white">
+  <v-container fluid class="fill-height d-flex flex-column align-center justify-center bg-white text-center text-black">
     <v-icon size="80" class="mb-4">mdi-home</v-icon>
     <h1 class="text-h4 font-weight-bold mb-2">Bem-vindo ao MKT Usados</h1>
     <p class="text-subtitle-1 mb-6">
