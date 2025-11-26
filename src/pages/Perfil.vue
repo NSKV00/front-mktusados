@@ -35,7 +35,16 @@
     <section class="products-list">
       <div>
       <h3 v-if="produtos.length > 0" class="products-title">Meus Produtos</h3>
+      <div>
+      <h3 v-if="produtos.length > 0" class="products-title">Meus Produtos</h3>
       <div class="products-grid">
+
+      <div v-if="produtos.length === 0" class="no-products">
+        Nenhum produto cadastrado
+        <router-link to="/produtoCriar">
+          <button class="btn-criar">Cadastrar Produto</button>
+        </router-link>
+      </div>
 
       <div v-if="produtos.length === 0" class="no-products">
         Nenhum produto cadastrado
@@ -62,6 +71,7 @@
         </div>
       </div>
       </div>
+      </div>
     </section>
 
     <!-- Modal -->
@@ -84,8 +94,10 @@
 
   <div v-else class="loading-full">
     <div class="spinner-wrapper">
+    <div class="spinner-cent">
       <div class="spinner"></div>
       <div class="loading-text">Carregando perfil...</div>
+    </div>
     </div>
   </div>
 </template>
@@ -250,13 +262,16 @@
 .products-grid {
   display: grid;
   justify-items: center;
+  justify-items: center;
   grid-template-columns: repeat(2, 1fr);
+  gap: 50px;
   gap: 50px;
   width: 100%;
 }
 
 /* Card principal */
 .product-card {
+  width: 80%;
   width: 80%;
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -277,12 +292,17 @@
   position: relative;
   width: 100%;
   height: 350px;
+  height: 350px;
   overflow: hidden;
   background: #fafafa;
 }
 
+
 .product-img {
   width: 100%;
+  height: 350px;
+  object-fit: fill;
+  border-radius: 8px;
   height: 350px;
   object-fit: fill;
   border-radius: 8px;
@@ -310,10 +330,51 @@
   padding-top: 42px;
   padding-bottom: 42px;
   font-size: 46px;
+:deep(.products-title) {
+  padding-top: 42px;
+  padding-bottom: 42px;
+  font-size: 46px;
   font-weight: 600;
   color: #111;
   margin: 0;
 }
+.no-products {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(1200px, 100%);
+  max-width: 1200px;
+  gap: 28px;
+  padding: 60px 20px;
+  grid-column: span 2;
+  border-radius: 18px;
+  background: #faf9ff;
+  border: 1px dashed #b48eff;
+  box-shadow: 0 6px 18px rgba(150, 100, 255, 0.08);
+  animation: fadeIn 0.4s ease;
+}
+
+.no-products {
+  font-size: 32px;
+  font-weight: 500;
+  color: #6b5c99;
+  margin-top: 56px;
+}
+
+.no-products:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(150, 100, 255, 0.15);
+  transition: 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+
 .no-products {
   display: flex;
   flex-direction: column;
@@ -393,8 +454,18 @@
   color: white;
   font-size: 36px;
   font-weight: 600;
+.btn-criar {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7b2ff7, #9c4dff);
+  color: white;
+  font-size: 36px;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  transition: 0.25s ease;
+  box-shadow: 0 4px 12px rgba(123, 47, 247, 0.35);
   transition: 0.25s ease;
   box-shadow: 0 4px 12px rgba(123, 47, 247, 0.35);
 }
@@ -402,7 +473,14 @@
 .btn-criar:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 16px rgba(123, 47, 247, 0.45);
+.btn-criar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(123, 47, 247, 0.45);
 }
+
+.btn-criar:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(123, 47, 247, 0.3);
 
 .btn-criar:active {
   transform: translateY(0);
@@ -413,6 +491,16 @@
 .spinner-wrapper {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  gap: 12px;
+}
+
+.spinner-cent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   gap: 12px;
 }
@@ -424,11 +512,12 @@
   border-top-color: #fed5aa;
   animation: spin 0.9s linear infinite;
 }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 .loading-text {
-  color: #222;
+  color: #ffffff;
   font-size: 16px;
 }
 
@@ -447,6 +536,11 @@
   height: 220px;
   object-fit: cover;
 }
+.product-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
 
   @media (max-width: 720px) {
   .product-header {
@@ -460,12 +554,17 @@
 import { ref, onMounted, computed } from 'vue'
 import  apiController  from "../controller/api"
 import { jwtDecode } from "jwt-decode"
+import { jwtDecode } from "jwt-decode"
 
 const produtos = ref([])
 const usuario = ref(null)
 const imagemBase64 = ref('')
 const modalAberto = ref(false)
 const isCarregando = ref(true)
+
+const tokenLocal = localStorage.getItem("token") || ""
+const token = ref(tokenLocal)
+const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
 
 const tokenLocal = localStorage.getItem("token") || ""
 const token = ref(tokenLocal)
@@ -481,6 +580,8 @@ const form = ref({
 
 const fotoPadrao = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
 
+const fotoPadrao = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
+
 const detectarTipoImagem = (base64) => {
   if (base64.startsWith('UklG')) return 'image/webp'
   if (base64.startsWith('/9j/')) return 'image/jpeg'
@@ -490,6 +591,11 @@ const detectarTipoImagem = (base64) => {
 
 const fotoSrc = computed(() => {
   const b = imagemBase64.value
+
+  if (!b || typeof b !== "string" || !b.trim()) {
+  return fotoPadrao
+  }
+
 
   if (!b || typeof b !== "string" || !b.trim()) {
   return fotoPadrao
@@ -522,6 +628,24 @@ const produtoSrc = (imagem) => {
     return produtoSrc(imagem.base64 || imagem.url || '')
   }
 
+  // Se for base64 direto
+  if (typeof imagem === 'string') {
+    const trimmed = imagem.trim()
+    if (trimmed.startsWith('/9j/') || trimmed.startsWith('iVBOR') || trimmed.startsWith('UklG')) {
+      const tipo = detectarTipoImagem(trimmed)
+      return `data:${tipo};base64,${trimmed}`
+    }
+
+    if (trimmed.startsWith('data:')) return trimmed
+    return trimmed  // URL absoluta
+  }
+
+  if (typeof imagem === 'object') {
+    return produtoSrc(imagem.base64 || imagem.url || '')
+  }
+
+  return null
+}
   return null
 }
 
@@ -533,20 +657,25 @@ onMounted(async () => {
   try {
 
     console.log(user.value)
+    console.log(user.value)
     isCarregando.value = true
     const headers = {
+      Authorization: `Bearer ${token.value}`
       Authorization: `Bearer ${token.value}`
     };
 
     const [response, response2, response3] = await Promise.all([
       apiController.get("produto", {
+        params: { Id: 20},
         params: { usuarioId: 8, skip: 8, take: 1 },
         headers
       }),
       apiController.get("usuarios", {
         params: { id: user.value.id },
+        params: { id: user.value.id },
         headers
       }),
+      apiController.get(`usuarioImagem/8`, { headers })
       apiController.get(`usuarioImagem/${user.value.id}`, { headers })
     ]);
 
@@ -574,7 +703,7 @@ onMounted(async () => {
 
   } catch (error) {
     console.error("Erro ao buscar produtos:", error)
-    isCarregando.value = false
+    isCarregando.value = true
   }
 })
 
@@ -586,6 +715,7 @@ const salvarDados = async() => {
   const inicio = { ...usuario.value }
 try {
   const headers = {
+      Authorization: `Bearer ${token.value}`
       Authorization: `Bearer ${token.value}`
     };
   console.log('Dados atualizados:', form.value)
