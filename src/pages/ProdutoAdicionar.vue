@@ -104,6 +104,7 @@
               v-model="form.categoriaId"
               :options="categoriasAPI"
               label="nome"
+              :reduce="(cat: { id: number; nome: string }) => cat.id"
               :clearable="false"
               placeholder="Selecione..."
               class="styled-select"
@@ -116,6 +117,7 @@
               v-model="form.estado"
               :options="estadoOpcoes"
               label="label"
+              :reduce="(opt: { label: string; value: string }) => opt.value"
               :clearable="false"
               placeholder="Selecione..."
               class="styled-select"
@@ -188,6 +190,8 @@ import "vue-select/dist/vue-select.css"
 import { ref, onMounted } from "vue"
 import { jwtDecode } from "jwt-decode"
 import  apiController  from "../controller/api"
+import { nextTick } from "vue"
+import { toast } from "vue3-toastify"
 
 const tokenLocal = localStorage.getItem("token") || ""
 const token = ref(tokenLocal)
@@ -309,70 +313,84 @@ async function anunciar() {
   const checks = [
     {
       ok: !!form.value.fotoPreview,
-      el: fileInput.value,
+      el: () => document.querySelector(".photo-add") || fileInput.value,
       action: () => fileInput.value?.click()
     },
     {
       ok: !!form.value.titulo?.trim(),
-      el: document.getElementById("titulo")
+      el: () => document.getElementById("titulo")
     },
     {
       ok: !!form.value.descricao?.trim(),
-      el: document.getElementById("descricao")
+      el: () => document.getElementById("descricao")
     },
     {
       ok: form.value.categoriaId,
-      el: document.querySelectorAll(".styled-select")[0]
+      el: () => document.querySelectorAll(".styled-select .vs__dropdown-toggle")[0]
     },
     {
       ok: form.value.estado,
-      el: document.querySelectorAll(".styled-select")[1]
+      el: () => document.querySelectorAll(".styled-select .vs__dropdown-toggle")[1]
     },
     {
       ok: form.value.preco !== "" && !isNaN(Number(form.value.preco)),
-      el: document.getElementById("preco")
+      el: () => document.getElementById("preco")
     }
   ];
 
   const missing = checks.find(c => !c.ok);
 
   if (missing) {
-    const el = missing.el as HTMLElement | null;
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
-    highlight(el);
-    setTimeout(() => el?.focus(), 300);
+    const el = typeof missing.el === 'function' ? missing.el() : missing.el;
+    const element = el as HTMLElement | null;
+    
+    element?.scrollIntoView({ behavior: "smooth", block: "center" });
+    await nextTick();
+    highlight(element);
+    setTimeout(() => element?.focus(), 300);
 
     return;
   }
 
-  const formData = new FormData()
+const formData = new FormData()
 
-  formData.append("Nome", form.value.titulo)
-  formData.append("Descricao", form.value.descricao)
-  formData.append("Valor", String(form.value.preco))
-  formData.append("Desconto", "0")
-  formData.append("CategoriaId", String(form.value.categoriaId))
-  formData.append("Ativo", "true")
-  formData.append("Estado", form.value.estado)
-  formData.append("Cep", form.value.cep)
-  formData.append("cpf", userCpf.value)
+formData.append("UsuarioId", String((user.value as any).id));
+formData.append("Nome", form.value.titulo)
+formData.append("Descricao", form.value.descricao)
+formData.append("Valor", String(form.value.preco).replace(",", "."))
+formData.append("Desconto", "0")
+formData.append("CategoriaId", String(form.value.categoriaId))
+formData.append("Ativo", "true")
+formData.append("Estado", String(form.value.estado))
+formData.append("Cep", form.value.cep)
+formData.append("QtdEstoque", String(form.value.quantidade))
 
-  formData.append("Img", form.value.foto)
+// imagem principal
+if (form.value.foto) {
+  formData.append("Img", form.value.foto);
+}
 
+// imagens extras (envio como "Imagens")
+for (const file of form.value.fotosAngulos) {
+  formData.append("Imagens", file)
+}
+
+
+try {
   const produtoResponse = await apiController.post("/produto", formData, {
-  headers: { "Content-Type": "multipart/form-data" }
-  })
+    headers: { 
+      Authorization: `Bearer ${token.value}`,
+      "Content-Type": undefined
+    }
+  });
+  toast.success("Anuncio criado com sucesso!");
 
-  const produtoId = produtoResponse.data.id
-
-  for (const file of form.value.fotosAngulos) {
-  const fd = new FormData()
-  fd.append("produtoId", produtoId)
-  fd.append("imagem", file)
-
-  await apiController.post("/produtoImagem", fd, {
-    headers: { "Content-Type": "multipart/form-data" }
-  })
+  setTimeout(() => {
+    window.location.href = "/perfil";
+  }, 1600);
+} catch (error) {
+  const msg = error.response?.data?.message || "Erro ao criar anúncio. Tente novamente mais tarde.";
+  toast.error(msg);
 }
 }
 
@@ -854,12 +872,22 @@ body, html {
 }
 
 @keyframes highlightError {
-  0% { box-shadow: 0 0 0px rgba(255, 0, 0, 0); }
-  50% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.8); }
-  100% { box-shadow: 0 0 0px rgba(255, 0, 0, 0); }
+  0% { 
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+    border-color: #d1d5db;
+  }
+  50% { 
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.5);
+    border-color: #ef4444;
+  }
+  100% { 
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+    border-color: #d1d5db;
+  }
 }
 
 .error-highlight {
-  animation: highlightError 1s ease-out;
+  animation: highlightError 1s ease-out !important;
+  border-color: #ef4444 !important;
 }
 </style>
