@@ -299,9 +299,81 @@ function cancelar() {
   window.history.back();
 }
 
-function anunciar() {
-  console.log("Dados enviados:", form.value);
-  alert("Anúncio enviado com sucesso!");
+function highlight(el: HTMLElement | null) {
+  if (!el) return;
+  el.classList.add("error-highlight");
+  setTimeout(() => el.classList.remove("error-highlight"), 1000);
+}
+
+async function anunciar() {
+  const checks = [
+    {
+      ok: !!form.value.fotoPreview,
+      el: fileInput.value,
+      action: () => fileInput.value?.click()
+    },
+    {
+      ok: !!form.value.titulo?.trim(),
+      el: document.getElementById("titulo")
+    },
+    {
+      ok: !!form.value.descricao?.trim(),
+      el: document.getElementById("descricao")
+    },
+    {
+      ok: form.value.categoriaId,
+      el: document.querySelectorAll(".styled-select")[0]
+    },
+    {
+      ok: form.value.estado,
+      el: document.querySelectorAll(".styled-select")[1]
+    },
+    {
+      ok: form.value.preco !== "" && !isNaN(Number(form.value.preco)),
+      el: document.getElementById("preco")
+    }
+  ];
+
+  const missing = checks.find(c => !c.ok);
+
+  if (missing) {
+    const el = missing.el as HTMLElement | null;
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    highlight(el);
+    setTimeout(() => el?.focus(), 300);
+
+    return;
+  }
+
+  const formData = new FormData()
+
+  formData.append("Nome", form.value.titulo)
+  formData.append("Descricao", form.value.descricao)
+  formData.append("Valor", String(form.value.preco))
+  formData.append("Desconto", "0")
+  formData.append("CategoriaId", String(form.value.categoriaId))
+  formData.append("Ativo", "true")
+  formData.append("Estado", form.value.estado)
+  formData.append("Cep", form.value.cep)
+  formData.append("cpf", userCpf.value)
+
+  formData.append("Img", form.value.foto)
+
+  const produtoResponse = await apiController.post("/produto", formData, {
+  headers: { "Content-Type": "multipart/form-data" }
+  })
+
+  const produtoId = produtoResponse.data.id
+
+  for (const file of form.value.fotosAngulos) {
+  const fd = new FormData()
+  fd.append("produtoId", produtoId)
+  fd.append("imagem", file)
+
+  await apiController.post("/produtoImagem", fd, {
+    headers: { "Content-Type": "multipart/form-data" }
+  })
+}
 }
 
 
@@ -779,5 +851,15 @@ body, html {
     padding: 5px 7px;
     font-size: 15px;
   }
+}
+
+@keyframes highlightError {
+  0% { box-shadow: 0 0 0px rgba(255, 0, 0, 0); }
+  50% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.8); }
+  100% { box-shadow: 0 0 0px rgba(255, 0, 0, 0); }
+}
+
+.error-highlight {
+  animation: highlightError 1s ease-out;
 }
 </style>
