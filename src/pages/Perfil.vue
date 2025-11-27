@@ -1,5 +1,71 @@
 <template>
   <div v-if="!isCarregando" class="profile-page">
+      <div v-if="modalAberto" class="modal-overlay" @click.self="fecharModal">
+        <div class="modal-container">
+          <h2>Editar Usuário</h2>
+
+          <form @submit.prevent="salvarDados">
+
+            <label>
+              Nome:
+              <input type="text" v-model="form.nome">
+            </label>
+
+            <label>
+              Telefone:
+              <input type="text" v-model="form.telefone" minlength="11" maxlength="11">
+            </label>
+
+            <label>
+              CPF:
+              <input type="text" v-model="form.cpf" minlength="11" maxlength="11">
+            </label>
+
+            <label>
+              Idade:
+              <input type="number" v-model="form.idade" min="16" max="99">
+            </label>
+
+            <div class="modal-buttons">
+              <button type="button" @click="fecharModal">Cancelar</button>
+              <button type="submit">Salvar</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+      <div v-if="modalImagemAberto" class="modal-overlay" @click.self="fecharModalImagem">
+        <div class="modal-container">
+
+          <h2>Alterar Imagem de Perfil</h2>
+
+          <form @submit.prevent="salvarImagem">
+
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              @change="selecionarImagem"
+              style="display:none;"
+            />
+
+            <button type="button" class="file-btn" @click="fileInput.click()">
+              {{ preview ? "Trocar imagem" : "Escolher imagem" }}
+            </button>
+
+            <div v-if="preview" class="preview-container">
+              <img :src="preview" class="preview-img" />
+            </div>
+
+            <div class="modal-buttons">
+              <button type="button" @click="fecharModalImagem">Cancelar</button>
+              <button type="submit">Salvar</button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
     <div v-if="usuario" class="profile-container">
       <button class="config-btn" aria-label="Configurações" @click="abrirModal">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -15,6 +81,9 @@
           <div v-else class="avatar-placeholder">
             {{ usuario.nome ? usuario.nome.charAt(0).toUpperCase() : 'U' }}
           </div>
+          <button class="edit-photo-btn" @click="abrirModalImagem">
+            <i class="pi pi-camera"></i>
+          </button>
         </div>
         <div class="user-info">
           <h2 class="user-name">{{ usuario.nome || '-' }}</h2>
@@ -85,6 +154,7 @@
         >
           Próximo ›
         </button>
+        
       </div>
       </div>
     </section>
@@ -119,8 +189,9 @@
 
 
 <style scoped>
+/* ===== Página ===== */
 .profile-page {
-  position: relative; 
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -133,7 +204,7 @@
   overflow-x: hidden;
 }
 
-
+/* ===== Container do perfil ===== */
 .profile-container {
   margin: 0 auto;
   width: min(1200px, 100%);
@@ -153,7 +224,7 @@
   align-items: center;
 }
 
-/* Botão de Configurações */
+/* ===== Botão de configurações ===== */
 .config-btn {
   position: absolute;
   top: 16px;
@@ -174,7 +245,29 @@
   transform: scale(1.05);
 }
 
-/* Cabeçalho do perfil */
+.edit-photo-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #fed5aa;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: 0.2s ease;
+}
+
+.edit-photo-btn:hover {
+  transform: scale(1.1);
+  background: #ffb764;
+}
+
+/* ===== Cabeçalho do perfil ===== */
 .profile-header {
   display: flex;
   align-items: center;
@@ -184,16 +277,14 @@
   flex-wrap: wrap;
 }
 
+/* ===== Avatar ===== */
 .avatar-wrapper {
-  width: 300px;
-  height: 300px;
+  position: relative;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  overflow: hidden;
   border: 3px solid #fed5aa;
-  overflow: visible;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  flex-shrink: 0;
 }
 
 .avatar-img {
@@ -205,16 +296,16 @@
 .avatar-placeholder {
   width: 100%;
   height: 100%;
+  font-size: 48px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 28px;
-  color: #666;
-  background-color: #eee;
-  border-radius: 50%;
+  align-items: center;
+  background: #7b2ff7;
+  color: #fff;
+  font-weight: bold;
 }
 
-/* Informações */
+/* ===== Informações do usuário ===== */
 .user-info {
   display: flex;
   flex-direction: column;
@@ -230,7 +321,6 @@
   color: #666;
   font-size: 14px;
 }
-
 .user-info h2 {
   font-size: 24px;
   font-weight: 700;
@@ -241,7 +331,7 @@
   color: #6b7280;
 }
 
-/* Detalhes do perfil */
+/* ===== Detalhes ===== */
 .profile-details {
   display: flex;
   flex-direction: column;
@@ -272,8 +362,7 @@
   font-size: 15px;
 }
 
-
-/* Lista de produtos */
+/* ===== Produtos ===== */
 .products-grid {
   display: grid;
   justify-items: center;
@@ -282,7 +371,6 @@
   width: 100%;
 }
 
-/* Card principal */
 .product-card {
   width: 80%;
   background: #fff;
@@ -299,7 +387,6 @@
   box-shadow: 0 6px 14px rgba(0,0,0,0.08);
 }
 
-/* Header com imagem */
 .product-header {
   position: relative;
   width: 100%;
@@ -322,6 +409,7 @@
   object-fit: fill;
   border-radius: 8px;
 }
+
 .status-badge {
   position: absolute;
   top: 10px;
@@ -334,13 +422,13 @@
   border-radius: 999px;
 }
 
-/* Corpo do produto */
 .product-body {
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+
 :deep(.products-title) {
   padding-top: 42px;
   padding-bottom: 42px;
@@ -349,6 +437,7 @@
   color: #111;
   margin: 0;
 }
+
 .no-products {
   display: flex;
   flex-direction: column;
@@ -364,28 +453,24 @@
   border: 1px dashed #b48eff;
   box-shadow: 0 6px 18px rgba(150, 100, 255, 0.08);
   animation: fadeIn 0.4s ease;
-}
-
-.no-products {
   font-size: 32px;
   font-weight: 500;
   color: #6b5c99;
   margin-top: 56px;
 }
-
 .no-products:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 24px rgba(150, 100, 255, 0.15);
   transition: 0.25s ease;
 }
 
+/* ===== Keyframes ===== */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-
-
+/* ===== Produtos (footer) ===== */
 .product-desc {
   font-size: 14px;
   color: #555;
@@ -398,8 +483,6 @@
   font-weight: 700;
   margin-top: 8px;
 }
-
-/* Rodapé com categoria e data */
 .product-footer {
   margin-top: auto;
   padding: 10px 16px 14px;
@@ -419,7 +502,7 @@
   color: #9ca3af;
 }
 
-/* Botão de novo produto */
+/* ===== Botão criar ===== */
 .btn-criar {
   display: inline-block;
   padding: 12px 22px;
@@ -433,16 +516,17 @@
   transition: 0.25s ease;
   box-shadow: 0 4px 12px rgba(123, 47, 247, 0.35);
 }
-
 .btn-criar:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 16px rgba(123, 47, 247, 0.45);
 }
-
 .btn-criar:active {
   transform: translateY(0);
   box-shadow: 0 3px 8px rgba(123, 47, 247, 0.3);
 }
+
+/* ===== Botão adicionar produto ===== */
+.btn-upload-produto {}
 
 .btn-add-produto {
   display: inline-flex;
@@ -461,27 +545,17 @@
   border: none;
   white-space: nowrap;
 }
-
 .btn-add-produto:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(255, 149, 0, 0.4);
 }
-
 .btn-add-produto:active {
   transform: translateY(0);
   box-shadow: 0 3px 8px rgba(255, 149, 0, 0.25);
 }
 
-/* Loader */
-.spinner-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  gap: 12px;
-}
-
+/* ===== Loader ===== */
+.spinner-wrapper,
 .spinner-cent {
   display: flex;
   flex-direction: column;
@@ -497,39 +571,119 @@
   border-top-color: #fed5aa;
   animation: spin 0.9s linear infinite;
 }
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
 .loading-text {
   color: #ffffff;
   font-size: 16px;
 }
 
-/* Responsividade */
-@media (max-width: 720px) {
-  .profile-container {
-    width: calc(100% - 32px);
-    padding: 16px;
-    max-height: calc(100vh - 32px);
-  }
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-.product-img {
-  width: 100%;
-  height: 220px;
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-container h2 {
+  margin: 0;
+  color: black;
+}
+
+.modal-container label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 18px;
+  color: #333;
+  flex: 1 1 calc(50% - 16px);
+  min-width: 250px;
+  padding: 10px;
+}
+
+.modal-container input {
+  flex: 1;
+  max-width: 250px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  color: black;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 12px;
+}
+.modal-buttons button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+.modal-buttons button:first-child {
+  background: #f3f3f3;
+}
+.modal-buttons button:last-child {
+  background: #fed5aa;
+}
+
+/* ===== Botão file (imagem de perfil) ===== */
+.file-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #fed5aa, #fbbf77);
+  color: #4a3a28;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+.file-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #fbbf77, #f9a94c);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.18);
+}
+.file-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+}
+
+/* Preview da imagem */
+.preview-container {
+  display: flex;
+  justify-content: center;
+}
+.preview-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #fed5aa;
 }
 
-  @media (max-width: 720px) {
-  .product-header {
-    height: 160px;
-  }
-}
-}
-
-/* Paginação */
+/* ===== Paginação ===== */
 .pagination-controls {
   display: flex;
   justify-content: center;
@@ -550,12 +704,10 @@
   transition: all 0.25s ease;
   box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
 }
-
 .btn-pagination:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(255, 149, 0, 0.4);
 }
-
 .btn-pagination:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -569,7 +721,28 @@
   text-align: center;
 }
 
+/* ===== Responsividade ===== */
 @media (max-width: 720px) {
+  .profile-container {
+    width: calc(100% - 32px);
+    padding: 16px;
+    max-height: calc(100vh - 32px);
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+  }
+
+  .product-header {
+    height: 160px;
+  }
+
   .pagination-controls {
     gap: 8px;
     margin-top: 24px;
@@ -587,6 +760,7 @@
 }
 </style>
 
+
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import  apiController  from "../controller/api"
@@ -597,6 +771,11 @@ const usuario = ref(null)
 const imagemBase64 = ref('')
 const modalAberto = ref(false)
 const isCarregando = ref(true)
+const modalImagemAberto = ref(false);
+const preview = ref(null);
+const imagemSelecionada = ref(null);
+const fileInput = ref(null);
+
 
 const tokenLocal = localStorage.getItem("token") || ""
 const token = ref(tokenLocal)
@@ -655,6 +834,55 @@ const produtoSrc = (imagem) => {
 
   return null
 }
+
+const abrirModalImagem = () => {
+  modalImagemAberto.value = true;
+};
+
+const fecharModalImagem = () => {
+  modalImagemAberto.value = false;
+  preview.value = null;
+  imagemSelecionada.value = null;
+};
+
+const selecionarImagem = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  imagemSelecionada.value = file;
+  preview.value = URL.createObjectURL(file);
+};
+
+const salvarImagem = async () => {
+  if (!imagemSelecionada.value) return;
+
+  const formData = new FormData();
+  formData.append("imagem", imagemSelecionada.value);
+
+  try {
+    const headers = {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    };
+
+    await apiController.post(
+      `usuarioImagem/${usuario.value.id}`,
+      formData,
+      { headers }
+    );
+
+    // Atualizar imagem no perfil sem reload
+    const reader = new FileReader();
+    reader.onload = () => {
+      imagemBase64.value = reader.result;
+    };
+    reader.readAsDataURL(imagemSelecionada.value);
+
+    fecharModalImagem();
+  } catch (error) {
+    console.error("Erro ao enviar imagem:", error);
+    alert("Erro ao atualizar a imagem.");
+  }
+};
 
 onMounted(async () => {
      console.log("onMounted foi chamado!")
