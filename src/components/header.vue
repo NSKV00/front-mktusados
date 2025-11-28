@@ -101,7 +101,7 @@ onMounted(async () => {
       signal: controller.signal
     })
 
-    imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '')
+    imagemBase64.value = img.data.imagem
     
     clearTimeout(timeoutId)
   } catch (error: any) {
