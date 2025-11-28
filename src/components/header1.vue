@@ -46,7 +46,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../controller/api'
 import { jwtDecode } from 'jwt-decode'
-import emitter from '../utils/emitter'
+import  emitter  from '../utils/emitter'
 
 const router = useRouter()
 const drawer = ref(false)
@@ -91,9 +91,8 @@ onMounted(async () => {
 
     const user = await api.get("usuarios", {
       params: { id: usuario.value.id },
-      headers: { Authorization: `Bearer ${tokenLocal}` },
       signal: controller.signal
-    });
+    })
 
     usuario.value = user.data[0]
 
@@ -186,7 +185,7 @@ const emitUpdate = () => {
 }
 
 .Logo {
-  width: var(--logo-size-mobile);
+  width: var(--logo-size-desktop);
   height: auto;
 }
 

@@ -17,12 +17,13 @@
     
    
     <Carrinho
-      v-model:aberto="carrinhoDrawer"
-      :carrinho="carrinho"
-      :produtos="products"
-      @remover="removerCarrinho"
-      @finalizar="() => console.log('Compra finalizada!')"
-    />
+  :aberto="carrinhoDrawer"
+  :carrinho="carrinho"
+  :produtos="products"
+  @update:aberto="carrinhoDrawer = $event"
+  @remover="removerItem"
+  @carregar-carrinho="carregarCarrinhoEProdutos"
+/>
 
    
     <section class="products">
@@ -36,14 +37,26 @@
             md="4"
             lg="3"
           >
-            <v-card class="product-card" @click="goToDetails(product)">
-              <v-img :src="product.img" height="180px" />
-              <v-card-text>
-                <h3>Nome:{{ product.nome }}</h3>
-                <p class="price">R$ {{ product.valor }}</p>
-                <p class="categoria">categoria: {{ product.categoria }}</p>
-              </v-card-text>
-            </v-card>
+            <v-card class="product-card">
+  <v-img :src="product.img" height="180px" @click="goToDetails(product)" />
+
+  <v-card-text @click="goToDetails(product)">
+    <h3>Nome: {{ product.nome }}</h3>
+    <p class="price">R$ {{ product.valor }}</p>
+    <p class="categoria">categoria: {{ product.categoria }}</p>
+    <p class="quantidade">Quantidade: {{ product.quantidade }}</p>
+  </v-card-text>
+
+  <v-card-actions>
+    <v-btn 
+      color="deep-purple-accent-4"
+      block
+      @click.stop="adicionarAoCarrinho(product)"
+    >
+      Adicionar ao Carrinho ({{ quantidade || 1 }})
+    </v-btn>
+  </v-card-actions>
+</v-card>
           </v-col>
         </v-row>
       </v-container>
@@ -55,13 +68,16 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import apiController from "../controller/api";
+import { toast } from 'vue3-toastify'
 import Carrinho from "../components/carrinho.vue"; 
+
 
 
 interface Product {
   id: number;
   nome: string;
   description: string;
+  quantidade: number;
   categoria: string;
   valor: number;
   img: string;
@@ -75,40 +91,81 @@ interface CarrinhoItem {
 }
 
 const router = useRouter();
-const usuarioId = 1;
 const carrinhoDrawer = ref(false);
-
 const products = ref<Product[]>([]);
 const carrinho = ref<CarrinhoItem[]>([]);
+const quantidade = ref(1);
+const usuarioId = (() => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  return Number(payload.id);
+})();
 
-const apiProduto = "/produto";
-const apiCarrinho = "/itemCarrinho";
 
 const headers = {
   Authorization:
-    `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZXJuYXJkb3JhYnVza2U2N0BnbWFpbC5jb20iLCJpZCI6IjEzIiwibm9tZSI6IkJlcm5hcmRvIFJhYnVza2UiLCJhZG1pbiI6IkZhbHNlIiwibmJmIjoxNzYzNTA2MTkwLCJleHAiOjE3NjM1MTMzOTAsImlhdCI6MTc2MzUwNjE5MH0.5b3O_0BkVCfOZBBE4iGLFxGAPESTucVSqfr0O2Q9fgI`,
+    `Bearer ${localStorage.getItem('token')}`,
 };
 
+async function adicionarAoCarrinho(produto: Product) {
+  if (!produto) return;
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error("Você precisa estar logado para adicionar itens ao carrinho.");
+      return;
+    }
+
+    
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const usuarioId = Number(payload.id);
+
+    if (!usuarioId) {
+      toast.error("Usuário inválido. Faça login novamente.");
+      return;
+    }
+
+    await apiController.post("/itemCarrinho",
+      {
+        UsuarioId: usuarioId,
+        ProdutoId: produto.id,
+        Qtd: 1,
+      },
+      { 
+        headers: { Authorization: `Bearer ${token}` } 
+      }
+    );
+    await carregarCarrinhoEProdutos();
+    toast.success("Item adicionado ao carrinho com sucesso!");
+
+  } catch (err: any) {
+    console.error("Erro ao adicionar ao carrinho:", err.response?.data || err);
+    toast.error(err.response?.data?.message || "Erro ao adicionar ao carrinho");
+  }
+}
 
 async function carregarCarrinhoEProdutos() {
   try {
-    const resProdutos = await apiController.get(apiProduto, { headers });
+    const resProdutos = await apiController.get("/produto", { headers });
     products.value = resProdutos.data;
 
-    const resCarrinho = await apiController.get(apiCarrinho, {
+    const resCarrinho = await apiController.get("/itemcarrinho", {
       params: { usuarioId },
       headers,
     });
     carrinho.value = resCarrinho.data;
+
   } catch (err) {
     console.error("Erro ao carregar dados:", err);
   }
 }
-async function removerCarrinho(index: number) {
+async function removerItem(index: number) {
   const item = carrinho.value[index];
   if (!item) return;
   try {
-    await apiController.delete(`${apiCarrinho}/${item.id}`, { headers });
+    await apiController.delete(`/itemcarrinho/${item.id}`, { headers });
     carrinho.value.splice(index, 1);
   } catch (err) {
     console.error("Erro ao remover item:", err);
@@ -140,6 +197,13 @@ onMounted(() => carregarCarrinhoEProdutos());
   top: 15px;   
   right: 20px;
   z-index: 999;
+}
+.carrinho-drawer {
+  position: fixed ;
+  right: 0 ;
+  top: 0;
+  height: 100vh;
+  z-index: 9999 ;
 }
 .header {
   position: relative;
@@ -174,7 +238,7 @@ onMounted(() => carregarCarrinhoEProdutos());
   background-color: #ffffff;
   color: #000;
   box-shadow: 0 8px 20px #00000022;
-  height: 340px;
+  height: 400px;
 }
 .product-card:hover {
   transform: translateY(-5px);
@@ -182,7 +246,7 @@ onMounted(() => carregarCarrinhoEProdutos());
 }
 .price {
   font-size: 1.2rem;
-  color: #fcca00;
+  color: #000000;
   font-weight: 600;
   margin-top: 0.5rem;
 }

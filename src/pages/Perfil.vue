@@ -451,6 +451,7 @@ const usuario = ref(null)
 const imagemBase64 = ref('')
 const modalAberto = ref(false)
 const isCarregando = ref(true)
+const token = localStorage.getItem('authToken');
 
 
 const form = ref({
@@ -465,6 +466,21 @@ const detectarTipoImagem = (base64) => {
   if (base64.startsWith('/9j/')) return 'image/jpeg'
   if (base64.startsWith('iVBOR')) return 'image/png'
   return 'image/png'
+}
+function decodeJWT(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64).split('').map(c => 
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Erro ao decodificar token:', e);
+    return null;
+  }
 }
 
 const fotoSrc = computed(() => {
@@ -512,7 +528,7 @@ onMounted(async () => {
 
     isCarregando.value = true
     const token = localStorage.getItem("token")
-    const tokenData = token ? jwtDecode(token) : null
+    const tokenData = token ? decodeJWT(token) : null;
     
     if (!token || !tokenData) {
       console.error("Token não encontrado ou inválido")
