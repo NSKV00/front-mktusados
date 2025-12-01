@@ -34,27 +34,31 @@
             <v-col cols="12" md="6" class="info-section">
               <div v-if="produto" class="info-content">
                 <p class="product-price">R$ {{ produto.valor.toFixed(2).replace('.', ',') }}</p>
+                <p class="product-desconto">R$ {{ produto.desconto.toFixed(1).replace('.', ',') }}</p>
                 <p class="product-description">{{ produto.descricao || 'Descrição não disponível.' }}</p>
                 <div class="product-category"><strong>Categoria:</strong> {{ categoriaNome || 'Não especificada' }}</div>
+                <p class="product-estoque">Estoque: {{ produto.estoque || 'Não especificado' }}</p>
                 <div class="product-avaliacao">
                 <strong>Avaliação:</strong>
                 <span v-for="i in 5" :key="i">
-                <v-icon small color="yellow" v-if="i <= Math.round(mediaAvaliacao)">mdi-star</v-icon>
+                <v-icon small color="yellow" v-if="i <= Math.round(produto.avaliacao)">mdi-star</v-icon>
                 <v-icon small color="grey" v-else>mdi-star-outline</v-icon>
                 </span>
-                ({{ mediaAvaliacao.toFixed(1) }})
+                ({{ produto.avaliacao }})
                 </div>
+                
 
-                <v-text-field
-                  v-model.number="quantidade"
-                  label="Quantidade"
-                  type="number"
-                  min="1"
-                  variant="outlined"
-                  density="compact"
-                  class="mt-4"
-                  style="max-width: 120px;"
-                ></v-text-field>
+                <div class="product-quantidade">
+                  <strong>Quantidade:</strong>
+                  <v-text-field
+                    v-model.number="quantidade"
+                    type="number"
+                    min="1"
+                    variant="outlined"
+                    density="compact"
+                    style="max-width: 100px; margin-left: 10px;"
+                  ></v-text-field>
+                </div>
               </div>
 
               <div class="button-group">
@@ -137,7 +141,7 @@ onMounted(async () => {
   } catch (err) {
     console.error("Erro ao carregar categoria:", err);
   }
-  
+
 });
 
     async function carregarAvaliacao() {
@@ -157,29 +161,43 @@ onMounted(() => {
   carregarAvaliacao();
 });
 async function adicionarAoCarrinho() {
-  
   if (!produto.value) return;
-  if (!token) {
-    toast.error("Você precisa estar logado");
+
+  if (quantidade.value < 1) { 
+    toast.error("A quantidade deve ser pelo menos 1.");
     return;
   }
-  if (quantidade.value < 1) { toast.error("A quantidade deve ser pelo menos 1."); return; }
 
   try {
-    
- if (!usuarioId) {
-    toast.error("Usuário inválido. Faça login novamente.");
-    return;
-  }
-  
-  await apiController.post("/itemCarrinho", {
-    UsuarioId: Number(usuarioId),
-    ProdutoId: produto.value.id,
-    Qtd: quantidade.value
-  }, { headers: { Authorization: `Bearer ${token}` }});
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error("Você precisa estar logado para adicionar itens ao carrinho.");
+      return;
+    }
+
+   
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const usuarioId = Number(payload.id);
+
+    if (!usuarioId) {
+      toast.error("Usuário inválido. Faça login novamente.");
+      return;
+    }
+
+    await apiController.post("/itemCarrinho",
+      {
+        UsuarioId: usuarioId,
+        ProdutoId: produto.value.id,
+        Qtd: quantidade.value 
+      },
+      { 
+        headers: { Authorization: `Bearer ${token}` } 
+      }
+    );
 
     showToast.value = true;
     quantidade.value = 1;
+
   } catch (err: any) {
     console.error("Erro ao adicionar ao carrinho:", err.response?.data || err);
     toast.error(err.response?.data?.message || "Erro ao adicionar ao carrinho");
@@ -213,7 +231,7 @@ async function adicionarAoCarrinho() {
   box-shadow: 0 15px 35px rgba(0,0,0,0.12);
 }
 
-/* Seção de imagens */
+
 .image-section {
   display: flex;
   flex-direction: column;
@@ -224,7 +242,7 @@ async function adicionarAoCarrinho() {
 .product-title {
   font-size: 28px;
   font-weight: 900;
-  color: #43119b;
+  color: #010101;
   margin-bottom: 0.8rem;
   text-align: center;
 }
@@ -238,7 +256,6 @@ async function adicionarAoCarrinho() {
   object-fit: contain;
 }
 
-/* Miniaturas */
 .miniaturas {
   margin-top: 1rem;
   display: flex;
@@ -261,25 +278,29 @@ async function adicionarAoCarrinho() {
   border-color: #43119b;
   box-shadow: 0 0 12px #6b2dff;
 }
-
-/* Informações do produto */
 .info-section {
   display: flex;
   flex-direction: column;
-  gap: 1.8rem;
+  gap: 10rem;
   padding: 0 1rem;
 }
-
 .product-price {
-  font-size: 3rem;
+  font-size: 2.6rem;
   font-weight: 900;
   color: #010101;
   margin-bottom: 0.8rem;
   text-align: justify;
 }
-
+.product-desconto {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #d32f2f;
+  margin-bottom: 0.8rem;
+  text-align: justify;
+  text-decoration: line-through;
+}
 .product-description {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #444;
   line-height: 1.6;
   background-color: #fafafa;
@@ -287,16 +308,26 @@ async function adicionarAoCarrinho() {
   border-radius: 14px;
   border: 1px solid #eee;
   text-align: justify;
+  gap: 1rem;
 }
 
 .product-category {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #555;
   font-weight: 500;
   text-align: justify;
+  gap: 1rem;
+}
+.product-estoque {
+  font-size: 0.9rem;
+  color: #555;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  text-align: justify;
+  gap: 1rem;
 }
 .product-avaliacao {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #555;
   font-weight: 500;
   margin-top: 0.5rem;
@@ -304,12 +335,26 @@ async function adicionarAoCarrinho() {
   align-items: center;
   gap: 0.3rem;
 }
-
+.product-avaliacao i {
+  vertical-align: middle;
+  margin-right: 2px;
+}
+.product-avaliacao span {
+  vertical-align: middle;
+}
+.product-quantidade{
+  font-size: 0.9rem;
+  color: #000000;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  text-align: justify;
+  gap: 1rem;
+}
 .button-group {
   display: flex;
   justify-content: flex-start;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 0.9rem;
+  margin-top: 1rem;
 }
 
 .btnAdd {
@@ -350,4 +395,60 @@ async function adicionarAoCarrinho() {
   box-shadow: 0 6px 15px rgba(0,0,0,0.15);
 }
 
+@media (max-width: 960px) {
+  .detalhes-card {
+    padding: 1.5rem;
+  }
+  .info-section {
+    gap: 0.1rem;
+    padding: 0;
+  }
+  .product-price {
+    font-size: 2rem;
+  }
+  .product-description {
+    font-size: 0.8rem;
+  }
+  .product-category {
+    font-size: 0.8rem;
+    padding-left: 16px;
+  }
+  .product-avaliacao {
+    font-size: 0.8rem;
+    padding-left: 16px;
+  }
+  .product-quantidade {
+    font-size: 0.8rem;
+    padding-top: 8px;
+    padding-left: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .detalhes-card {
+    padding: 1rem;
+  }
+  .product-title {
+    font-size: 22px;
+    padding-bottom: 20px;
+  }
+  .product-price {
+    font-size: 2rem;
+    padding-left: 24px;
+    padding-bottom: 8px;
+  }
+  .button-group {
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 2rem;
+  }
+  .image-section {
+    margin-bottom: 2rem;
+    padding-top: 36px;
+  }
+  .product-description {
+    font-size: 0.8rem;
+    padding: 1rem;
+    padding-left: 24px;
+  }
+}
 </style>

@@ -83,6 +83,13 @@
           R$ {{ totalCarrinho.toFixed(2).replace('.', ',') }}
         </v-col>
       </v-row>
+      <v-btn
+        class="mt-3"
+        color="primary"
+        block
+        :disabled="itensComDetalhes.length === 0"
+        @click="$emit('finalizar')"
+      >Finalizar Compra</v-btn>
     </div>
   </v-navigation-drawer>
 </template>
@@ -176,6 +183,10 @@ function removerItem(itemId: number) {
   }
 }
 
+function finalizarCompra() {
+  emit("finalizar");
+  
+}
 
 </script>
 
@@ -201,7 +212,7 @@ function removerItem(itemId: number) {
   color: white;
 }
 .item-image-border {
-  border: 1px solid #313131;
+  border: 1px solid #0c0c0c;
   border-radius: 4px;
 }
 .carrinho-item {
@@ -210,19 +221,26 @@ function removerItem(itemId: number) {
 .item-nome {
   white-space: normal;
   line-height: 1.3;
+  color:#ff8801;
+  font-weight: 700;
+  text-align: justify;
 }
 .item-info {
-  color: #ffffff;
-  font-weight: 500;
+  display: block;
+  color: #ff8801;
+  font-weight: 700;
+  text-align: justify;
 }
 .item-subtotal {
   display: block;
-  color: #43119b;
+  color: #ff8801;
   font-weight: 700;
+  text-align: justify;
 }
 .total-summary {
   padding: 8px 0;
   border-top: 2px solid #d3d3d3;
   background-color: #ffffff;
 }
+
 </style>
