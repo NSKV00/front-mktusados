@@ -10,20 +10,6 @@
 
     <v-spacer></v-spacer>
 
-    <v-text-field
-      v-model="search"
-      variant="solo-filled"
-      flat
-      hide-details
-      density="comfortable"
-      placeholder="Buscar produtos..."
-      prepend-inner-icon="mdi-magnify"
-      @input="emitUpdate"
-      class="search-input"
-    />
-
-    <v-spacer></v-spacer>
-
     <header class="profile-header">
       <div class="avatar-wrapper" @click="irPerfil" style="cursor: pointer;">
         <img v-if="fotoSrc" :src="fotoSrc" alt="avatar" class="avatar-img" />
