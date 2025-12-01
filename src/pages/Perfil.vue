@@ -359,7 +359,7 @@ const produtosVisiveis = computed(() => {
     transform: scale(1.05);
   }
 
-  @midia (max-width: 375px) {
+  @media (max-width: 375px) {
     .config-btn {
       display: inline-flex;
       align-items: center;
