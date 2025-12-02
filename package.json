@@ -20,6 +20,7 @@
     "pinia": "^3.0.4",
     "vite-plugin-vuetify": "^2.1.2",
     "vue": "^3.5.13",
+    "vue-select": "4.0.0-beta.2",
     "vue-router": "^4.5.1",
     "vue-the-mask": "^0.11.1",
     "vue3-google-login": "^2.0.34",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
+    "@types/vue-select": "^3.16.8",
     "@types/vue-the-mask": "^0.11.5",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
