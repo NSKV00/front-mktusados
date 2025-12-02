@@ -1,9 +1,11 @@
 <template>
   <v-app class="app">
-    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage" />
+    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isDetalhesProdutos || isLoginPage" />
     <v-main class="main-content">
       <router-view />
     </v-main>
+
+    
     <app-footer v-if="isHomePage" />
   </v-app>
 </template>
@@ -15,7 +17,10 @@ import AppFooter from './components/footer.vue'
 import AppHeader from './components/header.vue'
 
 const route = useRoute()
+const isLoginPage = computed(() => route.path === '/login')
 const isHomePage = computed(() => route.path === '/')
+const isDetalhesProduto = computed(() => route.path.startsWith('/produtos/'))
+const isDetalhesProdutos = computed(() => isHomePage.value || isDetalhesProduto.value)
 const isPerfilPage = computed(() => route.path === '/perfil')
 const isEnderecoPage = computed(() => route.path === '/enderecos')
 const isProdutoPage = computed(() => route.path === '/produtoCriar')
@@ -32,5 +37,6 @@ const isProdutoPage = computed(() => route.path === '/produtoCriar')
 
 .main-content {
   padding: 0 !important;
+  background-color: #fff;
 }
 </style>

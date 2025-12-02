@@ -3,11 +3,23 @@
     <v-app-bar-nav-icon @click="drawer = !drawer" class="me-2" />
 
     <div class="logo">
-      <router-link to="/" aria-label="Home">
-        <img class="Logo" src="../assets/logo.png" alt="Logo" />
-      </router-link>
+      <img class="Logo" src="../assets/logo.png" alt="Logo" />
     </div>
-    
+
+    <v-spacer></v-spacer>
+
+    <v-text-field
+      v-model="search"
+      variant="solo-filled"
+      flat
+      hide-details
+      density="comfortable"
+      placeholder="Buscar produtos..."
+      prepend-inner-icon="mdi-magnify"
+      @input="emitUpdate"
+      class="search-input"
+    />
+
     <v-spacer></v-spacer>
 
     <header class="profile-header">
@@ -30,25 +42,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { jwtDecode } from 'jwt-decode'
 import api from '../controller/api'
-import emitter from '../utils/emitter'
+import { jwtDecode } from 'jwt-decode'
+import  emitter  from '../utils/emitter'
 
 const router = useRouter()
-const isCarregando = ref(true)
-const search = ref('')
-const usuario = ref<any>({ nome: '' })
-const imagemBase64 = ref('')
-
+const drawer = ref(false)
 const tokenLocal = localStorage.getItem('token')
+const usuario = ref(tokenLocal ? jwtDecode(tokenLocal) as any : { nome: '' })
+const imagemBase64 = ref('')
+const search = ref('')
+const isCarregando = ref(true)
 
-const isValidToken = (token: string): boolean => {
-  if (!token || typeof token !== 'string') return false
-  const parts = token.split('.')
-  return parts.length === 3 && parts.every(part => part && part.length > 0)
-}
+const emit = defineEmits<{
+  (e: 'update', filters: {
+    search: string
+  }): void
+}>()
+
+const irPerfil = () => router.push('/perfil')
 
 const detectarTipoImagem = (base64: any) => {
   if (base64.startsWith('UklG')) return 'image/webp'
@@ -64,26 +78,21 @@ const fotoSrc = computed(() => {
   return `data:${tipo};base64,${cleanedBase64}`
 })
 
-const irPerfil = () => router.push('/perfil')
-
 onMounted(async () => {
-  if (!tokenLocal || !isValidToken(tokenLocal)) {
+  // Verifica se há token antes de fazer requisições
+  if (!tokenLocal) {
     isCarregando.value = false
     return
   }
 
   try {
-    const decoded: any = jwtDecode(tokenLocal)
-    usuario.value = decoded
-
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 segundos timeout
 
     const user = await api.get("usuarios", {
       params: { id: usuario.value.id },
-      headers: { Authorization: `Bearer ${tokenLocal}` },
       signal: controller.signal
-    });
+    })
 
     usuario.value = user.data[0]
 
@@ -95,6 +104,7 @@ onMounted(async () => {
     
     clearTimeout(timeoutId)
   } catch (error: any) {
+    // Silencia erros de conexão se for abort ou timeout
     if (error.code !== 'ECONNABORTED') {
       console.error("Erro ao carregar header:", error)
     }
@@ -102,6 +112,7 @@ onMounted(async () => {
     isCarregando.value = false
   }
 });
+
 
 const emitUpdate = () => {
   emitter.emit('applyFilters', {
@@ -152,6 +163,7 @@ const emitUpdate = () => {
 }
 
 .header {
+
   position: relative !important;
 }
 
@@ -173,7 +185,7 @@ const emitUpdate = () => {
 }
 
 .Logo {
-  width: var(--logo-size-mobile);
+  width: var(--logo-size-desktop);
   height: auto;
 }
 
