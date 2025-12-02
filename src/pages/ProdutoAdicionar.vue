@@ -80,25 +80,46 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "CreateListingPage",
-  data() {
-    return {
-      form: {
-        titulo: "",
-        descricao: "",
-        preco: ""
-      }
-    };
-  },
-  methods: {
-    submitForm() {
-      console.log("Anúncio enviado:", this.form);
-      alert("Anúncio criado com sucesso!");
-    }
+<script setup lang="ts">
+import { ref } from 'vue'
+import { jwtDecode } from 'jwt-decode'
+import { decrypt } from '../utils/crypto'
+
+const isValidToken = (token: string): boolean => {
+  if (!token || typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every(part => part && part.length > 0)
+}
+
+const tokenLocal = localStorage.getItem("token")
+const token = ref(tokenLocal)
+
+const user = ref(null)
+if (tokenLocal && isValidToken(tokenLocal)) {
+  try {
+    user.value = jwtDecode(tokenLocal)
+  } catch (error) {
+    console.error('Erro ao decodificar token:', error)
+    user.value = null
   }
-};
+}
+
+const form = ref({
+  titulo: "",
+  descricao: "",
+  preco: "",
+  localizacao: "",
+  categoria: ""
+})
+
+const submitForm = async () => {
+  if (!user.value) {
+    alert('Você precisa estar autenticado')
+    return
+  }
+  console.log("Anúncio enviado:", this.form)
+  alert("Anúncio criado com sucesso!")
+}
 </script>
 
 <style scoped>

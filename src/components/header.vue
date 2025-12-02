@@ -7,7 +7,7 @@
         <img class="Logo" src="../assets/logo.png" alt="Logo" />
       </router-link>
     </div>
-
+    
     <v-spacer></v-spacer>
 
     <header class="profile-header">
@@ -30,27 +30,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../controller/api'
 import { jwtDecode } from 'jwt-decode'
+import api from '../controller/api'
 import emitter from '../utils/emitter'
 
 const router = useRouter()
-const drawer = ref(false)
-const tokenLocal = localStorage.getItem('token')
-const usuario = ref(tokenLocal ? jwtDecode(tokenLocal) as any : { nome: '' })
-const imagemBase64 = ref('')
-const search = ref('')
 const isCarregando = ref(true)
+const search = ref('')
+const usuario = ref<any>({ nome: '' })
+const imagemBase64 = ref('')
 
-const emit = defineEmits<{
-  (e: 'update', filters: {
-    search: string
-  }): void
-}>()
+const tokenLocal = localStorage.getItem('token')
 
-const irPerfil = () => router.push('/perfil')
+const isValidToken = (token: string): boolean => {
+  if (!token || typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every(part => part && part.length > 0)
+}
 
 const detectarTipoImagem = (base64: any) => {
   if (base64.startsWith('UklG')) return 'image/webp'
@@ -66,13 +64,18 @@ const fotoSrc = computed(() => {
   return `data:${tipo};base64,${cleanedBase64}`
 })
 
+const irPerfil = () => router.push('/perfil')
+
 onMounted(async () => {
-  if (!tokenLocal) {
+  if (!tokenLocal || !isValidToken(tokenLocal)) {
     isCarregando.value = false
     return
   }
 
   try {
+    const decoded: any = jwtDecode(tokenLocal)
+    usuario.value = decoded
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
@@ -87,7 +90,7 @@ onMounted(async () => {
       signal: controller.signal
     })
 
-    imagemBase64.value = img.data.imagem
+    imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '')
     
     clearTimeout(timeoutId)
   } catch (error: any) {
@@ -98,7 +101,6 @@ onMounted(async () => {
     isCarregando.value = false
   }
 });
-
 
 const emitUpdate = () => {
   emitter.emit('applyFilters', {

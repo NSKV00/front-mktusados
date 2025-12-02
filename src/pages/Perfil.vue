@@ -1,6 +1,12 @@
 <template>
   <div v-if="!isCarregando" class="profile-page">
     <div v-if="usuario" class="profile-container">
+      <button class="config-btn" aria-label="Configurações" @click="abrirModal">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.213-.75-.153-1.075.124-.073.044-.146.087-.22.127-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a4.997 4.997 0 0 0-.22-.127c-.325-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.293-.241.438-.613.431-.992a6.758 6.758 0 0 0 0-.255c.007-.378-.138-.75-.43-.99l-1.005-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.213.75.153 1.075-.124.072-.044.146-.087.22-.127.332-.184.582-.496.644-.87l.213-1.28Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>
+      </button>
 
       <header class="profile-header">
         <div class="avatar-wrapper">
@@ -21,26 +27,13 @@
           <p>{{ valor || '-' }}</p>
         </div>
       </section>
-
-      <button class="config-btn" aria-label="Configurações" @click="abrirModal">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-        </svg>
-      </button>
     </div>
 
     <div v-else class="loading">Carregando perfil...</div>
 
     <section class="products-list">
       <div>
-      <div class="products-header-2">
-        <h3 v-if="produtos.length > 0" class="products-title">Meus Produtos</h3>
-        <router-link to="/produtoCriar" class="btn-add-produto">
-          Novo Produto
-        </router-link>
-      </div>
+      <h3 v-if="produtos.length > 0" class="products-title">Meus Produtos</h3>
       <div class="products-grid">
 
       <div v-if="produtos.length === 0" class="no-products">
@@ -49,7 +42,7 @@
           <button class="btn-criar">Cadastrar Produto</button>
         </router-link>
       </div>
-        <div v-for="(produto, index) in produtosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
+        <div v-for="produto in produtos" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
           <div class="product-header">
             <span class="status-badge" :class="{ inativo: !produto.ativo }">
               {{ produto.ativo ? 'Ativo' : 'Inativo' }}
@@ -66,26 +59,6 @@
             <span class="product-date">{{ produto.data || '24/10/2024' }}</span>
           </div>
         </div>
-      </div>
-
-      <div v-if="produtos.length > 0" class="pagination-controls">
-        <button 
-          class="btn-pagination" 
-          @click="offset -= 16" 
-          :disabled="offset === 0"
-          aria-label="Produtos anteriores"
-        >
-          ‹ Anterior
-        </button>
-        <span class="pagination-info">{{ offset + 1 }} - {{ Math.min(offset + 16, produtos.length) }} de {{ produtos.length }}</span>
-        <button 
-          class="btn-pagination" 
-          @click="offset += 16" 
-          :disabled="offset + 16 >= produtos.length"
-          aria-label="Próximos produtos"
-        >
-          Próximo ›
-        </button>
       </div>
       </div>
     </section>
@@ -118,57 +91,67 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import  apiController  from "../controller/api"
-import { jwtDecode } from "jwt-decode"
+import apiController from '../controller/api'
+import { jwtDecode } from 'jwt-decode'
 
-const produtos = ref([])
-const usuario = ref(null)
-const imagemBase64 = ref('')
-const modalAberto = ref(false)
-const isCarregando = ref(true)
+const isValidToken = (token: string): boolean => {
+  if (!token || typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every(part => part && part.length > 0)
+}
 
-const tokenLocal = localStorage.getItem("token") || ""
+const tokenLocal = localStorage.getItem('token') || ''
 const token = ref(tokenLocal)
-const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
 
+const user = ref<any>(null)
+if (tokenLocal && isValidToken(tokenLocal)) {
+  try {
+    user.value = jwtDecode(tokenLocal)
+  } catch (error) {
+    console.error('Erro ao decodificar token:', error)
+    user.value = null
+  }
+}
+
+const produtos = ref<any[]>([])
+const usuario = ref<any>(null)
+const imagemBase64 = ref('')
+const offset = ref(0)
+const isCarregando = ref(true)
+const modalAberto = ref(false)
 
 const form = ref({
   nome: '',
   telefone: '',
   cpf: '',
-  idade: ''
+  idade: null
 })
 
 const fotoPadrao = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
 
-const detectarTipoImagem = (base64) => {
-  if (base64.startsWith('UklG')) return 'image/webp'
-  if (base64.startsWith('/9j/')) return 'image/jpeg'
-  if (base64.startsWith('iVBOR')) return 'image/png'
+const detectarTipoImagem = (base64: any) => {
+  if (base64?.startsWith('UklG')) return 'image/webp'
+  if (base64?.startsWith('/9j/')) return 'image/jpeg'
+  if (base64?.startsWith('iVBOR')) return 'image/png'
   return 'image/png'
 }
 
 const fotoSrc = computed(() => {
   const b = imagemBase64.value
 
-  if (!b || typeof b !== "string" || !b.trim()) {
-  return fotoPadrao
+  if (!b || typeof b !== 'string' || !b.trim()) {
+    return fotoPadrao
   }
-
-  if (!b || typeof b !== 'string') return null
-  const trimmed = b.trim()
-  if (trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('http') || trimmed.startsWith('/')) return trimmed
-  const tipo = detectarTipoImagem(trimmed)
-  return `data:${tipo};base64,${trimmed}`
+  const cleanedBase64 = b.replace(/[\r\n\s]+/g, '')
+  const tipo = detectarTipoImagem(cleanedBase64)
+  return `data:${tipo};base64,${cleanedBase64}`
 })
 
-const produtoSrc = (imagem) => {
-  if (!imagem) return null;
+const produtoSrc = (imagem: any) => {
+  if (!imagem) return null
 
-  // Se for base64 direto
   if (typeof imagem === 'string') {
     const trimmed = imagem.trim()
     if (trimmed.startsWith('/9j/') || trimmed.startsWith('iVBOR') || trimmed.startsWith('UklG')) {
@@ -177,7 +160,7 @@ const produtoSrc = (imagem) => {
     }
 
     if (trimmed.startsWith('data:')) return trimmed
-    return trimmed  // URL absoluta
+    return trimmed
   }
 
   if (typeof imagem === 'object') {
@@ -188,92 +171,86 @@ const produtoSrc = (imagem) => {
 }
 
 onMounted(async () => {
-     console.log("onMounted foi chamado!")
-
-  
-
   try {
-
-    console.log(user.value)
     isCarregando.value = true
     const headers = {
       Authorization: `Bearer ${token.value}`
-    };
+    }
+
+    if (!user.value) {
+      console.error('Usuário não autenticado')
+      isCarregando.value = false
+      return
+    }
 
     const [response, response2, response3] = await Promise.all([
-      apiController.get("produto", {
-        params: { usuarioId: user.value.id , skip:offset.value },
+      apiController.get('produto', {
+        params: { usuarioId: user.value.id, skip: offset.value },
         headers
       }),
-      apiController.get("usuarios", {
+      apiController.get('usuarios', {
         params: { id: user.value.id },
         headers
       }),
       apiController.get(`usuarioImagem/${user.value.id}`, { headers })
-    ]);
+    ])
 
     if (response2?.data) {
-      usuario.value = response2.data[0];
+      usuario.value = response2.data[0]
     }
 
     if (response?.data) {
-      produtos.value = response.data;
-    }
-    if (response3?.data) {
-      imagemBase64.value = response3.data.imagem;
+      produtos.value = response.data
     }
 
-    console.log("Produto SRC FINAL:", produtoSrc(produtos.value[0]?.img));
+    if (response3?.data) {
+      imagemBase64.value = response3.data.imagem
+    }
 
     form.value = {
-    nome: usuario.value.nome || '',
-    telefone: usuario.value.telefone || usuario.value.telefones || '',
-    cpf: usuario.value.cpf || '',
-    idade: usuario.value.idade || usuario.value.age || ''
+      nome: usuario.value?.nome || '',
+      telefone: usuario.value?.telefone || usuario.value?.telefones || '',
+      cpf: usuario.value?.cpf || '',
+      idade: usuario.value?.idade || usuario.value?.age || null
     }
 
     isCarregando.value = false
-
   } catch (error) {
-    console.error("Erro ao buscar produtos:", error)
-    isCarregando.value = true
+    console.error('Erro ao buscar produtos:', error)
+    isCarregando.value = false
   }
 })
 
+const abrirModal = () => (modalAberto.value = true)
+const fecharModal = () => (modalAberto.value = false)
 
-const abrirModal = () => modalAberto.value = true
-const fecharModal = () => modalAberto.value = false
-
-const salvarDados = async() => {
+const salvarDados = async () => {
   const inicio = { ...usuario.value }
-try {
-  const headers = {
+  try {
+    const headers = {
       Authorization: `Bearer ${token.value}`
-    };
-  console.log('Dados atualizados:', form.value)
-  usuario.value = { ...usuario.value, ...form.value }
-  await apiController.patch(
-    `usuarios/${usuario.value.id}`,
-    { ...form.value },
-    {
-      params: { id: usuario.value.id },
-      headers
     }
-  );
-
-fecharModal()
-} catch (error) {
-  console.error("Erro ao salvar dados do usuário")
-  form.value = {
-    nome: inicio.nome || '',
-    telefone: inicio.telefone || inicio.telefones || '',
-    cpf: inicio.cpf || '',
-    idade: inicio.idade || inicio.age || ''
+    console.log('Dados atualizados:', form.value)
+    usuario.value = { ...usuario.value, ...form.value }
+    await apiController.patch(
+      `usuarios/${usuario.value.id}`,
+      { ...form.value },
+      {
+        params: { id: usuario.value.id },
+        headers
+      }
+    )
+    fecharModal()
+  } catch (error) {
+    console.error('Erro ao salvar dados do usuário:', error)
+    form.value = {
+      nome: inicio.nome || '',
+      telefone: inicio.telefone || inicio.telefones || '',
+      cpf: inicio.cpf || '',
+      idade: inicio.idade || inicio.age || null
+    }
   }
 }
-}
-
-const offset = ref(0)
 
 const produtosVisiveis = computed(() => {
   return produtos.value.slice(offset.value, offset.value + 16)

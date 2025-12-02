@@ -13,6 +13,12 @@ import VueTheMask from 'vue-the-mask'
 import vue3GoogleLogin from 'vue3-google-login'
 import { jwtDecode } from "jwt-decode"
 
+const isValidToken = (token: string): boolean => {
+  if (!token || typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every(part => part && part.length > 0)
+}
+
 const vuetify = createVuetify({
   components,
   directives,
@@ -48,12 +54,20 @@ createApp(App)
 const token = localStorage.getItem("token");
 if (token) {
   try {
-    const payload: any = jwtDecode(token);
-    if (payload.exp * 1000 < Date.now()) {
+    if (!isValidToken(token)) {
+      console.warn("Token inválido encontrado, removendo...")
       localStorage.removeItem("token");
       localStorage.removeItem("usuario");
+    } else {
+      const payload: any = jwtDecode(token);
+      if (payload.exp * 1000 < Date.now()) {
+        console.warn("Token expirado, removendo...")
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+      }
     }
-  } catch {
+  } catch (error) {
+    console.error("Erro ao validar token no boot:", error)
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
   }

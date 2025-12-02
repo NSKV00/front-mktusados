@@ -69,6 +69,12 @@ const loading = ref(false)
 const googleLoading = ref(false)
 const form = ref()
 
+const isValidToken = (token: string): boolean => {
+  if (!token || typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every(part => part && part.length > 0)
+}
+
 const validateForm = (): boolean => {
   if (!email.value || !senha.value) {
     toast.error('Preencha e-mail e senha.')
@@ -88,7 +94,6 @@ const retrieveUsuario = async (token: string) => {
     })
 
     if (status === 200 && data) {
-      //localStorage.setItem('usuario', JSON.stringify(data))
       localStorage.setItem("usuario", encryptJSON(data))
     } else {
       toast.warn('Não foi possível recuperar os dados do usuário.')
@@ -113,6 +118,12 @@ const handleSubmit = async () => {
     if (status === 200 || status === 201) {
       toast.success('Login realizado com sucesso!')
       const token = data.token
+      
+      if (!isValidToken(token)) {
+        toast.error('Token recebido é inválido')
+        return
+      }
+
       localStorage.setItem("token", token)
 
       await retrieveUsuario(token)
@@ -153,9 +164,7 @@ const handleGoogleLogin = async () => {
       router.push('/')
     }
   } catch (error: any) {
-    const mensagem =
-      error.response?.data?.message || 'Erro ao realizar login com Google.'
-    toast.error(mensagem)
+    toast.error('Erro ao fazer login com Google')
     console.error(error)
   } finally {
     googleLoading.value = false
