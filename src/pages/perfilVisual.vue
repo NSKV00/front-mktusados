@@ -7,17 +7,12 @@
           <div class="ml-avatar">
             <img v-if="fotoSrc" :src="fotoSrc" alt="Avatar" />
             <div v-else class="ml-avatar-fallback">{{ usuario.nome ? usuario.nome.charAt(0).toUpperCase() : 'U' }}</div>
-            <button class="ml-edit-photo" @click="abrirModalImagem" aria-label="Alterar foto"> ✏️
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14" stroke="#1B1B1B" stroke-width="1.6" stroke-linecap="round"/><path d="M5 12h14" stroke="#1B1B1B" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </button>
           </div>
 
           <div class="ml-user-info">
             <h2 class="ml-name">{{ usuario.nome || '-' }}</h2>
             <p class="ml-email">{{ usuario.email || '-' }}</p>
           </div>
-
-          <button class="ml-edit-btn" @click="abrirModal">Editar perfil</button>
 
           <div class="ml-details">
             <div class="ml-detail">
@@ -40,45 +35,18 @@
         <section class="ml-products-header">
           <h1 class="products-title">Meus Produtos</h1>
           <div class="products-actions">
-            <router-link to="/produtoCriar" class="btn-add-produto">Adicionar produto</router-link>
           </div>
         </section>
 
-        <!-- Abas de Filtro -->
-        <div class="filter-tabs">
-          <button 
-            class="tab-button" 
-            :class="{ active: filtroAtivo === 'ativos' }"
-            @click="filtroAtivo = 'ativos'"
-          >
-            <span class="tab-badge active-badge">{{ produtosAtivos.length }}</span>
-            Ativos
-          </button>
-          <button 
-            class="tab-button" 
-            :class="{ active: filtroAtivo === 'inativos' }"
-            @click="filtroAtivo = 'inativos'"
-          >
-            <span class="tab-badge inactive-badge">{{ produtosInativos.length }}</span>
-            Inativos
-          </button>
-        </div>
-
         <section class="ml-products">
-          <!-- Empty State -->
-          <div v-if="filtroAtivo === 'ativos' && produtosFiltrados.length === 0" class="ml-empty">
-            <p>{{ filtroAtivo === 'ativos' && 'Nenhum produto ativo' }}</p>
-            <router-link to="/produtoCriar" class="btn-add-produto btn-add-large">Criar anúncio</router-link>
+          <div v-if="produtos.length === 0" class="ml-empty">
+            <p>Este Usuario Ainda Não Tem Anúncios.</p>
           </div>
 
-          <!-- Grid de Produtos -->
           <div class="products-grid">
-            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
+            <article v-for="(produto, index) in produtosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
               <div class="product-media">
                 <img :src="produtoSrc(produto.img)" alt="produto" class="product-img" />
-                <span :class="['status-badge', { inativo: !produto.ativo }]">
-                  {{ produto.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
               </div>
 
               <div class="product-content">
@@ -99,51 +67,15 @@
             </article>
           </div>
 
-          <!-- Paginação -->
-          <div v-if="produtosFiltrados.length > 0" class="pagination-controls">
-            <button class="btn-pagination" @click="offsetFiltro = Math.max(0, offsetFiltro - 12)" :disabled="offsetFiltro === 0" aria-label="Anterior">&lt;</button>
-            <span class="pagination-info">{{ offsetFiltro + 1 }} - {{ Math.min(offsetFiltro + 12, produtosFiltrados.length) }} de {{ produtosFiltrados.length }}</span>
-            <button class="btn-pagination" @click="offsetFiltro = Math.min(produtosFiltrados.length - 1, offsetFiltro + 12)" :disabled="offsetFiltro + 12 >= produtosFiltrados.length" aria-label="Próximo">&gt;</button>
+          <div v-if="produtos.length > 0" class="pagination-controls">
+            <button class="btn-pagination" @click="offset = Math.max(0, offset - 12)" :disabled="offset === 0" aria-label="Anterior">&lt;</button>
+            <span class="pagination-info">{{ offset + 1 }} - {{ Math.min(offset + 12, produtos.length) }} de {{ produtos.length }}</span>
+            <button class="btn-pagination" @click="offset = Math.min(produtos.length - 1, offset + 12)" :disabled="offset + 12 >= produtos.length" aria-label="Próximo">&gt;</button>
           </div>
         </section>
       </main>
     </div>
 
-    <!-- Modal: Editar usuário -->
-    <div v-if="modalAberto" class="ml-modal-backdrop" @click.self="fecharModal">
-      <div class="ml-modal">
-        <h3>Editar usuário</h3>
-        <form @submit.prevent="salvarDados" class="ml-form">
-          <label>Nome<input type="text" v-model="form.nome" /></label>
-          <label>Email<input type="email" v-model="form.email" /></label>
-          <label>Telefone<input type="text" v-model="form.telefone" /></label>
-          <label>CPF<input type="text" v-model="form.cpf" /></label>
-          <label>Idade<input type="number" v-model="form.idade" /></label>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="fecharModal">Cancelar</button>
-            <button type="submit" class="btn-primary">Salvar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal: Alterar imagem de perfil -->
-    <div v-if="modalImagemAberto" class="ml-modal-backdrop" @click.self="fecharModalImagem">
-      <div class="ml-modal">
-        <h3>Alterar imagem de perfil</h3>
-        <form @submit.prevent="salvarImagem" class="ml-form">
-          <input ref="fileInput" type="file" accept="image/*" @change="selecionarImagem" style="display:none" />
-          <button type="button" class="btn-secondary" @click="fileInput.click()">Escolher arquivo</button>
-          <div v-if="preview" class="preview-box">
-            <img :src="preview" alt="preview" />
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="fecharModalImagem">Cancelar</button>
-            <button type="submit" class="btn-primary">Salvar</button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
 
   <div v-else class="ml-loading">
@@ -237,12 +169,6 @@
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  transition: all 0.2s ease;
-}
-
-.ml-edit-photo:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translate(25%, 25%) scale(1.1);
 }
 
 .ml-user-info{
@@ -270,12 +196,6 @@
   cursor:pointer;
   font-weight:600;
   width:100%;
-  transition: all 0.2s ease;
-}
-
-.ml-edit-btn:hover{
-  background: var(--ml-yellow);
-  border-color: var(--ml-yellow);
 }
 
 .ml-details{
@@ -302,6 +222,7 @@
   display:flex;
   flex-direction:column;
   gap:18px;
+  min-width: 500px;;
 }
 
 /* Products header */
@@ -330,7 +251,7 @@
   justify-content:flex-end;
 }
 
-/* Add product button */
+/* Add product button (orange / market-like) */
 .btn-add-produto{
   display:inline-flex;
   align-items:center;
@@ -343,80 +264,11 @@
   text-decoration:none;
   border:none;
   box-shadow: 0 6px 18px rgba(255,152,0,0.15);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-add-produto:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255,152,0,0.25);
 }
 
 .btn-add-large{
   padding:12px 20px;
   font-size:16px;
-}
-
-/* ===== FILTER TABS ===== */
-.filter-tabs {
-  display: flex;
-  gap: 8px;
-  background: #fff;
-  padding: 8px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.tab-button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  background: #f3f4f6;
-  color: var(--ml-dark);
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.tab-button:hover {
-  background: #e5e7eb;
-}
-
-.tab-button.active {
-  background: var(--ml-yellow);
-  color: #000;
-  box-shadow: 0 4px 12px rgba(255, 210, 0, 0.2);
-}
-
-.tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  background: rgba(0, 0, 0, 0.1);
-  color: inherit;
-}
-
-.tab-badge.active-badge {
-  background: #16a34a;
-  color: white;
-}
-
-.tab-badge.inactive-badge {
-  background: #9ca3af;
-  color: white;
 }
 
 /* Products grid */
@@ -561,28 +413,82 @@
 
 /* Empty state */
 .ml-empty{
-  display:flex;
-  gap:16px;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  padding:32px;
-  background:#fac16c33;
-  border-radius:12px;
-  border:1px dashed rgba(136, 40, 2, 0.616);
-  min-width: 300px;
+  /* layout */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 28px;
+  box-sizing: border-box;
+  width: 100%;
   height: 240px;
-  animation: fadeIn 0.3s ease;
-}
-
-.ml-empty p{
-  margin:0;
-  font-size:18px;
-  font-weight:600;
+  background: linear-gradient(180deg, rgba(137,12,148,0.08), rgba(128, 97, 133, 0.459));
+  border: 1px dashed rgba(137,12,148,0.28);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(137,12,148,0.06);
   color: var(--ml-dark);
-  text-align:center;
+  text-align: center;
+  animation: fadeIn 300ms ease both;
+  transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
+.ml-empty::before{
+  content: "📭";
+  display: block;
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 6px 18px rgba(137,12,148,0.08));
+}
+
+/* texto principal */
+.ml-empty p{
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ml-dark);
+  text-transform: none;
+}
+
+/* se houver botão (usa a classe existente .btn-add-produto) */
+.ml-empty .btn-add-produto{
+  margin-top: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+}
+
+/* hover sutil no bloco vazio */
+.ml-empty:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(137,12,148,0.09);
+}
+
+/* responsividade */
+@media (max-width: 640px){
+  .ml-empty{
+    padding: 20px;
+  }
+  .ml-empty::before{
+    font-size: 36px;
+  }
+  .ml-empty p{
+    font-size: 15px;
+  }
+}
+@media (max-width: 420px){
+  .ml-empty{
+    padding: 16px;
+  }
+  .ml-empty::before{
+    font-size: 30px;
+  }
+  .ml-empty p{
+    font-size: 14px;
+  }
+}
 /* Pagination */
 .pagination-controls{
   display:flex;
@@ -599,13 +505,6 @@
   border-radius:8px;
   font-weight:700;
   cursor:pointer;
-  color: white;
-  transition: all 0.2s ease;
-}
-
-.btn-pagination:hover:not(:disabled){
-  background: #6b0d7f;
-  transform: translateY(-2px);
 }
 
 .btn-pagination:disabled{
@@ -627,7 +526,6 @@
   align-items:center;
   justify-content:center;
   z-index:2000;
-  animation: fadeIn 0.2s ease;
 }
 
 .ml-modal{
@@ -638,7 +536,6 @@
   border-radius:12px;
   box-shadow: 0 18px 50px rgba(15,23,42,0.2);
   color: black;
-  animation: slideUp 0.3s ease;
 }
 
 .ml-form{
@@ -658,19 +555,11 @@
 }
 
 .ml-form input[type="text"],
-.ml-form input[type="email"],
 .ml-form input[type="number"]{
   padding:8px 10px;
   border-radius:8px;
   border:1px solid rgba(0,0,0,0.08);
   color: black;
-  transition: all 0.2s ease;
-}
-
-.ml-form input:focus{
-  outline: none;
-  border-color: var(--ml-yellow);
-  box-shadow: 0 0 0 3px rgba(255, 210, 0, 0.1);
 }
 
 /* Modal buttons */
@@ -690,13 +579,6 @@
   border-radius:8px;
   font-weight:500;
   cursor:pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-primary:hover{
-  background: #ffca00;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 210, 0, 0.2);
 }
 
 .btn-secondary{
@@ -706,12 +588,6 @@
   border-radius:8px;
   font-weight:500;
   cursor:pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-secondary:hover{
-  background: #f3f4f6;
-  border-color: rgba(0,0,0,0.12);
 }
 
 /* Loading */
@@ -734,11 +610,11 @@
 
 .preview-box {
   width: 100%;
-  max-width: 300px;
-  max-height: 300px;
+  max-width: 300px;   /* largura máxima do preview */
+  max-height: 300px;  /* altura máxima do preview */
   margin: 16px auto;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 12px;  /* opcional, deixa arredondado */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -748,29 +624,11 @@
 .preview-box img {
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain;
+  object-fit: contain; /* mantém proporção e não corta a imagem */
   display: block;
 }
 
-@keyframes spin{ 
-  to { transform:rotate(360deg);} 
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { 
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+@keyframes spin{ to { transform:rotate(360deg);} }
 
 /* Responsiveness */
 @media (max-width: 980px){
@@ -780,51 +638,30 @@
   .ml-main{ order:1; }
   .products-title{ text-align:left; }
 }
-
-@media (max-width: 640px){
-  .filter-tabs {
-    gap: 6px;
-  }
-
-  .tab-button {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .tab-badge {
-    min-width: 20px;
-    height: 20px;
-    font-size: 11px;
-  }
-}
 </style>
 
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import apiController from "../controller/api"
+import  apiController  from "../controller/api"
+import { useRoute } from 'vue-router'
 import { jwtDecode } from "jwt-decode"
 import { toast } from 'vue3-toastify'
 
 const produtos = ref([])
 const usuario = ref(null)
 const imagemBase64 = ref('')
-const modalAberto = ref(false)
 const isCarregando = ref(true)
-const modalImagemAberto = ref(false)
-const preview = ref(null)
-const imagemSelecionada = ref(null)
-const fileInput = ref(null)
-const offset = ref(0)
-const offsetFiltro = ref(0)
-const filtroAtivo = ref('ativos') // 'ativos' ou 'inativos'
 
 const tokenLocal = localStorage.getItem("token") || ""
 const token = ref(tokenLocal)
 const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
 
+const route = useRoute()
+const usuarioId = ref(route.params.id) 
+
+
 const form = ref({
-  email: '',
   nome: '',
   telefone: '',
   cpf: '',
@@ -844,7 +681,7 @@ const fotoSrc = computed(() => {
   const b = imagemBase64.value
 
   if (!b || typeof b !== "string" || !b.trim()) {
-    return fotoPadrao
+  return fotoPadrao
   }
 
   if (!b || typeof b !== 'string') return null
@@ -856,8 +693,9 @@ const fotoSrc = computed(() => {
 })
 
 const produtoSrc = (imagem) => {
-  if (!imagem) return null
+  if (!imagem) return null;
 
+  // Se for base64 direto
   if (typeof imagem === 'string') {
     const trimmed = imagem.trim()
     if (trimmed.startsWith('/9j/') || trimmed.startsWith('iVBOR') || trimmed.startsWith('UklG')) {
@@ -866,7 +704,7 @@ const produtoSrc = (imagem) => {
     }
 
     if (trimmed.startsWith('data:')) return trimmed
-    return trimmed
+    return trimmed  // URL absoluta
   }
 
   if (typeof imagem === 'object') {
@@ -876,190 +714,63 @@ const produtoSrc = (imagem) => {
   return null
 }
 
-// ===== COMPUTED: FILTRAR PRODUTOS =====
-const produtosAtivos = computed(() => {
-  return produtos.value.filter(p => p.ativo === true)
-})
-
-const produtosInativos = computed(() => {
-  return produtos.value.filter(p => p.ativo === false)
-})
-
-const produtosFiltrados = computed(() => {
-  return filtroAtivo.value === 'ativos' ? produtosAtivos.value : produtosInativos.value
-})
-
-const produtosFiltradosVisiveis = computed(() => {
-  return produtosFiltrados.value.slice(offsetFiltro.value, offsetFiltro.value + 12)
-})
-
-const abrirModalImagem = () => {
-  modalImagemAberto.value = true
-}
-
-const fecharModalImagem = () => {
-  modalImagemAberto.value = false
-  preview.value = null
-  imagemSelecionada.value = null
-}
-
-const selecionarImagem = (event) => {
-  const file = event.target.files[0]
-
-  if (!file) {
-    alert('❌ Nenhum arquivo selecionado!')
-    return
-  }
-
-  if (!file.type.startsWith('image/')) {
-    alert('❌ Selecione apenas imagens (JPG, PNG, etc.)!')
-    event.target.value = ''
-    return
-  }
-
-  imagemSelecionada.value = file
-  preview.value = URL.createObjectURL(file)
-}
-
-const salvarImagem = async () => {
-  if (!imagemSelecionada.value) return
-
-  const formData = new FormData()
-  formData.append("imagem", imagemSelecionada.value)
-  formData.append("file", imagemSelecionada.value)
-
-  try {
-    const headers = {
-      Authorization: `Bearer ${token.value}`
-    }
-
-    await apiController.post(`usuarioImagem/${usuario.value.id}`, formData, {
-      headers,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity
-    })
-
-    toast.success("Imagem atualizada com sucesso!")
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      imagemBase64.value = reader.result.split(",")[1]
-    }
-    reader.readAsDataURL(imagemSelecionada.value)
-
-    fecharModalImagem()
-  } catch (error) {
-    console.error("Erro ao enviar imagem:", error)
-    toast.error("Erro ao atualizar a imagem.")
-  }
-}
-
 onMounted(async () => {
+     console.log("onMounted foi chamado!")
+
+  
+
   try {
+
+    console.log(user.value)
     isCarregando.value = true
     const headers = {
       Authorization: `Bearer ${token.value}`
-    }
+    };
 
     const [response, response2, response3] = await Promise.all([
       apiController.get("produto", {
-        params: { usuarioId: user.value.id, skip: offset.value },
+        params: { usuarioId: usuarioId.value , skip:offset.value },
         headers
       }),
       apiController.get("usuarios", {
-        params: { id: user.value.id },
+        params: { id: usuarioId.value },
         headers
       }),
-      apiController.get(`usuarioImagem/${user.value.id}`, { headers })
-    ])
+      apiController.get(`usuarioImagem/${usuarioId.value}`, { headers })
+    ]);
 
     if (response2?.data) {
-      usuario.value = response2.data[0]
+      usuario.value = response2.data[0];
     }
 
     if (response?.data) {
-      produtos.value = response.data
+      produtos.value = response.data;
+    }
+    if (response3?.data) {
+      imagemBase64.value = produtoSrc(response3.data.imagemBase64);
     }
 
-    if (response3?.data) {
-      imagemBase64.value = produtoSrc(response3.data.imagemBase64)
-    }
+    console.log("Produto SRC FINAL:", produtoSrc(produtos.value[0]?.img));
+    console.log("USUÁRIO CARREGADO:", usuario.value.id);
 
     form.value = {
-      email: usuario.value.email || '',
-      nome: usuario.value.nome || '',
-      telefone: usuario.value.telefone || usuario.value.telefones || '',
-      cpf: usuario.value.cpf || '',
-      idade: usuario.value.idade || usuario.value.age || ''
+    nome: usuario.value.nome || '',
+    telefone: usuario.value.telefone || usuario.value.telefones || '',
+    cpf: usuario.value.cpf || '',
+    idade: usuario.value.idade || usuario.value.age || ''
     }
 
     isCarregando.value = false
+
   } catch (error) {
     console.error("Erro ao buscar produtos:", error)
-    isCarregando.value = false
+    isCarregando.value = true
   }
 })
 
-const validarCPF = (cpf) => {
-  cpf = cpf.replace(/\D/g, '')
-  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false
+const offset = ref(0)
 
-  let soma = 0
-  for (let i = 0; i < 9; i++) {
-    soma += parseInt(cpf.charAt(i)) * (10 - i)
-  }
-  let resto = (soma * 10) % 11
-  if (resto === 10) resto = 0
-  if (resto !== parseInt(cpf.charAt(9))) return false
-
-  soma = 0
-  for (let i = 0; i < 10; i++) {
-    soma += parseInt(cpf.charAt(i)) * (11 - i)
-  }
-  resto = (soma * 10) % 11
-  if (resto === 10) resto = 0
-  if (resto !== parseInt(cpf.charAt(10))) return false
-
-  return true
-}
-
-const abrirModal = () => modalAberto.value = true
-const fecharModal = () => modalAberto.value = false
-
-const salvarDados = async () => {
-  const inicio = { ...usuario.value }
-
-  try {
-    if (!validarCPF(form.value.cpf)) {
-      toast.error("CPF inválido. Verifique e tente novamente.")
-      return
-    }
-
-    const headers = {
-      Authorization: `Bearer ${token.value}`
-    }
-
-    await apiController.patch(
-      `usuarios/${usuario.value.id}`,
-      { ...form.value },
-      {
-        params: { id: usuario.value.id },
-        headers
-      }
-    )
-    toast.success("Dados atualizados com sucesso!")
-    usuario.value = { ...usuario.value, ...form.value }
-
-    fecharModal()
-  } catch (error) {
-    toast.error(error.response?.data?.message || 'Erro ao atualizar dados. Tente novamente.')
-    form.value = {
-      email: inicio.email || '',
-      nome: inicio.nome || '',
-      telefone: inicio.telefone || inicio.telefones || '',
-      cpf: inicio.cpf || '',
-      idade: inicio.idade || inicio.age || ''
-    }
-  }
-}
+const produtosVisiveis = computed(() => {
+  return produtos.value.slice(offset.value, offset.value + 16)
+})
 </script>

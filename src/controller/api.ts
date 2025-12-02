@@ -2,7 +2,7 @@ import axios from 'axios';
 import { jwtDecode } from "jwt-decode"
 import { forceLogout } from "../utils/logout";
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5056';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://api-c-atha.onrender.com';
 
 // Função para validar token
 const isValidToken = (token: string): boolean => {
