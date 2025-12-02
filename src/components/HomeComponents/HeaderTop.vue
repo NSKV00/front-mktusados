@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import carrinho from '../carrinho.vue';
 
 const props = defineProps({ modelValue: Boolean, 'cart-count': Number });
 const emit = defineEmits(['update:drawerCart','open-filters','update:searchTerm']);
