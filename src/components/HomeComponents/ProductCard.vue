@@ -14,7 +14,7 @@
 
     <!-- Imagem -->
     <v-img
-      :src="product.img"
+      :src="converterBase64(product.img)"
       class="product-image"
       height="200"
       cover
@@ -30,7 +30,7 @@
       </div>
 
       <div class="product-info">
-        {{ product.categoria }} • {{ product.vendedorNome || 'Vendedor' }}
+        {{ product.categoriaNome }} • {{ product.vendedorNome || 'Vendedor' }}
       </div>
 
     </v-card-text>
@@ -59,6 +59,17 @@ const props = defineProps({
 
 function formatPrice(v:any){
   return Number(v||0).toFixed(2).replace('.',',');
+}
+
+const converterBase64 = (base64:any) => {
+    if (!base64 || typeof base64 !== 'string') return null
+    const trimmed = base64.trim()
+    if (trimmed.startsWith('data:')) return trimmed
+
+    let tipo = 'image/png'
+    if (trimmed.startsWith('/9j/')) tipo = 'image/jpeg'
+
+    return `data:${tipo};base64,${trimmed}`
 }
 
 const isNew = computed(() => {
