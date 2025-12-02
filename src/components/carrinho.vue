@@ -42,7 +42,7 @@
 
           <v-col cols="6" class="pl-2">
             <v-list-item-title
-              class="item-nome text-subtitle-2 font-weight-medium mb-1"
+              class="item-nome text-subtitle-2  mb-1"
             >
               {{ item.nome }}
             </v-list-item-title>
@@ -79,7 +79,7 @@
     <div class="pa-4 bg-grey-lighten-4 mt-auto">
       <v-row class="total-summary">
         <v-col class="text-h6 font-weight-bold">Total:</v-col>
-        <v-col class="text-h6 font-weight-bold text-right text-success">
+        <v-col class="text-h6 font-weight-bold text-right ">
           R$ {{ totalCarrinho.toFixed(2).replace('.', ',') }}
         </v-col>
       </v-row>
@@ -198,11 +198,13 @@ function finalizarCompra() {
   font-weight: 700px;
   color: #43119b;
 }
+
 .carrinho-drawer {
   z-index: 1000 !important;
   display: flex;
   flex-direction: column;
 }
+
 .drawer-header {
   padding: 16px;
   background-color: #43119b;

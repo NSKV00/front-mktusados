@@ -8,43 +8,52 @@
             
             <v-col cols="12" md="6" class="image-section">
               <h1 class="product-title">{{ produto?.nome || 'Produto não encontrado' }}</h1>
-              <v-img :src="imagemSelecionada || produto?.img" class="product-image" contain />
+              <v-img 
+  :src="imagemSelecionada" 
+  class="product-image" 
+  contain
+/>
 
-              <v-row class="miniaturas" dense>
-                <v-col
-                  v-for="(img, index) in produtoImagens"
-                  :key="index"
-                  cols="3"
-                  class="pa-1"
-                >
-                  <v-img
-                    :src="img"
-                    height="60"
-                    width="60"
-                    contain
-                    class="thumbnail"
-                    :class="{ selected: imagemSelecionada === img }"
-                    @click="imagemSelecionada = img"
-                  />
-                </v-col>
-              </v-row>
+
+<v-row 
+  class="miniaturas" 
+  dense 
+  v-if="produtoImagens.length > 1"
+>
+  <v-col
+    v-for="(img, index) in produtoImagens"
+    :key="index"
+    cols="3"
+    class="pa-1"
+  >
+    <v-img
+      :src="img"
+      height="70"
+      width="70"
+      contain
+      class="thumbnail"
+      :class="{ selected: imagemSelecionada === img }"
+      @click="imagemSelecionada = img"
+    />
+  </v-col>
+</v-row>
             </v-col>
 
             
             <v-col cols="12" md="6" class="info-section">
               <div v-if="produto" class="info-content">
-                <p class="product-price">R$ {{ produto.valor.toFixed(2).replace('.', ',') }}</p>
-                <p class="product-desconto">R$ {{ produto.desconto.toFixed(1).replace('.', ',') }}</p>
-                <p class="product-description">{{ produto.descricao || 'Descrição não disponível.' }}</p>
-                <div class="product-category"><strong>Categoria:</strong> {{ categoriaNome || 'Não especificada' }}</div>
+                <p class="product-preco">R$ {{ produto.valor.toFixed(2).replace('.', ',') }}</p>
+                <p class="product-desconto" v-if="produto.desconto > 0">Desconto de R$ {{ produto.desconto.toFixed(2).replace('.', ',') }}</p>
+                <p class="product-descricao">{{ produto.descricao || 'Descrição não disponível.' }}</p>
+                <div class="product-categoria"><strong>Categoria:</strong> {{ produto.categoria || 'Não especificada' }}</div>
                 <p class="product-estoque">Estoque: {{ produto.estoque || 'Não especificado' }}</p>
                 <div class="product-avaliacao">
                 <strong>Avaliação:</strong>
                 <span v-for="i in 5" :key="i">
                 <v-icon small color="yellow" v-if="i <= Math.round(produto.avaliacao)">mdi-star</v-icon>
-                <v-icon small color="grey" v-else>mdi-star-outline</v-icon>
+                <v-icon small color="silver" v-else>mdi-star-outline</v-icon>
                 </span>
-                ({{ produto.avaliacao }})
+                ({{ produto.avaliacao}})
                 </div>
                 
 
@@ -99,14 +108,15 @@ import { useRouter } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 const produto = ref<any>(null);
-const produtoImagens = ref<string[]>([]);
 const imagemSelecionada = ref<string>('');
+const produtoImagens = ref<string[]>([]);
 const showToast = ref(false);
 const mediaAvaliacao = ref<number>(0);
 const categoriaNome = ref('');
 const quantidade = ref(1);
 const token = localStorage.getItem('authToken'); 
 const usuarioId = localStorage.getItem('userId'); 
+
 
 
 
@@ -128,6 +138,13 @@ onMounted(async () => {
   } catch (err) {
     console.error("Erro ao carregar produto:", err);
   }
+  if (produto.value) {
+
+  const extras = produto.value.imagensExtras || [];
+  produtoImagens.value = [produto.value.img, ...extras];
+
+  imagemSelecionada.value = produto.value.img;
+}
   try {
     if (produto.value && produto.value.categoria) {
       const resCategoria = await apiController.get("/categoria", {
@@ -157,9 +174,7 @@ onMounted(async () => {
     mediaAvaliacao.value = 0;
   }
 }
-onMounted(() => {
-  carregarAvaliacao();
-});
+
 async function adicionarAoCarrinho() {
   if (!produto.value) return;
 
@@ -204,6 +219,11 @@ async function adicionarAoCarrinho() {
   }
 }
 
+
+
+onMounted(() => {
+  carregarAvaliacao();
+});
 </script>
 
 <style scoped>
@@ -256,40 +276,20 @@ async function adicionarAoCarrinho() {
   object-fit: contain;
 }
 
-.miniaturas {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-.thumbnail {
-  cursor: pointer;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  transition: all 0.25s;
-}
-.thumbnail:hover {
-  transform: scale(1.1);
-  border-color: #6b2dff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-.thumbnail.selected {
-  border-color: #43119b;
-  box-shadow: 0 0 12px #6b2dff;
-}
+
 .info-section {
   display: flex;
   flex-direction: column;
-  gap: 10rem;
+  gap: 1rem;
   padding: 0 1rem;
 }
-.product-price {
+.product-preco {
   font-size: 2.6rem;
   font-weight: 900;
   color: #010101;
   margin-bottom: 0.8rem;
   text-align: justify;
+  
 }
 .product-desconto {
   font-size: 1.8rem;
@@ -298,8 +298,9 @@ async function adicionarAoCarrinho() {
   margin-bottom: 0.8rem;
   text-align: justify;
   text-decoration: line-through;
+  padding-bottom: 32px;
 }
-.product-description {
+.product-descricao {
   font-size: 0.9rem;
   color: #444;
   line-height: 1.6;
@@ -309,14 +310,16 @@ async function adicionarAoCarrinho() {
   border: 1px solid #eee;
   text-align: justify;
   gap: 1rem;
+  
 }
 
-.product-category {
+.product-categoria {
   font-size: 0.9rem;
   color: #555;
   font-weight: 500;
   text-align: justify;
   gap: 1rem;
+  padding-top: 48px;
 }
 .product-estoque {
   font-size: 0.9rem;
@@ -334,11 +337,9 @@ async function adicionarAoCarrinho() {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-}
-.product-avaliacao i {
-  vertical-align: middle;
   margin-right: 2px;
 }
+
 .product-avaliacao span {
   vertical-align: middle;
 }

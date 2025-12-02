@@ -41,19 +41,18 @@
   <v-img :src="product.img" height="180px" @click="goToDetails(product)" />
 
   <v-card-text @click="goToDetails(product)">
-    <h3>Nome: {{ product.nome }}</h3>
+    <h3 class="nome">{{ product.nome }}</h3>
     <p class="price">R$ {{ product.valor }}</p>
     <p class="categoria">categoria: {{ product.categoria }}</p>
-    <p class="quantidade">Quantidade: {{ product.quantidade }}</p>
+    <p class="estoque">Quantidade: {{ product.estoque }}</p>
   </v-card-text>
 
   <v-card-actions>
     <v-btn 
-      color="deep-purple-accent-4"
-      block
-      @click.stop="adicionarAoCarrinho(product)"
+
+      @click.stop="adicionarAoCarrinho(product) " class="adicionarAoCarrinho"
     >
-      Adicionar ao Carrinho ({{ quantidade || 1 }})
+      Adicionar ao Carrinho 
     </v-btn>
   </v-card-actions>
 </v-card>
@@ -78,6 +77,7 @@ interface Product {
   nome: string;
   description: string;
   quantidade: number;
+  estoque:number;
   categoria: string;
   valor: number;
   img: string;
@@ -224,25 +224,26 @@ onMounted(() => carregarCarrinhoEProdutos());
 .products {
   padding: 2rem 1rem;
 }
-.product-card h3,
+.product-card .nome,
 .product-card .price,
+.product-card .estoque,
 .product-card .categoria {
   margin-left: 0;
   text-align: left;
 }
 .product-card {
-  transition: all 0.2s ease;
+  transition: all 0.150s ease;
   cursor: pointer;
   border-radius: 18px;
   padding: 2rem 2rem;
   background-color: #ffffff;
   color: #000;
   box-shadow: 0 8px 20px #00000022;
-  height: 400px;
+  height:100%;
 }
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(204, 0, 255, 0.441);
+  box-shadow: 0 8px 20px rgba(68, 0, 255, 0.441);
 }
 .price {
   font-size: 1.2rem;
@@ -250,4 +251,27 @@ onMounted(() => carregarCarrinhoEProdutos());
   font-weight: 600;
   margin-top: 0.5rem;
 }
+.adicionarAoCarrinho{
+border: solid  #050505;
+border-radius: 16px;
+font-size: 12px;
+align-items: center;
+transition: transform 0.2s, box-shadow 0.1s;
+}
+.adicionarAoCarrinho:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(185, 185, 185, 0.4);
+  background-color: rgba(68, 0, 255, 0.441);
+  color:#ffff;
+}
+.v-btn--icon {
+  transition: transform 0.1s , box-shadow 0.2s;
+}
+.v-btn--icon:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(185, 185, 185, 0.4);
+  background-color: rgba(68, 0, 255, 0.441);
+  color:#ffff;
+}
+
 </style>
