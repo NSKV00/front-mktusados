@@ -30,84 +30,77 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { jwtDecode } from 'jwt-decode'
-import api from '../controller/api'
-import emitter from '../utils/emitter'
+  import { ref, computed, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { jwtDecode } from 'jwt-decode'
+  import api from '../controller/api'
 
-const router = useRouter()
-const isCarregando = ref(true)
-const search = ref('')
-const usuario = ref<any>({ nome: '' })
-const imagemBase64 = ref('')
+  const router = useRouter()
+  const drawer = ref(false);
+  const isCarregando = ref(true)
+  const usuario = ref<any>({ nome: '' })
+  const imagemBase64 = ref('')
 
-const tokenLocal = localStorage.getItem('token')
+  const tokenLocal = localStorage.getItem('token')
 
-const isValidToken = (token: string): boolean => {
-  if (!token || typeof token !== 'string') return false
-  const parts = token.split('.')
-  return parts.length === 3 && parts.every(part => part && part.length > 0)
-}
-
-const detectarTipoImagem = (base64: any) => {
-  if (base64.startsWith('UklG')) return 'image/webp'
-  if (base64.startsWith('/9j/')) return 'image/jpeg'
-  if (base64.startsWith('iVBOR')) return 'image/png'
-  return 'image/png'
-}
-
-const fotoSrc = computed(() => {
-  if (!imagemBase64.value) return null
-  const cleanedBase64 = imagemBase64.value.replace(/[\r\n\s]+/g, '')
-  const tipo = detectarTipoImagem(cleanedBase64)
-  return `data:${tipo};base64,${cleanedBase64}`
-})
-
-const irPerfil = () => router.push('/perfil')
-
-onMounted(async () => {
-  if (!tokenLocal || !isValidToken(tokenLocal)) {
-    isCarregando.value = false
-    return
+  const isValidToken = (token: string): boolean => {
+    if (!token || typeof token !== 'string') return false
+    const parts = token.split('.')
+    return parts.length === 3 && parts.every(part => part && part.length > 0)
   }
 
-  try {
-    const decoded: any = jwtDecode(tokenLocal)
-    usuario.value = decoded
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
-
-    const user = await api.get("usuarios", {
-      params: { id: usuario.value.id },
-      headers: { Authorization: `Bearer ${tokenLocal}` },
-      signal: controller.signal
-    });
-
-    usuario.value = user.data[0]
-
-    const img = await api.get(`usuarioImagem/${usuario.value.id}`, {
-      signal: controller.signal
-    })
-
-    imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '')
-    
-    clearTimeout(timeoutId)
-  } catch (error: any) {
-    if (error.code !== 'ECONNABORTED') {
-      console.error("Erro ao carregar header:", error)
-    }
-  } finally {
-    isCarregando.value = false
+  const detectarTipoImagem = (base64: any) => {
+    if (base64.startsWith('UklG')) return 'image/webp'
+    if (base64.startsWith('/9j/')) return 'image/jpeg'
+    if (base64.startsWith('iVBOR')) return 'image/png'
+    return 'image/png'
   }
-});
 
-const emitUpdate = () => {
-  emitter.emit('applyFilters', {
-    search: search.value
+  const fotoSrc = computed(() => {
+    if (!imagemBase64.value) return null
+    const cleanedBase64 = imagemBase64.value.replace(/[\r\n\s]+/g, '')
+    const tipo = detectarTipoImagem(cleanedBase64)
+    return `data:${tipo};base64,${cleanedBase64}`
   })
-}
+
+  const irPerfil = () => router.push('/perfil')
+
+  onMounted(async () => {
+    if (!tokenLocal || !isValidToken(tokenLocal)) {
+      isCarregando.value = false
+      return
+    }
+
+    try {
+      const decoded: any = jwtDecode(tokenLocal)
+      usuario.value = decoded
+
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+      const user = await api.get("usuarios", {
+        params: { id: usuario.value.id },
+        headers: { Authorization: `Bearer ${tokenLocal}` },
+        signal: controller.signal
+      });
+
+      usuario.value = user.data[0]
+
+      const img = await api.get(`usuarioImagem/${usuario.value.id}`, {
+        signal: controller.signal
+      })
+
+      imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '')
+      
+      clearTimeout(timeoutId)
+    } catch (error: any) {
+      if (error.code !== 'ECONNABORTED') {
+        console.error("Erro ao carregar header:", error)
+      }
+    } finally {
+      isCarregando.value = false
+    }
+  });
 </script>
 
 <style scoped>

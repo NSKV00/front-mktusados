@@ -21,7 +21,7 @@ const routes = [
   { path: '/cartao', component: Cartao },
   { path: '/perfilVisual/:id', component: PerfilVisual },
   { path: '/produto/:id', component: Produto },
-  { path: '/perfil', component: Perfil, meta: { requiresAuth: true } },
+  //{ path: '/perfil', component: Perfil, meta: { requiresAuth: true } },
   { path: '/produtoCriar', component: ProdutoAdicionar, meta: { requiresAuth: true } },
   { path: '/produtos/:id', name: 'DetalhesProdutos', component: DetalhesProdutos, props: true },
   { path: '/enderecos', component: Endereco, meta: { requiresAuth: true } },

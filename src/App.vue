@@ -1,11 +1,9 @@
 <template>
   <v-app class="app">
-    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isDetalhesProdutos || isLoginPage" />
+    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isDetalhesProdutos" />
     <v-main class="main-content">
       <router-view />
     </v-main>
-
-    
     <app-footer v-if="isHomePage" />
   </v-app>
 </template>
