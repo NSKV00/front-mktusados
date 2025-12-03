@@ -324,8 +324,9 @@ function initMercadoPago() {
   const bricks = mp.bricks();
 
   bricks.create("cardPayment", "cardPaymentBrick", {
-    initialization: { amount: produtos.value ? produtos.value.valor * quantidade2 + 1 : 0 },
+    initialization: { amount: produtos.value ? produtos.value.valor * quantidade2 + 1  : 0 },
     customization: {
+      
       visual: {
         style: {
           theme: "dark",

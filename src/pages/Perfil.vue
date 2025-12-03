@@ -73,12 +73,9 @@
 
           <!-- Grid de Produtos -->
           <div class="products-grid">
-            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
+            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo"  class="product-card" @click="abrirProduto(produto)">
               <div class="product-media">
                 <img :src="produtoSrc(produto.img)" alt="produto" class="product-img" />
-                <span :class="['status-badge', { inativo: !produto.ativo }]">
-                  {{ produto.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
               </div>
 
               <div class="product-content">
@@ -805,6 +802,9 @@ import { ref, onMounted, computed } from 'vue'
 import apiController from "../controller/api"
 import { jwtDecode } from "jwt-decode"
 import { toast } from 'vue3-toastify'
+import { useRouter } from "vue-router"
+
+const router = useRouter()
 
 const produtos = ref([])
 const usuario = ref(null)
@@ -838,6 +838,11 @@ const detectarTipoImagem = (base64) => {
   if (base64.startsWith('/9j/')) return 'image/jpeg'
   if (base64.startsWith('iVBOR')) return 'image/png'
   return 'image/png'
+}
+
+
+const abrirProduto = (produto) => {
+  router.push(`/produto/${produto.id || produto.produtoId}`)
 }
 
 const fotoSrc = computed(() => {
