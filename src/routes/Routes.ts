@@ -9,6 +9,9 @@ import Pagamento from '../pages/Pagamento.vue'
 import Cartao from '../pages/Cartao.vue'
 import PerfilVisual from '../pages/perfilVisual.vue'
 import Produto from '../pages/produto.vue'
+import Teste from '../pages/teste.vue'
+import Bloqueado from '../pages/bloqueado.vue'
+import Dashboard from '../pages/dashboard.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -20,6 +23,9 @@ const routes = [
   { path: '/cartao', component: Cartao },
   { path: '/perfilVisual/:id', component: PerfilVisual },
   { path: '/produto/:id', component: Produto },
+  { path: '/teste', component: Teste},
+  { path: '/bloqueado', component: Bloqueado},
+  { path: '/dashboard', component: Dashboard}
 ]
 
 const router = createRouter({

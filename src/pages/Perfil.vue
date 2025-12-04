@@ -73,12 +73,9 @@
 
           <!-- Grid de Produtos -->
           <div class="products-grid">
-            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
+            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card" @click="irParaProduto(produto.id)">
               <div class="product-media">
                 <img :src="produtoSrc(produto.img)" alt="produto" class="product-img" />
-                <span :class="['status-badge', { inativo: !produto.ativo }]">
-                  {{ produto.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
               </div>
 
               <div class="product-content">
@@ -805,6 +802,7 @@ import { ref, onMounted, computed } from 'vue'
 import apiController from "../controller/api"
 import { jwtDecode } from "jwt-decode"
 import { toast } from 'vue3-toastify'
+import { useRouter } from 'vue-router'
 
 const produtos = ref([])
 const usuario = ref(null)
@@ -830,6 +828,13 @@ const form = ref({
   cpf: '',
   idade: ''
 })
+
+const router = useRouter()
+
+const irParaProduto = (id) => {
+  if (!id) return
+  router.push(`/produto/${id}`)
+}
 
 const fotoPadrao = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
 
@@ -905,45 +910,37 @@ const fecharModalImagem = () => {
 
 const selecionarImagem = (event) => {
   const file = event.target.files[0]
-
-  if (!file) {
-    alert('❌ Nenhum arquivo selecionado!')
-    return
-  }
-
-  if (!file.type.startsWith('image/')) {
-    alert('❌ Selecione apenas imagens (JPG, PNG, etc.)!')
-    event.target.value = ''
-    return
-  }
+  if (!file) return alert("❌ Nenhum arquivo selecionado!")
+  if (!file.type.startsWith("image/")) return alert("❌ Selecione apenas imagens!")
 
   imagemSelecionada.value = file
   preview.value = URL.createObjectURL(file)
 }
 
 const salvarImagem = async () => {
-  if (!imagemSelecionada.value) return
+  if (!imagemSelecionada.value) return alert("❌ Nenhuma imagem selecionada!")
 
   const formData = new FormData()
-  formData.append("imagem", imagemSelecionada.value)
-  formData.append("file", imagemSelecionada.value)
+  formData.append("usuarioId", usuario.value.id) // string/number ok
+  formData.append("imagem", imagemSelecionada.value) // File real
 
   try {
-    const headers = {
-      Authorization: `Bearer ${token.value}`
-    }
-
-    await apiController.post(`usuarioImagem/${usuario.value.id}`, formData, {
-      headers,
+    await apiController.post("usuarioImagem", formData, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "Content-Type": "multipart/form-data"
+      },
       maxContentLength: Infinity,
-      maxBodyLength: Infinity
+      maxBodyLength: Infinity,
     })
 
     toast.success("Imagem atualizada com sucesso!")
 
     const reader = new FileReader()
     reader.onload = () => {
-      imagemBase64.value = reader.result.split(",")[1]
+      const base64 = reader.result.split(",")[1]
+      imagemBase64.value = base64
+      fotoSrc.value = reader.result
     }
     reader.readAsDataURL(imagemSelecionada.value)
 

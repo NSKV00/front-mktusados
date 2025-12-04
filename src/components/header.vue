@@ -1,96 +1,28 @@
 <template>
-  <v-app-bar class="header" style=".header" flat color="white">
+  <v-app-bar class="header" style=".header" flat color="white" height="100">
     <v-app-bar-nav-icon @click="drawer = !drawer" class="me-2" />
 
     <div class="logo">
-      <img class="Logo" src="../assets/logo.png" alt="Logo" />
+      <router-link to="/" aria-label="Home">
+        <img class="Logo" src="../assets/logo.png" alt="Logo" />
+      </router-link>
     </div>
-
-    <v-spacer></v-spacer>
-    <v-text-field
-      v-model="search"
-      placeholder="Buscar..."
-      prepend-inner-icon="mdi-magnify"
-      hide-details
-      dense
-      flat
-      class="search-bar"
-    />
+    
     <v-spacer></v-spacer>
 
-    <v-menu
-      v-model="menuUsuario"
-      offset-y
-      :close-on-content-click="false"
-      transition="slide-y-transition"
-    >
-      <template #activator="{ props }">
-        <v-btn icon v-bind="props">
-          <v-icon>mdi-account-circle</v-icon>
-        </v-btn>
-      </template>
+    <header class="profile-header">
+      <div class="avatar-wrapper" @click="irPerfil" style="cursor: pointer;">
+        <img v-if="fotoSrc" :src="fotoSrc" alt="avatar" class="avatar-img" />
+        <div v-else class="avatar-placeholder">
+          {{ usuario.nome ? usuario.nome.charAt(0).toUpperCase() : 'U' }}
+        </div>
+      </div>
 
-      <v-card width="260">
-        <v-card-text v-if="cliente.length > 0" class="text-center">
-          <v-avatar size="70" class="mx-auto mb-2">
-            <v-img
-              :src="fotoPerfil"
-              alt="Foto de perfil"
-              @click="abrirUpload"
-              class="cursor-pointer"
-            />
-          </v-avatar>
+    </header>
 
-          <v-btn text color="primary" size="small" @click="abrirUpload">
-            Trocar Foto
-          </v-btn>
-
-          <input
-            ref="inputFile"
-            type="file"
-            accept="image/*"
-            class="hidden"
-            @change="handleFotoChange"
-          />
-        </v-card-text>
-
-        <v-divider />
-
-        <v-list dense nav>
-          <v-list-item
-            v-if="cliente[0]?.ativo"
-            :to="{ path: '/meusAgendamentos' }"
-            title="Meus Agendamentos"
-            prepend-icon="mdi-calendar-check"
-          />
-
-          <template v-if="cliente[0]?.admin">
-            <v-list-item :to="{ path: '/clientes' }" title="Clientes" prepend-icon="mdi-account-group" />
-            <v-list-item :to="{ path: '/agendamentos' }" title="Agendamentos" prepend-icon="mdi-clock" />
-            <v-list-item :to="{ path: '/funcionarios' }" title="Funcionários" prepend-icon="mdi-briefcase-account" />
-            <v-list-item :to="{ path: '/semana' }" title="Semana" prepend-icon="mdi-calendar" />
-          </template>
-
-          <v-divider />
-
-          <v-list-item
-            v-if="cliente.length > 0"
-            @click="logout"
-            title="Logout"
-            prepend-icon="mdi-logout"
-          />
-          <v-list-item
-            v-else
-            :to="{ path: '/login' }"
-            title="Login"
-            prepend-icon="mdi-login"
-          />
-        </v-list>
-      </v-card>
-    </v-menu>
   </v-app-bar>
 
-  <v-navigation-drawer v-model="drawer" temporary app color="grey-lighten-4">
+  <v-navigation-drawer v-model="drawer" class="list" style=".list" temporary app color="grey-lighten-4">
     <v-list nav dense>
       <v-list-item :to="{ path: '/' }" title="Home" prepend-icon="mdi-home" />
     </v-list>
@@ -98,86 +30,122 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { toast } from 'vue3-toastify'
-import api from '../controller/api'
+  import { ref, computed, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { jwtDecode } from 'jwt-decode'
+  import api from '../controller/api'
 
-const router = useRouter()
+  const router = useRouter()
+  const drawer = ref(false);
+  const isCarregando = ref(true)
+  const usuario = ref<any>({ nome: '' })
+  const imagemBase64 = ref('')
 
-interface ReturnUser {
-  id: number
-  nome: string
-  email: string
-  admin: boolean
-  ativo: boolean
-  imagem?: string
-}
+  const tokenLocal = localStorage.getItem('token')
 
-const drawer = ref(false)
-const menuUsuario = ref(false)
-const cliente = ref<ReturnUser[]>([])
-const inputFile = ref<HTMLInputElement | null>(null)
-const fotoPerfil = ref<string>('/default-profile.png')
-const search = ref('')
-
-const pegarUsuario = async () => {
-  try {
-    const valor = localStorage.getItem('usuario')
-    if (!valor) return
-
-    const userData = JSON.parse(valor)
-    const id = userData.id || userData.usuario?.id
-    if (!id) return
-
-    const { data } = await api.get('/usuario', { params: { id } })
-    cliente.value = data
-
-    fotoPerfil.value = data[0]?.imagem
-      ? `data:image/png;base64,${data[0].imagem}`
-      : '/default-profile.png'
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error)
+  const isValidToken = (token: string): boolean => {
+    if (!token || typeof token !== 'string') return false
+    const parts = token.split('.')
+    return parts.length === 3 && parts.every(part => part && part.length > 0)
   }
-}
 
-const abrirUpload = () => inputFile.value?.click()
+  const detectarTipoImagem = (base64: any) => {
+    if (base64.startsWith('UklG')) return 'image/webp'
+    if (base64.startsWith('/9j/')) return 'image/jpeg'
+    if (base64.startsWith('iVBOR')) return 'image/png'
+    return 'image/png'
+  }
 
-const handleFotoChange = async (e: Event) => {
-  const target = e.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    const file = target.files[0]
+  const fotoSrc = computed(() => {
+    if (!imagemBase64.value) return null
+    const cleanedBase64 = imagemBase64.value.replace(/[\r\n\s]+/g, '')
+    const tipo = detectarTipoImagem(cleanedBase64)
+    return `data:${tipo};base64,${cleanedBase64}`
+  })
+
+  const irPerfil = () => router.push('/perfil')
+
+  onMounted(async () => {
+    if (!tokenLocal || !isValidToken(tokenLocal)) {
+      isCarregando.value = false
+      return
+    }
+
     try {
-      const formData = new FormData()
-      formData.append('imagem', file)
+      const decoded: any = jwtDecode(tokenLocal)
+      usuario.value = decoded
 
-      const userStorage = localStorage.getItem('usuario')
-      if (!userStorage) return
-      const { id } = JSON.parse(userStorage)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-      await api.patch(`/usuario/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const user = await api.get("usuarios", {
+        params: { id: usuario.value.id },
+        headers: { Authorization: `Bearer ${tokenLocal}` },
+        signal: controller.signal
+      });
+
+      usuario.value = user.data[0]
+
+      const img = await api.get(`usuarioImagem/${usuario.value.id}`, {
+        signal: controller.signal,
+        headers: { Authorization: `Bearer ${tokenLocal}` }
       })
 
-      toast.success('Foto atualizada com sucesso!')
-      await pegarUsuario()
-    } catch (error) {
-      console.error('Erro ao salvar foto:', error)
-      toast.error('Erro ao salvar foto.')
+      imagemBase64.value = img.data.imagem.replace(/[\r\n\s]+/g, '')
+      console.log(img.data + "oi")
+      
+      clearTimeout(timeoutId)
+    } catch (error: any) {
+      if (error.code !== 'ECONNABORTED') {
+        console.error("Erro ao carregar header:", error)
+      }
+    } finally {
+      isCarregando.value = false
     }
-  }
-}
-
-const logout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('usuario')
-  router.push('/login')
-}
-
-onMounted(pegarUsuario)
+  });
 </script>
 
 <style scoped>
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-right: 1rem;
+}
+
+.avatar-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ccc;
+  font-size: 24px;
+  color: white;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-info .user-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .header {
   position: relative !important;
 }
@@ -200,7 +168,7 @@ onMounted(pegarUsuario)
 }
 
 .Logo {
-  width: var(--logo-size-desktop);
+  width: var(--logo-size-mobile);
   height: auto;
 }
 
@@ -215,5 +183,34 @@ onMounted(pegarUsuario)
 
 .hidden {
   display: none;
+}
+
+.search-filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+}
+
+.search-input {
+  border-radius: 25px !important;
+  background-color: #f5f5f5;
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.search-input:focus-within {
+  box-shadow: 0 0 0 2px #7e57c2;
+  transform: scale(1.01);
+}
+
+.filter-card {
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
 }
 </style>
