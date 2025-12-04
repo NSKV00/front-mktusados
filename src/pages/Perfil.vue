@@ -845,6 +845,11 @@ const detectarTipoImagem = (base64) => {
   return 'image/png'
 }
 
+
+const abrirProduto = (produto) => {
+  router.push(`/produto/${produto.id || produto.produtoId}`)
+}
+
 const fotoSrc = computed(() => {
   const b = imagemBase64.value
 
