@@ -42,4 +42,3 @@ defineProps<{
   padding: clamp(1rem, 3vw, 1.5rem);
 }
 </style>
-

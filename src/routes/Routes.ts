@@ -4,8 +4,10 @@ import Login from '../pages/Login.vue'
 import Cadastro from '../pages/Cadastro.vue'
 import Perfil from '../pages/Perfil.vue'
 import ProdutoAdicionar from '../pages/ProdutoAdicionar.vue'
-import Endereço from '../pages/Endereço.vue'
+import Endereco from '../pages/Endereco.vue'
 import DetalhesProdutos from '../pages/DetalhesProdutos.vue'
+import Pagamento from '../pages/Pagamento.vue'
+import Cartao from '../pages/Cartao.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -14,7 +16,9 @@ const routes = [
   { path: '/perfil', component: Perfil, meta: { requiresAuth: true } },
   { path: '/produtoCriar', component: ProdutoAdicionar, meta: { requiresAuth: true } },
   { path: '/produtos/:id', name: 'DetalhesProdutos', component: DetalhesProdutos, props: true },
-  { path: '/enderecos', component: Endereço, meta: { requiresAuth: true } },
+   { path: '/pagamento', component: Pagamento },
+  { path: '/cartao', component: Cartao },
+  { path: '/enderecos', component: Endereco, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

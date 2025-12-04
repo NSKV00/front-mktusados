@@ -2,7 +2,15 @@ import axios from 'axios';
 import { jwtDecode } from "jwt-decode"
 import { forceLogout } from "../utils/logout";
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5056';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://api-c-atha.onrender.com';
+
+// Função para validar token
+const isValidToken = (token: string): boolean => {
+  if (!token || typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every(part => part && part.length > 0)
+}
 
 const api = axios.create({
     baseURL: API_BASE,
@@ -16,6 +24,12 @@ api.interceptors.request.use(
 
     if (token) {
       try {
+        if (!isValidToken(token)) {
+          console.warn("Token inválido detectado, removendo...");
+          forceLogout();
+          return Promise.reject("Token inválido");
+        }
+
         const decoded: any = jwtDecode(token);
 
         if (decoded.exp * 1000 < Date.now()) {
@@ -24,7 +38,8 @@ api.interceptors.request.use(
         }
 
         config.headers.Authorization = `Bearer ${token}`;
-      } catch {
+      } catch (error) {
+        console.error("Erro ao decodificar token:", error);
         forceLogout();
         return Promise.reject("Token inválido");
       }

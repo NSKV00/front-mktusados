@@ -83,13 +83,19 @@
           R$ {{ totalCarrinho.toFixed(2).replace('.', ',') }}
         </v-col>
       </v-row>
-      <v-btn
-        class="mt-3"
-        color="primary"
-        block
+       
+    </div>
+
+    <div class="actions">
+
+      <button class="btn-buy"
+        @click="handleBuyNow"
         :disabled="itensComDetalhes.length === 0"
-        @click="$emit('finalizar')"
-      >Finalizar Compra</v-btn>
+        aria-label="Comprar agora">
+          <span class="icon-buy" aria-hidden="true">💳</span>
+              Comprar Agora
+          </button>
+
     </div>
   </v-navigation-drawer>
 </template>
@@ -97,6 +103,8 @@
 <script lang="ts" setup>
 import { ref, computed, watch, defineProps, defineEmits } from "vue";
 import { toast } from "vue3-toastify";
+import { useRouter, useRoute } from 'vue-router'
+import api from "../controller/api"
 
 
 interface Product {
@@ -111,6 +119,12 @@ interface CarrinhoItem {
   produtoId: number;
   qtd: number;
 }
+
+const estoque = ref(0)
+const router = useRouter()
+ 
+
+
 
 const props = defineProps<{
   aberto: boolean;
@@ -183,10 +197,35 @@ function removerItem(itemId: number) {
   }
 }
 
-function finalizarCompra() {
-  emit("finalizar");
-  
-}
+const handleBuyNow = () => {
+  if (itensComDetalhes.value.length === 0) {
+    toast.error("Seu carrinho está vazio!");
+    return;
+  }
+
+  // Verifica se algum item está indisponível
+  const indisponiveis = itensComDetalhes.value.filter(item => !item.disponivel || item.subtotal <= 0);
+  if (indisponiveis.length > 0) {
+    toast.error("Alguns produtos do carrinho não estão disponíveis.");
+    return;
+  }
+
+  // Prepara IDs e quantidades para enviar à página de pagamento
+  const produtoIds = itensComDetalhes.value.map(item => item.produtoId).join(',');
+  const quantidades = itensComDetalhes.value.map(item => item.qtd).join(',');
+
+  router.push({
+    path: '/pagamento',
+    query: {
+      produtoId: produtoIds,
+      quantidade: quantidades
+    }
+  });
+};
+
+
+
+
 
 </script>
 
@@ -214,7 +253,6 @@ function finalizarCompra() {
   color: white;
 }
 .item-image-border {
-  border: 1px solid #0c0c0c;
   border-radius: 4px;
 }
 .carrinho-item {
@@ -223,19 +261,19 @@ function finalizarCompra() {
 .item-nome {
   white-space: normal;
   line-height: 1.3;
-  color:#ff8801;
+  color:#0e0e0e;
   font-weight: 700;
   text-align: justify;
 }
 .item-info {
   display: block;
-  color: #ff8801;
+  color: #0e0e0e;
   font-weight: 700;
   text-align: justify;
 }
 .item-subtotal {
   display: block;
-  color: #ff8801;
+  color: #0e0e0e;
   font-weight: 700;
   text-align: justify;
 }

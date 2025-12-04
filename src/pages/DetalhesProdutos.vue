@@ -1,455 +1,793 @@
 <template>
-  <v-container class="detalhes-produto" fluid>
-    <v-row justify="center">
-      <v-col cols="12" md="10">
-        <v-card class="detalhes-card" elevation="8">
-          <v-row>
+    <div class="produto-page">
 
-            
-            <v-col cols="12" md="6" class="image-section">
-              <h1 class="product-title">{{ produto?.nome || 'Produto não encontrado' }}</h1>
-              <v-img 
-  :src="imagemSelecionada" 
-  class="product-image" 
-  contain
-/>
+        <div v-if="loading" class="loading-wrapper">
+            <div class="loader"></div>
+            <p class="loading-text">Carregando produto...</p>
+        </div>
+        <div v-else>
+            <div class="produto-inner max-w-7xl mx-auto px-6 py-10">
+                <header class="produto-header text-center mb-8">
+                    <h1 class="produto-title">{{ produtoAPI?.nome || product.name }}</h1>
+                </header>
 
+                <main class="produto-grid">
+                    <section class="images-col">
+                        <div class="main-image card">
+                            <img :src="imagemSelecionada.url" :alt="imagemSelecionada.alt" @error="onImgError"
+                                class="main-img" />
+                        </div>
 
-<v-row 
-  class="miniaturas" 
-  dense 
-  v-if="produtoImagens.length > 1"
->
-  <v-col
-    v-for="(img, index) in produtoImagens"
-    :key="index"
-    cols="3"
-    class="pa-1"
-  >
-    <v-img
-      :src="img"
-      height="70"
-      width="70"
-      contain
-      class="thumbnail"
-      :class="{ selected: imagemSelecionada === img }"
-      @click="imagemSelecionada = img"
-    />
-  </v-col>
-</v-row>
-            </v-col>
+                        <div class="thumbs">
+                            <button @click="selectedImageIndex = 0" :aria-pressed="selectedImageIndex === 0"
+                                class="thumb-btn" :key="'main'">
+                                <img :src="imagemPrincipal" :alt="produtoAPI?.nome" class="thumb-img"
+                                    @error="onImgError" />
+                            </button>
 
-            
-            <v-col cols="12" md="6" class="info-section">
-              <div v-if="produto" class="info-content">
-                <p class="product-preco">R$ {{ produto.valor.toFixed(2).replace('.', ',') }}</p>
-                <p class="product-desconto" v-if="produto.desconto > 0">Desconto de R$ {{ produto.desconto.toFixed(2).replace('.', ',') }}</p>
-                <p class="product-descricao">{{ produto.descricao || 'Descrição não disponível.' }}</p>
-                <div class="product-categoria"><strong>Categoria:</strong> {{ produto.categoria || 'Não especificada' }}</div>
-                <p class="product-estoque">Estoque: {{ produto.estoque || 'Não especificado' }}</p>
-                <div class="product-avaliacao">
-                <strong>Avaliação:</strong>
-                <span v-for="i in 5" :key="i">
-                <v-icon small color="yellow" v-if="i <= Math.round(produto.avaliacao)">mdi-star</v-icon>
-                <v-icon small color="silver" v-else>mdi-star-outline</v-icon>
-                </span>
-                ({{ produto.avaliacao}})
-                </div>
-                
+                            <button v-for="(img, i) in imgs" :key="'extra-' + i" @click="selectedImageIndex = i + 1"
+                                :aria-pressed="selectedImageIndex === i + 1" class="thumb-btn">
+                                <img :src="converterBase64(img.imagem)" :alt="`${produtoAPI?.nome} - Imagem ${i + 2}`"
+                                    class="thumb-img" @error="onImgError" />
+                            </button>
+                        </div>
+                    </section>
 
-                <div class="product-quantidade">
-                  <strong>Quantidade:</strong>
-                  <v-text-field
-                    v-model.number="quantidade"
-                    type="number"
-                    min="1"
-                    variant="outlined"
-                    density="compact"
-                    style="max-width: 100px; margin-left: 10px;"
-                  ></v-text-field>
-                </div>
-              </div>
+                    <section class="details-col">
+                        <div class="card price-card">
+                            <div class="price-row">
+                                <div class="price-left">
+                                    <span class="price">R$ {{ (produtoAPI?.valor || product.price).toFixed(2) }}</span>
+                                    <span v-if="priceWithDiscount" class="original">R$ {{ priceWithDiscount.toFixed(2)
+                                        }}</span>
+                                </div>
+                                <div v-if="produtoAPI?.desconto > 0" class="savings">Economize {{ produtoAPI.desconto
+                                    }}%</div>
+                            </div>
+                        </div>
 
-              <div class="button-group">
-                <v-btn class="btnAdd" @click="adicionarAoCarrinho" :disabled="!produto">
-                  Adicionar ao Carrinho ({{ quantidade }})
-                </v-btn>
-                <v-btn class="btnBack" @click="$router.back()">Voltar</v-btn>
-              </div>
-            </v-col>
+                        <div class="card small-card rating-card">
+                            <div class="rating-row">
+                                <div class="stars" aria-hidden="true">
+                                    <template v-for="n in 5">
+                                        <span class="star"
+                                            :class="n <= Math.round(avaliacaoMedia) ? 'on' : 'off'">★</span>
+                                    </template>
+                                </div>
+                                <div class="rating-value">{{ avaliacaoMedia.toFixed(1) }} de 5</div>
+                            </div>
+                        </div>
 
-          </v-row>
-        </v-card>
-      </v-col>
-    </v-row>
+                        <div class="card small-card meta-card">
+                            <div class="meta-row">
+                                <div class="meta-left">
+                                    <div class="meta-label">Categoria:</div>
+                                    <div class="meta-value">{{ categoriaNome || product.category }}</div>
+                                </div>
+                                <div class="meta-right">
+                                    <div class="meta-label">Estoque:</div>
+                                    <div :class="estoqueClass + ' stock-badge'">{{ estoque }} unidades</div>
+                                </div>
+                            </div>
+                        </div>
 
-    <v-snackbar
-      v-model="showToast"
-      color="green darken-2"
-      timeout="2000"
-      location="bottom right"
-      elevation="24"
-      rounded="pill"
-      class="toast"
-    >
-      <v-icon start>mdi-cart-check</v-icon>
-      Produto adicionado ao carrinho!
-    </v-snackbar>
-  </v-container>
+                        <div class="card desc-card">
+                            <h2 class="desc-title">Descrição do Produto</h2>
+                            <p class="desc-text">{{ produtoAPI?.descricao || product.description }}</p>
+                        </div>
+
+                        <div class="card qty-card">
+                            <label class="qty-label">Quantidade:</label>
+                            <div class="qty-controls">
+                                <button class="qty-btn" @click="decrement" :disabled="quantity <= 1"
+                                    aria-label="Diminuir">—</button>
+                                <input type="number" v-model.number="quantity" @input="onQuantityInput" :min="1"
+                                    :max="estoque" class="qty-input" aria-label="Quantidade" />
+                                <button class="qty-btn" @click="increment" :disabled="quantity >= estoque"
+                                    aria-label="Aumentar">+</button>
+                                <span class="qty-max">(máx: {{ estoque }})</span>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="btn-add" @click="handleAddToCart" :disabled="estoque <= 0"
+                                aria-label="Adicionar ao carrinho">
+                                <span class="icon-cart" aria-hidden="true">🛒</span>
+                                {{ estoque > 0 ? 'Adicionar ao Carrinho' : 'Fora de Estoque' }}
+                            </button>
+
+                            <button class="btn-buy" @click="handleBuyNow" :disabled="estoque <= 0"
+                                aria-label="Comprar agora">
+                                <span class="icon-buy" aria-hidden="true">💳</span>
+                                Comprar Agora
+                            </button>
+
+                            <button class="btn-back" @click="goBack" aria-label="Voltar">
+                                <span class="icon-back" aria-hidden="true">←</span>
+                                Voltar
+                            </button>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { toast } from 'vue3-toastify';
-import apiController from '../controller/api';
-import { useRouter } from 'vue-router';
-
-const route = useRoute();
-const router = useRouter();
-const produto = ref<any>(null);
-const imagemSelecionada = ref<string>('');
-const produtoImagens = ref<string[]>([]);
-const showToast = ref(false);
-const mediaAvaliacao = ref<number>(0);
-const categoriaNome = ref('');
-const quantidade = ref(1);
-const token = localStorage.getItem('authToken'); 
-const usuarioId = localStorage.getItem('userId'); 
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import api from '../controller/api'
+import { jwtDecode } from 'jwt-decode'
+import { toast } from 'vue3-toastify'
 
 
 
+const quantity = ref(1)
+const selectedImageIndex = ref(0)
+const router = useRouter()
+const route = useRoute()
+const produtoAPI = ref(null)
+const categoriaNome = ref('')
+const estoque = ref(0)
+const avaliacaoMedia = ref(0)
+const imgs = ref([])
+const loading = ref(true)
+const produtoId2 = ref(route.params.id) 
+
+const tokenLocal = localStorage.getItem("token") || ""
+const token = ref(tokenLocal)
+const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
+
+const imagemPrincipal = computed(() => {
+    if (produtoAPI.value?.img) {
+        return converterBase64(produtoAPI.value.img)
+    }
+    return product.images[0].url
+})
+
+const todasAsImagens = computed(() => {
+    const resultado = [
+        { url: imagemPrincipal.value, alt: produtoAPI.value?.nome || 'Produto' }
+    ]
+
+    imgs.value.forEach((img, idx) => {
+        resultado.push({
+            url: converterBase64(img.imagem),
+            alt: `${produtoAPI.value?.nome || 'Produto'} - Imagem ${idx + 2}`
+        })
+    })
+
+    return resultado
+})
+
+const imagemSelecionada = computed(() => {
+    return todasAsImagens.value[selectedImageIndex.value] || todasAsImagens.value[0]
+})
+
+const priceWithDiscount = computed(() => {
+    if (!produtoAPI.value?.desconto || produtoAPI.value.desconto <= 0) return null
+    const priceWithoutDiscount = produtoAPI.value.valor / (1 - produtoAPI.value.desconto / 100)
+    return priceWithoutDiscount
+})
+
+const savingsPercent = computed(() => {
+    return produtoAPI.value?.desconto || 0
+})
+
+const estoqueClass = computed(() => {
+    if (estoque.value <= 0) return 'stock-unavailable'
+    if (estoque.value > 10) return 'stock-good'
+    return 'stock-low'
+})
 
 onMounted(async () => {
-  try {
-    const id = route.params.id;
+    try {
+        const produtoId = produtoId2.value
 
-    const res = await apiController.get("/produto", {
-      params: { id },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+        console.log(user.value)
+        const res = await api.get(`/produto?id=${produtoId}`)
 
-   
-    produto.value = Array.isArray(res.data) ? res.data[0] : res.data;
+        if (res.data && res.data.length > 0) {
+            produtoAPI.value = res.data[0]
 
-    console.log("Produto carregado:", produto.value);
-  } catch (err) {
-    console.error("Erro ao carregar produto:", err);
-  }
-  if (produto.value) {
+            if (produtoAPI.value.categoriaId) {
+                await buscarCategoria(produtoAPI.value.categoriaId)
+            }
 
-  const extras = produto.value.imagensExtras || [];
-  produtoImagens.value = [produto.value.img, ...extras];
+            await buscarEstoque(produtoId)
 
-  imagemSelecionada.value = produto.value.img;
-}
-  try {
-    if (produto.value && produto.value.categoria) {
-      const resCategoria = await apiController.get("/categoria", {
-        params: { id: produto.value.categoria },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      categoriaNome.value = resCategoria.data.nome || 'Não especificada';
+            await buscarAvaliacao(produtoId)
+
+            await buscarImagemExtra(produtoId)
+        }
+    } catch (error) {
+        console.error('Erro ao carregar produto:', error)
+    } finally {
+        loading.value = false
     }
-  } catch (err) {
-    console.error("Erro ao carregar categoria:", err);
-  }
+})
 
-});
+const converterBase64 = (base64) => {
+    if (!base64 || typeof base64 !== 'string') return null
+    const trimmed = base64.trim()
+    if (trimmed.startsWith('data:')) return trimmed
 
-    async function carregarAvaliacao() {
-  if (!produto.value) return;
+    let tipo = 'image/png'
+    if (trimmed.startsWith('/9j/')) tipo = 'image/jpeg'
 
-  try {
-    const res = await apiController.get("/avaliacao", {
-      params: { produtoId: produto.value.id }
-    });
-    mediaAvaliacao.value = res.data.media || 0;
-  } catch (err) {
-    console.error("Erro ao carregar avaliação:", err);
-    mediaAvaliacao.value = 0;
-  }
+    return `data:${tipo};base64,${trimmed}`
 }
 
-async function adicionarAoCarrinho() {
-  if (!produto.value) return;
-
-  if (quantidade.value < 1) { 
-    toast.error("A quantidade deve ser pelo menos 1.");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error("Você precisa estar logado para adicionar itens ao carrinho.");
-      return;
+const buscarCategoria = async (categoriaId) => {
+    try {
+        const res = await api.get(`/categoria?Id=${categoriaId}`)
+        if (res.data && res.data.length > 0) categoriaNome.value = res.data[0].nome || 'Categoria'
+    } catch (error) {
+        categoriaNome.value = 'Categoria'
     }
-
-   
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const usuarioId = Number(payload.id);
-
-    if (!usuarioId) {
-      toast.error("Usuário inválido. Faça login novamente.");
-      return;
-    }
-
-    await apiController.post("/itemCarrinho",
-      {
-        UsuarioId: usuarioId,
-        ProdutoId: produto.value.id,
-        Qtd: quantidade.value 
-      },
-      { 
-        headers: { Authorization: `Bearer ${token}` } 
-      }
-    );
-
-    showToast.value = true;
-    quantidade.value = 1;
-
-  } catch (err: any) {
-    console.error("Erro ao adicionar ao carrinho:", err.response?.data || err);
-    toast.error(err.response?.data?.message || "Erro ao adicionar ao carrinho");
-  }
 }
 
+const buscarEstoque = async (produtoId) => {
+    try {
+        const res = await api.get(`/estoque?ProdutoId=${produtoId}`)
+        if (res.data && res.data.length > 0) estoque.value = res.data[0].qtdEstoque || 0
+        else estoque.value = 0
+    } catch (error) {
+        estoque.value = 0
+    }
+}
 
+const buscarAvaliacao = async (produtoId) => {
+    try {
+        const res = await api.get(`/avaliacao?produtoId=${produtoId}`)
+        if (res.data) {
+            if (Array.isArray(res.data)) avaliacaoMedia.value = res.data[0]?.media || res.data[0]?.nota || 0
+            else if (typeof res.data === 'number') avaliacaoMedia.value = res.data
+            else if (res.data?.media) avaliacaoMedia.value = res.data.media
+            else avaliacaoMedia.value = 0
+        } else avaliacaoMedia.value = 0
+    } catch (error) {
+        avaliacaoMedia.value = 0
+    }
+}
 
-onMounted(() => {
-  carregarAvaliacao();
-});
+const buscarImagemExtra = async (produtoId) => {
+    try {
+        const res = await api.get(`/produtoImagem/${produtoId}`, {
+            headers: {
+                Authorization: `Bearer ${token.value}`
+            }
+        })
+        if (res.data) imgs.value = Array.isArray(res.data) ? res.data : [res.data]
+        else imgs.value = []
+    } catch (error) {
+        imgs.value = []
+    }
+}
+
+const onImgError = (e) => {
+    e.target.src = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
+}
+
+const decrement = () => {
+    if (quantity.value > 1) quantity.value -= 1
+}
+
+const increment = () => {
+    if (quantity.value < estoque.value) quantity.value += 1
+}
+
+const onQuantityInput = () => {
+    if (quantity.value < 1) quantity.value = 1
+    if (quantity.value > estoque.value) quantity.value = estoque.value
+}
+
+const handleAddToCart = () => {
+    if (estoque.value <= 0) {
+        toast.error('essa quantidade nao pode ser adicionada ao carrinho!')
+        return
+    }
+    
+    const adicionarCarrinho = async () => {
+    try {
+        const body = {
+            ProdutoId: produtoAPI.value.id,
+            Quantidade: quantity.value,
+            UsuarioId: user.value.id
+        }
+
+        const res = await api.post("/itemCarrinho", body, {
+            headers: {
+                Authorization: `Bearer ${token.value}`
+            }
+        });
+
+        console.log("Item adicionado:", res.data)
+        toast.success('Produto adicionado ao carrinho!')
+        setTimeout(() => {
+            router.push('/')
+        }, 1500)
+    } catch (err) {
+        console.error("Erro ao adicionar ao carrinho:", err)
+        toast.error('Erro ao adicionar ao carrinho')
+    }
+    }
+
+    adicionarCarrinho()
+}
+
+const handleBuyNow = () => {
+    if (estoque.value <= 0) {
+        toast.error('Produto fora de estoque!')
+        return
+    }
+
+    router.push({
+        path: '/pagamento',
+        query: {
+            produtoId: produtoAPI.value.id,
+            quantidade: quantity.value
+        }
+    })
+    }
+
+const goBack = () => {
+    if (window.history.length > 1) router.back()
+    else router.push('/')
+}
 </script>
 
 <style scoped>
-
-.detalhes-produto {
-  width: 100%;
-  min-height: 100vh;
-  background: #f8f8fa; 
-  padding: 50px 20px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+.produto-page {
+    background: linear-gradient(180deg, #f9f6ff 0%, #fffaf0 100%);
+    min-height: 100vh;
 }
 
-.detalhes-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 2.5rem;
-  border: none;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.detalhes-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+.produto-inner {
+    max-width: 1200px;
 }
 
-
-.image-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.2rem;
+.produto-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #2b1b3a;
+    margin: 0;
 }
 
-.product-title {
-  font-size: 28px;
-  font-weight: 900;
-  color: #010101;
-  margin-bottom: 0.8rem;
-  text-align: center;
+.produto-grid {
+    display: grid;
+    grid-template-columns: 1fr 520px;
+    gap: 32px;
+    align-items: start;
 }
 
-.product-image {
-  width: 100%;
-  max-width: 450px;
-  border-radius: 20px;
-  background-color: #fff;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  object-fit: contain;
+@media (max-width: 1024px) {
+    .produto-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-
-.info-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 0 1rem;
-}
-.product-preco {
-  font-size: 2.6rem;
-  font-weight: 900;
-  color: #010101;
-  margin-bottom: 0.8rem;
-  text-align: justify;
-  
-}
-.product-desconto {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #d32f2f;
-  margin-bottom: 0.8rem;
-  text-align: justify;
-  text-decoration: line-through;
-  padding-bottom: 32px;
-}
-.product-descricao {
-  font-size: 0.9rem;
-  color: #444;
-  line-height: 1.6;
-  background-color: #fafafa;
-  padding: 1.2rem;
-  border-radius: 14px;
-  border: 1px solid #eee;
-  text-align: justify;
-  gap: 1rem;
-  
+.card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
 }
 
-.product-categoria {
-  font-size: 0.9rem;
-  color: #555;
-  font-weight: 500;
-  text-align: justify;
-  gap: 1rem;
-  padding-top: 48px;
-}
-.product-estoque {
-  font-size: 0.9rem;
-  color: #555;
-  font-weight: 500;
-  margin-top: 0.5rem;
-  text-align: justify;
-  gap: 1rem;
-}
-.product-avaliacao {
-  font-size: 0.9rem;
-  color: #555;
-  font-weight: 500;
-  margin-top: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  margin-right: 2px;
+.images-col .main-image {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    background: #fff;
 }
 
-.product-avaliacao span {
-  vertical-align: middle;
-}
-.product-quantidade{
-  font-size: 0.9rem;
-  color: #000000;
-  font-weight: 500;
-  margin-top: 0.5rem;
-  text-align: justify;
-  gap: 1rem;
-}
-.button-group {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.9rem;
-  margin-top: 1rem;
+.main-img {
+    width: 100%;
+    height: 560px; 
+    object-fit: contain;
+    border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
 }
 
-.btnAdd {
-  background: linear-gradient(135deg, #6b2dff, #9b4dff);
-  color: #fff;
-  font-weight: 700;
-  border-radius: 14px;
-  height: 50px;
-  padding: 0 20px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btnAdd:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(107,45,255,0.4);
+@media (max-width:1024px) {
+    .main-img {
+        height: 420px;
+    }
 }
 
-.btnBack {
-  background: #222;
-  color: #fff;
-  font-weight: 700;
-  border-radius: 14px;
-  height: 50px;
-  padding: 0 20px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btnBack:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+@media (max-width:640px) {
+    .main-img {
+        height: 320px;
+    }
 }
 
-/* Snackbar / Toast */
-.toast {
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0.5px;
-  padding: 12px 20px;
-  border-radius: 50px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+.thumbs {
+    display: flex;
+    gap: 14px;
+    margin-top: 18px;
+    flex-wrap: wrap;
 }
 
-@media (max-width: 960px) {
-  .detalhes-card {
-    padding: 1.5rem;
-  }
-  .info-section {
-    gap: 0.1rem;
-    padding: 0;
-  }
-  .product-price {
-    font-size: 2rem;
-  }
-  .product-description {
-    font-size: 0.8rem;
-  }
-  .product-category {
-    font-size: 0.8rem;
-    padding-left: 16px;
-  }
-  .product-avaliacao {
-    font-size: 0.8rem;
-    padding-left: 16px;
-  }
-  .product-quantidade {
-    font-size: 0.8rem;
-    padding-top: 8px;
-    padding-left: 16px;
-  }
+.thumb-btn {
+    width: 86px;
+    height: 86px;
+    padding: 6px;
+    border-radius: 12px;
+    background: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .18s ease;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
-@media (max-width: 600px) {
-  .detalhes-card {
-    padding: 1rem;
-  }
-  .product-title {
-    font-size: 22px;
-    padding-bottom: 20px;
-  }
-  .product-price {
-    font-size: 2rem;
-    padding-left: 24px;
-    padding-bottom: 8px;
-  }
-  .button-group {
+
+.thumb-btn[aria-pressed="true"] {
+    box-shadow: 0 20px 48px rgba(99, 33, 255, 0.18);
+    border-color: transparent;
+    outline: 4px solid rgba(139, 92, 246, 0.14);
+    transform: translateY(-4px);
+}
+
+.thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.price-card {
+    padding: 20px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.price-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.price-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.price {
+    font-size: 2.4rem;
+    font-weight: 900;
+    color: #7b2ff7;
+}
+
+.original {
+    color: #bfb6c6;
+    text-decoration: line-through;
+    font-weight: 700;
+}
+
+.savings {
+    background: #ffd54f;
+    color: #2b1b3a;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.small-card {
+    padding: 14px 18px;
+    margin-top: 16px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rating-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.star {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 1;
+    display: inline-block;
+    text-align: center;
+}
+
+.star.on {
+    color: #facc15;
+}
+
+.star.off {
+    color: #e9e9ee;
+}
+
+.rating-value {
+    color: #6b6b74;
+    font-weight: 600;
+}
+
+.meta-card {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.meta-label {
+    color: #8a7e9f;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.meta-value {
+    background: #f3eaff;
+    color: #6236c9;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.stock-good {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+.stock-low {
+    background: #fff7d6;
+    color: #7a5f00;
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+.stock-unavailable {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+.desc-card {
+    margin-top: 16px;
+    padding: 20px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff, #fffaf0);
+}
+
+.desc-title {
+    margin: 0 0 8px 0;
+    font-weight: 800;
+    color: #2b1b3a;
+}
+
+.desc-text {
+    margin: 0;
+    color: #6b6b74;
+    line-height: 1.6;
+}
+
+.qty-card {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 18px;
+    display: flex;
     flex-direction: column;
-    gap: 0.7rem;
-    padding: 2rem;
-  }
-  .image-section {
-    margin-bottom: 2rem;
-    padding-top: 36px;
-  }
-  .product-description {
-    font-size: 0.8rem;
-    padding: 1rem;
-    padding-left: 24px;
-  }
+    gap: 12px;
+}
+
+.qty-label {
+    font-weight: 700;
+    color: #6b6b74;
+}
+
+.qty-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.qty-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 56px;
+    height: 44px;
+    border-radius: 12px;
+    color: black;
+    border: 2px solid rgba(123, 47, 247, 0.14);
+    background: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .12s ease;
+}
+
+.qty-btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.qty-input {
+    width: 84px;
+    height: 44px;
+    text-align: center;
+    border-radius: 12px;
+    color: black;
+    border: 2px solid rgba(123, 47, 247, 0.14);
+    font-weight: 700;
+}
+
+.qty-max {
+    color: #8a7e9f;
+    font-weight: 600;
+}
+
+.actions {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+    flex-direction: column;
+}
+
+.btn-add {
+    flex: 1;
+    height: 56px;
+    background: linear-gradient(90deg, #7b2ff7, #9c4dff);
+    color: white;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-weight: 800;
+    box-shadow: 0 14px 36px rgba(124, 58, 237, 0.22);
+    border: none;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.btn-add:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 48px rgba(124, 58, 237, 0.28);
+}
+
+.btn-add:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-buy {
+    width: 100%;
+    height: 56px;
+    background: linear-gradient(90deg, #059669, #10b981);
+    color: white;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-weight: 800;
+    box-shadow: 0 14px 36px rgba(16, 185, 129, 0.22);
+    border: none;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.btn-buy:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 48px rgba(16, 185, 129, 0.28);
+}
+
+.btn-buy:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-back {
+    height: 56px;
+    min-width: 150px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: #fff;
+    color: #6b6b74;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .12s ease;
+}
+
+.btn-back:hover {
+    background: #f3f4f6;
+}
+
+.icon-cart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.icon-buy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.icon-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    font-size: 16px;
+    line-height: 1;
+}
+
+@media (max-width: 1024px) {
+    .fixed-action {
+        display: block;
+        width: calc(100% - 48px);
+    }
+}
+
+@media (max-width: 640px) {
+    .actions {
+        flex-direction: column;
+    }
+
+    .btn-add, .btn-buy, .btn-back {
+        width: 100%;
+    }
+}
+
+.loading-wrapper {
+    width: 100%;
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.loader {
+    width: 64px;
+    height: 64px;
+    border: 6px solid #e8d5ff;
+    border-top-color: #7b2ff7;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+.loading-text {
+    font-weight: 600;
+    color: #7b2ff7;
+    font-size: 1.1rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>
