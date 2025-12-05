@@ -51,7 +51,7 @@
                 <span class="detail-icon">👤</span>
                 <div class="detail-text">
                   <p class="detail-label">Cliente</p>
-                  <p class="detail-value">{{ ultimoPedido.cliente ?? '' }}</p>
+                  <p class="detail-value">{{ usuario.nome }}</p>
                 </div>
               </div>
             </div>
@@ -75,10 +75,6 @@
           </div>
 
           <div class="badge-status">Pagamento aprovado</div>
-
-          <button class="btn-detalhes">
-            Ver detalhes →
-          </button>
         </div>
 
         <!-- Right: Produto Mais Vendido -->
@@ -124,11 +120,26 @@ const token = ref(tokenLocal)
 const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
 
 const dashboardData = ref({})
+const usuario = ref({})
 
 onMounted(async () => {
+
+  const iduser = Number(user.value.id)
+
   const res = await api.get(`/api/dashboard/${user.value.id}`)
+  const res2 = await api.get("/usuarios",{
+    headers: {
+      Authorization: `Bearer ${token.value}`
+    },
+    params: {
+      id: iduser
+    }
+  })
+
+  usuario.value = res2.data[0]
   dashboardData.value = res.data
   console.log('Dashboard Data:', res.data);
+  console.log('Usuário Data:', res2.data[0]);
 });
 
 const formatCurrency = (v) => {
@@ -188,7 +199,7 @@ const produtoImgSrc = computed(() => {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 40px;
 }
@@ -257,11 +268,14 @@ const produtoImgSrc = computed(() => {
 
 .main-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 24px;
 }
 
 .card {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
   background: #fff;
   border: 1px solid #e8e8e8;
   border-radius: 12px;
@@ -424,7 +438,7 @@ const produtoImgSrc = computed(() => {
 
 @media (max-width: 1024px) {
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .main-grid {
