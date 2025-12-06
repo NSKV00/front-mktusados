@@ -54,133 +54,107 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
-import { toast } from 'vue3-toastify'
-import { googleTokenLogin } from 'vue3-google-login'
-import api, { googleAuth } from '../controller/api'
-import { encrypt, encryptJSON } from "../utils/crypto"
+  import { ref, nextTick } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { toast } from 'vue3-toastify'
+  import api, {googleAuth } from '../controller/api'
+  import { encryptJSON } from "../utils/crypto"
+  import { googleTokenLogin } from 'vue3-google-login'
 
-const router = useRouter()
-const email = ref('')
-const senha = ref('')
-const showPassword = ref(false)
-const loading = ref(false)
-const googleLoading = ref(false)
-const form = ref()
+  const router = useRouter()
 
-const isValidToken = (token: string): boolean => {
-  if (!token || typeof token !== 'string') return false
-  const parts = token.split('.')
-  return parts.length === 3 && parts.every(part => part && part.length > 0)
-}
+  const email = ref('')
+  const senha = ref('')
+  const loading = ref(false)
+  const showPassword = ref(false)
+  const googleLoading = ref(false)
 
-const validateForm = (): boolean => {
-  if (!email.value || !senha.value) {
-    toast.error('Preencha e-mail e senha.')
-    return false
-  }
-  if (!/.+@.+\..+/.test(email.value)) {
-    toast.error('E-mail inválido.')
-    return false
-  }
-  return true
-}
-
-const retrieveUsuario = async (token: string) => {
-  try {
-    const { data, status } = await api.get('/retrieve', {
-       headers: { Authorization: `Bearer ${token}` }
-    })
-
-    if (status === 200 && data) {
-      localStorage.setItem("usuario", encryptJSON(data))
-    } else {
-      toast.warn('Não foi possível recuperar os dados do usuário.')
+  const validateForm = (): boolean => {
+    if (!email.value || !senha.value) {
+      toast.error("Preencha e-mail e senha.")
+      return false
     }
-  } catch (error: any) {
-    console.error('Erro ao recuperar usuário:', error)
-    toast.error('Falha ao carregar dados do usuário.')
-  }
-}
+    if (!/.+@.+\..+/.test(email.value)) {
+      toast.error("E-mail inválido.")
+      return false
+    }
+    return true
+  };
 
-const handleSubmit = async () => {
-  await nextTick()
-  if (!validateForm()) return
+  const retrieveUsuario = async () => {
+    try {
+      const { data } = await api.get("/retrieve");
+      localStorage.setItem("usuario", encryptJSON(data));
+    } catch (err) {
+      console.error("Erro recuperando usuário:", err);
+    }
+  };
 
-  loading.value = true
-  try {
-    const { data, status } = await api.post('/login', {
-      email: email.value,
-      senha: senha.value
-    })
+  const handleSubmit = async () => {
+    await nextTick();
+    if (!validateForm()) return;
 
-    if (status === 200 || status === 201) {
-      toast.success('Login realizado com sucesso!')
-      const token = data.token
-      
-      if (!isValidToken(token)) {
-        toast.error('Token recebido é inválido')
-        return
+    loading.value = true;
+
+    try {
+      const { data, status } = await api.post("/login", {
+        email: email.value,
+        senha: senha.value,
+      });
+
+      if (status === 200 || status === 201) {
+        localStorage.setItem("token", data.token);
+        await retrieveUsuario();
+        toast.success("Login realizado!");
+        setTimeout(() => router.push('/'), 2000)
+      } else {
+        toast.error("Falha no login.");
       }
-
-      localStorage.setItem("token", token)
-
-      await retrieveUsuario(token)
-
-      setTimeout(() => router.push('/'), 1200)
-    } else {
-      toast.error('Falha ao efetuar login.')
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Erro no servidor.");
+    } finally {
+      loading.value = false;
     }
-  } catch (error: any) {
-    const mensagem =
-      error.response?.data?.message ||
-      'Erro de conexão com o servidor. Tente novamente.'
-    toast.error(mensagem)
-    console.error(error)
-  } finally {
-    loading.value = false
+  };
+
+  const handleGoogleLogin = async () => {
+    googleLoading.value = true
+    try {
+      const { access_token } = await googleTokenLogin()
+      const googleUserInfo = await getGoogleUserInfo(access_token)
+
+      const { data, status } = await googleAuth.login({
+        email: googleUserInfo.email,
+        name: googleUserInfo.name,
+        googleId: googleUserInfo.sub || googleUserInfo.id,
+        picture: googleUserInfo.picture
+      })
+
+      if (status === 200 || status === 201) {
+        toast.success('Login com Google realizado com sucesso!')
+        localStorage.setItem('usuario', JSON.stringify(data.usuario || data))
+        localStorage.setItem('token', data.token || '')
+
+        router.push('/')
+      }
+    } catch (error: any) {
+      toast.error('Erro ao fazer login com Google')
+      console.error(error)
+    } finally {
+      googleLoading.value = false
+    }
   }
-}
 
-const handleGoogleLogin = async () => {
-  googleLoading.value = true
-  try {
-    const { access_token } = await googleTokenLogin()
-    const googleUserInfo = await getGoogleUserInfo(access_token)
-
-    const { data, status } = await googleAuth.login({
-      email: googleUserInfo.email,
-      name: googleUserInfo.name,
-      googleId: googleUserInfo.sub || googleUserInfo.id,
-      picture: googleUserInfo.picture
+  const getGoogleUserInfo = async (access_token: string) => {
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
     })
-
-    if (status === 200 || status === 201) {
-      toast.success('Login com Google realizado com sucesso!')
-      localStorage.setItem('usuario', JSON.stringify(data.usuario || data))
-      localStorage.setItem('token', data.token || '')
-
-      router.push('/')
-    }
-  } catch (error: any) {
-    toast.error('Erro ao fazer login com Google')
-    console.error(error)
-  } finally {
-    googleLoading.value = false
+    return await response.json()
   }
-}
 
-const getGoogleUserInfo = async (access_token: string) => {
-  const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: {
-      Authorization: `Bearer ${access_token}`
-    }
-  })
-  return await response.json()
-}
-
-const goToCadastro = () => router.push('/cadastro')
+  const goToCadastro = () => router.push('/cadastro')
 </script>
 
 <style scoped>

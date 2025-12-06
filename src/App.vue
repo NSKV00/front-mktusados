@@ -15,7 +15,6 @@ import AppFooter from './components/footer.vue'
 import AppHeader from './components/header.vue'
 
 const route = useRoute()
-const isLoginPage = computed(() => route.path === '/login')
 const isHomePage = computed(() => route.path === '/')
 const isDetalhesProduto = computed(() => route.path.startsWith('/produtos/'))
 const isDetalhesProdutos = computed(() => isHomePage.value || isDetalhesProduto.value)

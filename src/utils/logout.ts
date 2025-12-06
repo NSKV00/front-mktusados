@@ -1,5 +1,6 @@
 export function forceLogout() {
   localStorage.removeItem("token");
+  localStorage.removeItem("usuario");
 
-  window.location.href = "/login"; 
+  window.location.replace("/login");
 }

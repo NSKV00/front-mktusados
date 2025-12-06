@@ -1,22 +1,24 @@
-import axios from 'axios';
-import { jwtDecode } from "jwt-decode"
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import { forceLogout } from "../utils/logout";
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://api-c-atha.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE || "https://api-c-atha.onrender.com";
 
-// Função para validar token
 const isValidToken = (token: string): boolean => {
-  if (!token || typeof token !== 'string') return false
-  const parts = token.split('.')
-  return parts.length === 3 && parts.every(part => part && part.length > 0)
-}
+  if (!token) return false;
+  const parts = token.split(".");
+  return parts.length === 3 && parts.every((p) => p.length > 0);
+};
 
-const api = axios.create({
-    baseURL: API_BASE,
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: false,
-})
+export const api = axios.create({
+  baseURL: API_BASE,
+  headers: { "Content-Type": "application/json" },
+  withCredentials: false,
+});
 
+/* ----------------------------------------------------------
+   INTERCEPTOR REQUEST → valida token e injeta Authorization
+-----------------------------------------------------------*/
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -24,21 +26,22 @@ api.interceptors.request.use(
     if (token) {
       try {
         if (!isValidToken(token)) {
-          console.warn("Token inválido detectado, removendo...");
+          console.warn("Token malformado → Logout");
           forceLogout();
-          return Promise.reject("Token inválido");
+          return Promise.reject("Token malformado");
         }
 
         const decoded: any = jwtDecode(token);
 
         if (decoded.exp * 1000 < Date.now()) {
+          console.warn("Token expirado → Logout");
           forceLogout();
           return Promise.reject("Token expirado");
         }
 
         config.headers.Authorization = `Bearer ${token}`;
-      } catch (error) {
-        console.error("Erro ao decodificar token:", error);
+      } catch (err) {
+        console.error("Erro analisando token → Logout");
         forceLogout();
         return Promise.reject("Token inválido");
       }
@@ -50,10 +53,10 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  response => response,
-
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.warn("401 recebido do servidor → Logout automático");
       forceLogout();
     }
     return Promise.reject(error);

@@ -19,6 +19,8 @@
 
           <button class="ml-edit-btn" @click="abrirModal">Editar perfil</button>
 
+          <button class="ml-edit-btn" @click="abrirModalLogout">Logout</button>
+
           <div class="ml-details">
             <div class="ml-detail">
               <span class="label">Telefone</span>
@@ -122,6 +124,20 @@
           <div class="modal-actions">
             <button type="button" class="btn-secondary" @click="fecharModal">Cancelar</button>
             <button type="submit" class="btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Logout usuário -->
+    <div v-if="abrirLogout" class="ml-modal-backdrop" @click.self="fecharLogout">
+      <div class="ml-modal">
+        <h3>Fazer logout</h3>
+        <form  class="ml-form">
+          <p>Tem certeza que deseja fazer logout?</p>
+          <div class="modal-actions">
+             <button type="button" class="btn-secondary" @click="fecharLogout">Cancelar</button>
+            <button class="ml-edit-btn" @click="Logout">Logout</button>
           </div>
         </form>
       </div>
@@ -805,11 +821,13 @@ import { ref, onMounted, computed } from 'vue'
 import apiController from "../controller/api"
 import { jwtDecode } from "jwt-decode"
 import { toast } from 'vue3-toastify'
+import { forceLogout } from '../utils/logout'
 
 const produtos = ref([])
 const usuario = ref(null)
 const imagemBase64 = ref('')
 const modalAberto = ref(false)
+const abrirLogout = ref(false)
 const isCarregando = ref(true)
 const modalImagemAberto = ref(false)
 const preview = ref(null)
@@ -1039,7 +1057,10 @@ const validarCPF = (cpf) => {
 }
 
 const abrirModal = () => modalAberto.value = true
+const abrirModalLogout = () => abrirLogout.value = true
 const fecharModal = () => modalAberto.value = false
+const Logout = () => {forceLogout()}
+const fecharLogout = () => abrirLogout.value = false
 
 const salvarDados = async () => {
   const inicio = { ...usuario.value }
