@@ -292,10 +292,10 @@ const handleAddToCart = () => {
     const adicionarCarrinho = async () => {
     try {
         const body = {
-            ProdutoId: produtoAPI.value.id,
-            Quantidade: quantity.value,
-            UsuarioId: user.value.id
-        }
+        UsuarioId: user.value.id,
+        ProdutoId: produtoAPI.value.id,
+        Qtd: quantity.value
+    };
 
         const res = await api.post("/itemCarrinho", body, {
             headers: {
