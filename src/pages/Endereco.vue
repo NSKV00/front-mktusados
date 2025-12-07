@@ -39,7 +39,7 @@
                   {{ formatCep(end.cep) }} — Nº {{ end.numero }}
                 </h3>
                 <p class="text-body2 text-grey mb-0">
-                  {{ end.logradouro || '-' }}
+                  {{ end.rua || '-' }}
                 </p>
                 <p class="text-body2 text-grey">
                   {{ end.bairro || '-' }} — {{ end.cidade }} / {{ end.estado }}
@@ -158,8 +158,8 @@
 
               <v-col cols="12">
                 <v-text-field
-                  v-model="form.logradouro"
-                  label="Logradouro"
+                  v-model="form.rua"
+                  label="Rua"
                   prepend-icon="mdi-road-variant"
                   readonly
                   variant="outlined"
@@ -250,7 +250,7 @@
   const form = ref({
     cep: "",
     numero: "",
-    logradouro: "",
+    rua: "",
     bairro: "",
     cidade: "",
     estado: ""
@@ -319,13 +319,13 @@
       form.value = {
         cep: formatCep(String(endereco.cep)),
         numero: endereco.numero ?? "",
-        logradouro: endereco.rua ?? "",
+        rua: endereco.rua ?? "",
         bairro: endereco.bairro ?? "",
         cidade: endereco.cidade ?? "",
         estado: endereco.estado ?? ""
       }
     } else {
-      form.value = { cep: "", numero: "", logradouro: "", bairro: "", cidade: "", estado: "" }
+      form.value = { cep: "", numero: "", rua: "", bairro: "", cidade: "", estado: "" }
     }
 
     modalAberto.value = true
@@ -336,7 +336,7 @@
     enderecoEdicao.value = null
 
     setTimeout(() => {
-      form.value = { cep: "", numero: "", logradouro: "", bairro: "", cidade: "", estado: "" }
+      form.value = { cep: "", numero: "", rua: "", bairro: "", cidade: "", estado: "" }
     }, 200)
   }
 
@@ -350,7 +350,7 @@
 
       if (!dados || dados.erro) return
 
-      form.value.logradouro = dados.logradouro || "";
+      form.value.rua = dados.logradouro || "";
       form.value.bairro = dados.bairro || "";
       form.value.cidade = dados.localidade || "";
       form.value.estado = dados.uf || "";
@@ -453,28 +453,28 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 28px 16px;
-    background: linear-gradient(180deg, #f5f5f5, #fafafa);
+    background: linear-gradient(180deg, #cccccc, #cacaca);
     min-height: 100vh;
     box-sizing: border-box;
   }
 
   .header-card {
-    background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(255, 193, 7, 0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #fbfcff 100%);
+    box-shadow: 0 2px 10px rgba(16, 24, 40, 0.04);
+    border: 1px solid rgba(25, 118, 210, 0.06);
     border-radius: 16px;
     overflow: hidden;
     transition: box-shadow 0.3s ease;
   }
   .header-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 6px 20px rgba(25, 118, 210, 0.06);
   }
 
   .endereco-card {
     background: #fff;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #eef3f8;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     height: 100%;
     display: flex;
@@ -482,26 +482,26 @@
   }
   .endereco-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(255, 193, 7, 0.15);
-    border-color: #ffc107;
+    box-shadow: 0 12px 28px rgba(25, 118, 210, 0.12);
+    border-color: rgba(25, 118, 210, 0.16);
   }
   .principal-card {
-    border-color: #ffc107;
-    background: linear-gradient(135deg, #fffef9 0%, #fffbf0 100%);
+    border-color: rgba(25, 118, 210, 0.18);
+    background: linear-gradient(135deg, #f4fbff 0%, #ffffff 100%);
   }
   .principal-card:hover {
-    box-shadow: 0 12px 32px rgba(255, 193, 7, 0.25);
+    box-shadow: 0 12px 32px rgba(25, 118, 210, 0.18);
   }
 
   .empty-card {
-    background: linear-gradient(135deg, #fffef9 0%, #fff 100%);
-    border: 2px dashed #ffc107;
+    background: linear-gradient(135deg, #f8fbff 0%, #fff 100%);
+    border: 2px dashed rgba(25, 118, 210, 0.16);
     border-radius: 16px;
     transition: all 0.3s ease;
   }
   .empty-card:hover {
-    border-color: #ffb300;
-    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.1);
+    border-color: rgba(25, 118, 210, 0.24);
+    box-shadow: 0 6px 18px rgba(25, 118, 210, 0.06);
   }
 
   .modal-dialog :deep(.v-overlay__content) {
@@ -509,12 +509,12 @@
   }
   .modal-card {
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 18px 48px rgba(16, 24, 40, 0.08);
     overflow: hidden;
   }
   .bg-gradient-light {
-    background: linear-gradient(135deg, #fffef9 0%, #fff 100%);
-    border-bottom: 1px solid #ffc107;
+    background: linear-gradient(135deg, #f4fbff 0%, #fff 100%);
+    border-bottom: 1px solid rgba(25, 118, 210, 0.12);
   }
   .modal-title {
     color: #333;
@@ -530,7 +530,7 @@
   .modal-actions {
     justify-content: flex-end;
     gap: 12px;
-    background: linear-gradient(135deg, #f9f9f9 0%, #fff 100%);
+    background: linear-gradient(135deg, #f8f9fb 0%, #fff 100%);
   }
 
   .v-dialog--active .modal-card {
@@ -565,14 +565,14 @@
   @media (max-width: 600px) {
     .endereco-container {
       padding: 12px 8px;
-      background: linear-gradient(180deg, #fafafa, #f5f5f5);
+      background: linear-gradient(180deg, #fafcff, #f5fbff);
     }
     .endereco-card {
       border-radius: 12px;
     }
     .endereco-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(255, 193, 7, 0.12);
+      box-shadow: 0 8px 20px rgba(25, 118, 210, 0.08);
     }
 
     .header-card {
@@ -664,29 +664,32 @@
     }
   }
 
+  /* Mantemos aparência clara mesmo em preferência escura do sistema.
+     Isso evita que a página fique com fundo escuro inesperadamente. */
   @media (prefers-color-scheme: dark) {
     .endereco-container {
-      background: linear-gradient(180deg, #1e1e1e, #262626);
+      background: linear-gradient(180deg, #cccccc, #c9c9c9);
     }
 
     .header-card,
     .endereco-card,
     .empty-card {
-      background: #2d2d2d;
-      border-color: #404040;
+      background: #ffffff;
+      border-color: rgba(25, 118, 210, 0.06);
+      box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);
     }
 
     .modal-card {
-      background: #2d2d2d;
+      background: #ffffff;
     }
 
     .bg-gradient-light {
-      background: #363636;
-      border-bottom-color: #ffc107;
+      background: linear-gradient(135deg, #f4fbff 0%, #fff 100%);
+      border-bottom-color: rgba(25, 118, 210, 0.12);
     }
 
     .modal-actions {
-      background: #262626;
+      background: linear-gradient(135deg, #f8f9fb 0%, #fff 100%);
     }
   }
 

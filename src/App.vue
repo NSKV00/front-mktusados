@@ -9,19 +9,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import AppFooter from './components/footer.vue'
-import AppHeader from './components/header.vue'
+  import { computed } from 'vue'
+  import { useRoute } from 'vue-router'
+  import AppFooter from './components/footer.vue'
+  import AppHeader from './components/header.vue'
 
-const route = useRoute()
-const isHomePage = computed(() => route.path === '/')
-const isDetalhesProduto = computed(() => route.path.startsWith('/produtos/'))
-const isDetalhesProdutos = computed(() => isHomePage.value || isDetalhesProduto.value)
-const isPerfilPage = computed(() => route.path === '/perfil')
-const isEnderecoPage = computed(() => route.path === '/enderecos')
-const isProdutoPage = computed(() => route.path === '/produtoCriar')
-
+  const route = useRoute()
+  const isHomePage = computed(() => route.path === '/')
+  const isDetalhesProduto = computed(() => route.path.startsWith('/produtos/'))
+  const isDetalhesProdutos = computed(() => isHomePage.value || isDetalhesProduto.value)
+  const isPerfilPage = computed(() => route.path === '/perfil')
+  const isEnderecoPage = computed(() => route.path === '/enderecos')
+  const isProdutoPage = computed(() => route.path === '/produtoCriar')
 </script>
 
 <style>

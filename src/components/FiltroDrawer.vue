@@ -132,7 +132,6 @@
   )
   watch(openLocal, (v) => emit("update:open", v))
 
-  const formRef = ref()
   const local = ref({
     nomeProduto: "",
     categoriaNome: "" as string | null,
