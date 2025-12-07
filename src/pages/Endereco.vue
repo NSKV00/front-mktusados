@@ -233,207 +233,217 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
-import api from "../controller/api"
-import { decryptJSON } from "../utils/crypto"
+  import { ref, onMounted } from "vue"
+  import api from "../controller/api"
+  import { decryptJSON } from "../utils/crypto"
+  import { toast } from 'vue3-toastify'
+  import 'vue3-toastify/dist/index.css'
 
-const usuario = decryptJSON(localStorage.getItem("usuario")) || { id: null }
+  const usuario = decryptJSON(localStorage.getItem("usuario")) || { id: null }
 
-const enderecos = ref([])
-const enderecoEdicao = ref(null)
-const enderecoPrincipalId = ref(null)
-const modalAberto = ref(false)
-const enderecoPrincipalRegistroId = ref(null)
+  const enderecos = ref([])
+  const enderecoEdicao = ref(null)
+  const enderecoPrincipalId = ref(null)
+  const modalAberto = ref(false)
+  const enderecoPrincipalRegistroId = ref(null)
 
-const form = ref({
-  cep: "",
-  numero: "",
-  logradouro: "",
-  bairro: "",
-  cidade: "",
-  estado: ""
-})
+  const form = ref({
+    cep: "",
+    numero: "",
+    logradouro: "",
+    bairro: "",
+    cidade: "",
+    estado: ""
+  })
 
-const formRef = ref(null)
+  const formRef = ref(null)
 
-const formatCep = (raw) => {
-  if (!raw) return ""
-  const onlyDigits = raw.replace(/\D/g, "")
-  if (onlyDigits.length > 5) {
-    return onlyDigits.replace(/(\d{5})(\d)/, "$1-$2").slice(0, 9)
+  const formatCep = (raw) => {
+    if (!raw) return ""
+    const onlyDigits = raw.replace(/\D/g, "")
+    if (onlyDigits.length > 5) {
+      return onlyDigits.replace(/(\d{5})(\d)/, "$1-$2").slice(0, 9)
+    }
+    return onlyDigits
   }
-  return onlyDigits
-}
 
-const formatCepInPlace = () => {
-  form.value.cep = formatCep(form.value.cep)
-}
+  const formatCepInPlace = () => {
+    form.value.cep = formatCep(form.value.cep)
+  }
 
-const formatCepDisplay = (cep) => {
-  if (!cep) return "-"
-  const s = String(cep).replace(/\D/g, "")
-  if (s.length === 8) return s.replace(/(\d{5})(\d{3})/, "$1-$2")
-  return s
-}
+  const formatCepDisplay = (cep) => {
+    if (!cep) return "-"
+    const s = String(cep).replace(/\D/g, "")
+    if (s.length === 8) return s.replace(/(\d{5})(\d{3})/, "$1-$2")
+    return s
+  }
 
-const formatCepForApi = (cep) => String(cep).replace(/\D/g, "")
+  const formatCepForApi = (cep) => String(cep).replace(/\D/g, "")
 
-const carregarEnderecos = async () => {
-  try {
-    if (!usuario?.id) {
+  const carregarEnderecos = async () => {
+    try {
+      if (!usuario?.id) {
+        enderecos.value = []
+        return
+      }
+
+      const res = await api.get(`/endereco`, {
+        params: { id: usuario.id }
+      })
+
+      enderecos.value = Array.isArray(res.data) ? res.data : []
+    } catch (e) {
+      console.error("Erro ao carregar endereços:", e)
       enderecos.value = []
+    }
+  }
+
+  const carregarEnderecoPrincipal = async () => {
+    if (!usuario?.id) return
+
+    try {
+      const res = await api.get(`/endereco-principal/${usuario.id}`)
+
+      enderecoPrincipalId.value = res.data?.enderecoId || null
+      enderecoPrincipalRegistroId.value = res.data?.id || null
+    } catch (e) {
+      enderecoPrincipalId.value = null
+      enderecoPrincipalRegistroId.value = null
+    }
+  }
+
+  const abrirModal = (endereco = null) => {
+    enderecoEdicao.value = endereco
+
+    if (endereco) {
+      form.value = {
+        cep: formatCep(String(endereco.cep)),
+        numero: endereco.numero ?? "",
+        logradouro: endereco.rua ?? "",
+        bairro: endereco.bairro ?? "",
+        cidade: endereco.cidade ?? "",
+        estado: endereco.estado ?? ""
+      }
+    } else {
+      form.value = { cep: "", numero: "", logradouro: "", bairro: "", cidade: "", estado: "" }
+    }
+
+    modalAberto.value = true
+  }
+
+  const fecharModal = () => {
+    modalAberto.value = false
+    enderecoEdicao.value = null
+
+    setTimeout(() => {
+      form.value = { cep: "", numero: "", logradouro: "", bairro: "", cidade: "", estado: "" }
+    }, 200)
+  }
+
+  const buscarCep = async () => {
+    const cepRaw = formatCepForApi(form.value.cep)
+    if (!cepRaw || cepRaw.length !== 8) return
+
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`)
+      const dados = await res.json()
+
+      if (!dados || dados.erro) return
+
+      form.value.logradouro = dados.logradouro || "";
+      form.value.bairro = dados.bairro || "";
+      form.value.cidade = dados.localidade || "";
+      form.value.estado = dados.uf || "";
+    } catch (e) {
+      console.error("Erro ao buscar CEP:", e)
+    }
+  }
+
+  const salvarEndereco = async () => {
+    const cepNumbers = formatCepForApi(form.value.cep)
+    if (cepNumbers.length !== 8) {
+      toast.error("Informe um CEP válido.")
       return
     }
 
-    const res = await api.get(`/endereco`, {
-      params: { id: usuario.id }
-    })
-
-    enderecos.value = Array.isArray(res.data) ? res.data : []
-  } catch (e) {
-    console.error("Erro ao carregar endereços:", e)
-    enderecos.value = []
-  }
-}
-
-const carregarEnderecoPrincipal = async () => {
-  if (!usuario?.id) return
-
-  try {
-    const res = await api.get(`/endereco-principal/${usuario.id}`)
-
-    enderecoPrincipalId.value = res.data?.enderecoId || null
-    enderecoPrincipalRegistroId.value = res.data?.id || null
-  } catch (e) {
-    enderecoPrincipalId.value = null
-    enderecoPrincipalRegistroId.value = null
-  }
-}
-
-const abrirModal = (endereco = null) => {
-  enderecoEdicao.value = endereco
-
-  if (endereco) {
-    form.value = {
-      cep: formatCep(String(endereco.cep)),
-      numero: endereco.numero ?? "",
-      logradouro: endereco.rua ?? "",
-      bairro: endereco.bairro ?? "",
-      cidade: endereco.cidade ?? "",
-      estado: endereco.estado ?? ""
-    }
-  } else {
-    form.value = { cep: "", numero: "", logradouro: "", bairro: "", cidade: "", estado: "" }
-  }
-
-  modalAberto.value = true
-}
-
-const fecharModal = () => {
-  modalAberto.value = false
-  enderecoEdicao.value = null
-
-  setTimeout(() => {
-    form.value = { cep: "", numero: "", logradouro: "", bairro: "", cidade: "", estado: "" }
-  }, 200)
-}
-
-const buscarCep = async () => {
-  const cepRaw = formatCepForApi(form.value.cep)
-  if (!cepRaw || cepRaw.length !== 8) return
-
-  try {
-    const res = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`)
-    const dados = await res.json()
-
-    if (!dados || dados.erro) return
-
-    form.value.logradouro = dados.logradouro || "";
-    form.value.bairro = dados.bairro || "";
-    form.value.cidade = dados.localidade || "";
-    form.value.estado = dados.uf || "";
-  } catch (e) {
-    console.error("Erro ao buscar CEP:", e)
-  }
-}
-
-const salvarEndereco = async () => {
-  const cepNumbers = formatCepForApi(form.value.cep)
-  if (cepNumbers.length !== 8) {
-    alert("Informe um CEP válido.")
-    return
-  }
-
-  if (!form.value.numero) {
-    alert("Informe o número.")
-    return
-  }
-
-  const payload = {
-  cep: formatCepForApi(form.value.cep),
-  numero: Number(form.value.numero),
-  usuarioId: usuario.id
-}
-
-  try {
-    if (enderecoEdicao.value && enderecoEdicao.value.id) {
-      await api.patch(`/endereco/${enderecoEdicao.value.id}`, payload)
-    } else {
-      await api.post("/endereco", payload)
+    if (!form.value.numero) {
+      toast.error("Informe o número.")
+      return
     }
 
-    fecharModal()
-    await carregarEnderecos()
-    await carregarEnderecoPrincipal()
-  } catch (e) {
-    console.error("Erro ao salvar endereço:", e?.response?.data || e)
-    alert("Erro ao salvar endereço.")
-  }
-}
-
-const deletarEndereco = async (id) => {
-  if (!confirm("Deseja excluir este endereço?")) return
-
-  try {
-    await api.delete(`/endereco/${id}`)
-
-    await carregarEnderecos()
-    await carregarEnderecoPrincipal()
-  } catch (e) {
-    console.error("Erro ao deletar endereço:", e)
-    alert("Erro ao deletar endereço.")
-  }
-}
-
-const definirPrincipal = async (enderecoId) => {
-  if (!usuario?.id) {
-    alert("Usuário inválido.")
-    return
+    const payload = {
+    cep: formatCepForApi(form.value.cep),
+    numero: Number(form.value.numero),
+    usuarioId: usuario.id
   }
 
-  try {
-    if (enderecoPrincipalRegistroId.value) {
-      await api.patch(`/endereco-principal/${enderecoPrincipalRegistroId.value}`, { enderecoId })
-    } else {
-      const res = await api.post("/endereco-principal", {
-        usuarioId: usuario.id,
-        enderecoId
+    try {
+      if (enderecoEdicao.value && enderecoEdicao.value.id) {
+        await api.patch(`/endereco/${enderecoEdicao.value.id}`, payload)
+      } else {
+        await api.post("/endereco", payload)
+      }
+
+      fecharModal()
+      await carregarEnderecos()
+      await carregarEnderecoPrincipal()
+      toast.success("Endereço salvo com sucesso!")
+    } catch (e) {
+      console.error("Erro ao salvar endereço:", e?.response?.data || e)
+      toast.error("Erro ao salvar endereço.")
+    }
+  }
+
+  const deletarEndereco = async (id) => {
+    const confirmar = () => {
+      return new Promise((resolve) => {
+        toast.info("Confirmar exclusão?")
+        resolve(true)
       })
-
-      enderecoPrincipalRegistroId.value = res.data?.id || null
     }
 
-    enderecoPrincipalId.value = enderecoId
-  } catch (e) {
-    console.error("Erro ao definir principal:", e)
-    alert("Erro ao definir principal.")
-  }
-}
+    try {
+      await api.delete(`/endereco/${id}`)
 
-onMounted(async () => {
-  await carregarEnderecos()
-  await carregarEnderecoPrincipal()
-})
+      await carregarEnderecos()
+      await carregarEnderecoPrincipal()
+      toast.success("Endereço excluído com sucesso!")
+    } catch (e) {
+      console.error("Erro ao deletar endereço:", e)
+      toast.error("Erro ao deletar endereço.")
+    }
+  }
+
+  const definirPrincipal = async (enderecoId) => {
+    if (!usuario?.id) {
+      toast.error("Usuário inválido.")
+      return
+    }
+
+    try {
+      if (enderecoPrincipalRegistroId.value) {
+        await api.patch(`/endereco-principal/${enderecoPrincipalRegistroId.value}`, { enderecoId })
+      } else {
+        const res = await api.post("/endereco-principal", {
+          usuarioId: usuario.id,
+          enderecoId
+        })
+
+        enderecoPrincipalRegistroId.value = res.data?.id || null
+      }
+
+      enderecoPrincipalId.value = enderecoId
+      toast.success("Endereço principal definido com sucesso!")
+    } catch (e) {
+      console.error("Erro ao definir principal:", e)
+      toast.error("Erro ao definir principal.")
+    }
+  }
+
+  onMounted(async () => {
+    await carregarEnderecos()
+    await carregarEnderecoPrincipal()
+  })
 </script>
 
 <style scoped>
