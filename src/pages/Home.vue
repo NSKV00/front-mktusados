@@ -129,12 +129,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue';
-  import { useRouter } from 'vue-router';
-  import api from '../controller/api';
-  import Carrinho from '../components/carrinho.vue';
-  import FiltroDrawer from '../components/FiltroDrawer.vue';
-  import { toast } from 'vue3-toastify';
+  import { ref, computed, onMounted, watch } from 'vue'
+  import { useRouter } from 'vue-router'
+  import api from '../controller/api'
+  import Carrinho from '../components/carrinho.vue'
+  import FiltroDrawer from '../components/FiltroDrawer.vue'
+  import { toast } from 'vue3-toastify'
 
   interface Product {
     id: number;
@@ -157,22 +157,22 @@
     usuarioId?: number;
   }
 
-  const router = useRouter();
+  const router = useRouter()
 
-  const isLoading = ref(true);
-  const products = ref<Product[]>([]);
-  const carrinho = ref<CarrinhoItem[]>([]);
-  const localSearch = ref('');
+  const isLoading = ref(true)
+  const products = ref<Product[]>([])
+  const carrinho = ref<CarrinhoItem[]>([])
+  const localSearch = ref('')
   const quickCategories = ref(api.get('/categoria').then(res => {
-    const cats = Array.isArray(res.data) ? res.data : [];
-    return ['Tudo', ...cats];
-  }).catch(() => ['Tudo']));
-  const selectedCategory = ref<string | null>(null);
-  const filtroDrawer = ref(false);
-  const carrinhoDrawer = ref(false);
-  const paginaAtual = ref(1);
-  const itensPorPagina = 32;
-  const sortOrder = ref<'recent' | 'price-asc' | 'price-desc'>('recent');
+    const cats = Array.isArray(res.data) ? res.data : []
+    return ['Tudo', ...cats]
+  }).catch(() => ['Tudo']))
+  const selectedCategory = ref<string | null>(null)
+  const filtroDrawer = ref(false)
+  const carrinhoDrawer = ref(false)
+  const paginaAtual = ref(1)
+  const itensPorPagina = 32
+  const sortOrder = ref<'recent' | 'price-asc' | 'price-desc'>('recent')
 
   const filters = ref({
     nomeProduto: '',
@@ -180,74 +180,74 @@
     vendedorNome: '',
     valorMinimo: null as number | null,
     valorMaximo: null as number | null
-  });
+  })
 
   const sortItems = [
     { title: 'Mais recentes', value: 'recent' },
     { title: 'Menor preço', value: 'price-asc' },
     { title: 'Maior preço', value: 'price-desc' },
-  ];
+  ]
 
-  const categorias = computed(() => Array.from(new Set(products.value.map(p => p.categoriaNome || p.categoria || 'Outros'))));
-  const vendedores = computed(() => Array.from(new Set(products.value.map(p => p.vendedorNome || 'Vendedor'))));
+  const categorias = computed(() => Array.from(new Set(products.value.map(p => p.categoriaNome || p.categoria || 'Outros'))))
+  const vendedores = computed(() => Array.from(new Set(products.value.map(p => p.vendedorNome || 'Vendedor'))))
 
   const produtosFiltrados = computed(() => {
-    let list = products.value.filter(p => p.ativo !== false);
+    let list = products.value.filter(p => p.ativo !== false)
 
     if (selectedCategory.value && selectedCategory.value !== 'Tudo') {
-      list = list.filter(p => (p.categoria || p.categoriaNome) === selectedCategory.value);
+      list = list.filter(p => (p.categoria || p.categoriaNome) === selectedCategory.value)
     }
 
-    const s = (localSearch.value || '').toLowerCase().trim();
+    const s = (localSearch.value || '').toLowerCase().trim()
     if (s) {
       list = list.filter(p =>
         (p.nome || '').toLowerCase().includes(s) ||
         (p.vendedorNome || '').toLowerCase().includes(s)
-      );
+      )
     }
 
-    const f = filters.value;
-    if (f.nomeProduto) list = list.filter(p => (p.nome || '').toLowerCase().includes(String(f.nomeProduto).toLowerCase()));
-    if (f.categoriaNome) list = list.filter(p => (p.categoria || p.categoriaNome) === f.categoriaNome);
-    if (f.vendedorNome) list = list.filter(p => (p.vendedorNome || '').includes(f.vendedorNome));
-    if (f.valorMinimo != null) list = list.filter(p => Number(p.valor) >= Number(f.valorMinimo));
-    if (f.valorMaximo != null) list = list.filter(p => Number(p.valor) <= Number(f.valorMaximo));
+    const f = filters.value
+    if (f.nomeProduto) list = list.filter(p => (p.nome || '').toLowerCase().includes(String(f.nomeProduto).toLowerCase()))
+    if (f.categoriaNome) list = list.filter(p => (p.categoria || p.categoriaNome) === f.categoriaNome)
+    if (f.vendedorNome) list = list.filter(p => (p.vendedorNome || '').includes(f.vendedorNome))
+    if (f.valorMinimo != null) list = list.filter(p => Number(p.valor) >= Number(f.valorMinimo))
+    if (f.valorMaximo != null) list = list.filter(p => Number(p.valor) <= Number(f.valorMaximo))
 
-    if (sortOrder.value === 'price-asc') list = list.sort((a, b) => (Number(a.valor) || 0) - (Number(b.valor) || 0));
-    else if (sortOrder.value === 'price-desc') list = list.sort((a, b) => (Number(b.valor) || 0) - (Number(a.valor) || 0));
-    else list = list.sort((a, b) => (b.id || 0) - (a.id || 0));
+    if (sortOrder.value === 'price-asc') list = list.sort((a, b) => (Number(a.valor) || 0) - (Number(b.valor) || 0))
+    else if (sortOrder.value === 'price-desc') list = list.sort((a, b) => (Number(b.valor) || 0) - (Number(a.valor) || 0))
+    else list = list.sort((a, b) => (b.id || 0) - (a.id || 0))
 
-    return list;
-  });
+    return list
+  })
 
-  const totalPaginas = computed(() => Math.max(1, Math.ceil(produtosFiltrados.value.length / itensPorPagina)));
+  const totalPaginas = computed(() => Math.max(1, Math.ceil(produtosFiltrados.value.length / itensPorPagina)))
 
   const produtosPaginados = computed(() => {
-    const start = (paginaAtual.value - 1) * itensPorPagina;
-    return produtosFiltrados.value.slice(start, start + itensPorPagina);
-  });
+    const start = (paginaAtual.value - 1) * itensPorPagina
+    return produtosFiltrados.value.slice(start, start + itensPorPagina)
+  })
 
-  const carrinhoTotalQtd = computed(() => carrinho.value.reduce((s, it) => s + (it.qtd || 0), 0));
+  const carrinhoTotalQtd = computed(() => carrinho.value.reduce((s, it) => s + (it.qtd || 0), 0))
 
   watch([() => filters.value, localSearch, selectedCategory, sortOrder], () => {
-    paginaAtual.value = 1;
-  }, { deep: true });
+    paginaAtual.value = 1
+  }, { deep: true })
 
   watch(() => paginaAtual.value, (v) => {
-    if (v < 1) paginaAtual.value = 1;
-    if (v > totalPaginas.value) paginaAtual.value = totalPaginas.value;
-  });
+    if (v < 1) paginaAtual.value = 1
+    if (v > totalPaginas.value) paginaAtual.value = totalPaginas.value
+  })
 
-  onMounted(() => carregarDados());
+  onMounted(() => carregarDados())
 
   function iconFor(cat: string) {
-    const map: Record<string, string> = { 'Eletrônicos': 'mdi-cellphone', 'Moda': 'mdi-tshirt-crew', 'Beleza': 'mdi-lipstick', 'Casa': 'mdi-sofa', 'Jogos': 'mdi-gamepad', 'Tudo': 'mdi-fire' };
-    return map[cat] || 'mdi-tag';
+    const map: Record<string, string> = { 'Eletrônicos': 'mdi-cellphone', 'Moda': 'mdi-tshirt-crew', 'Beleza': 'mdi-lipstick', 'Casa': 'mdi-sofa', 'Jogos': 'mdi-gamepad', 'Tudo': 'mdi-fire' }
+    return map[cat] || 'mdi-tag'
   }
 
   function formatPrice(v: any) {
-    const n = Number(v || 0);
-    return n.toFixed(2).replace('.', ',');
+    const n = Number(v || 0)
+    return n.toFixed(2).replace('.', ',')
   }
 
   const converterBase64 = (base64:any) => {
@@ -262,149 +262,149 @@
 }
 
   function isProductNew(p: Product) {
-    if (!p?.createdAt) return false;
+    if (!p?.createdAt) return false
     try {
-      const created = new Date(p.createdAt).getTime();
-      return (Date.now() - created) < 1000 * 60 * 60 * 24 * 7;
+      const created = new Date(p.createdAt).getTime()
+      return (Date.now() - created) < 1000 * 60 * 60 * 24 * 7
     } catch {
-      return false;
+      return false
     }
   }
 
   function goToDetails(produto: Product) {
-    router.push({ name: 'DetalhesProdutos', params: { id: String(produto.id) } });
+    router.push({ name: 'DetalhesProdutos', params: { id: String(produto.id) } })
   }
 
   let debounceTimer: number | undefined;
   function onInput() {
     window.clearTimeout(debounceTimer);
     debounceTimer = window.setTimeout(() => {
-      paginaAtual.value = 1;
-    }, 350);
+      paginaAtual.value = 1
+    }, 350)
   }
 
   function onSearchEnter() {
-    paginaAtual.value = 1;
+    paginaAtual.value = 1
   }
 
   function selectCategory(cat: string) {
-    selectedCategory.value = (cat === 'Tudo') ? null : cat;
-    paginaAtual.value = 1;
+    selectedCategory.value = (cat === 'Tudo') ? null : cat
+    paginaAtual.value = 1
   }
 
   function getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    const token = localStorage.getItem('token')
+    return token ? { Authorization: `Bearer ${token}` } : {}
   }
 
   async function carregarDados() {
-  isLoading.value = true;
+  isLoading.value = true
   try {
-    const headers = getAuthHeaders();
+    const headers = getAuthHeaders()
 
-    const res = await api.get('/produto', { headers });
-    products.value = Array.isArray(res.data) ? res.data : [];
+    const res = await api.get('/produto', { headers })
+    products.value = Array.isArray(res.data) ? res.data : []
 
-    let usuarioId: number | null = null;
-    const token = localStorage.getItem('token');
+    let usuarioId: number | null = null
+    const token = localStorage.getItem('token')
 
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        usuarioId = Number(payload?.id) || null;
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        usuarioId = Number(payload?.id) || null
       } catch {
-        usuarioId = null;
+        usuarioId = null
       }
     }
 
     if (!usuarioId) {
-      carrinho.value = [];
-      return;
+      carrinho.value = []
+      return
     }
 
     try {
       const resCarrinho = await api.get('/itemCarrinho', {
         params: { usuarioId },
         headers
-      });
+      })
 
-      const data = resCarrinho?.data;
-      carrinho.value = Array.isArray(data) ? data : [];
+      const data = resCarrinho?.data
+      carrinho.value = Array.isArray(data) ? data : []
 
     } catch (carrinhoErr: any) {
       if (carrinhoErr?.response?.status === 404) {
-        carrinho.value = [];
+        carrinho.value = []
       } else {
-        console.warn("Carrinho não pôde ser carregado:", carrinhoErr);
-        carrinho.value = [];
+        console.warn("Carrinho não pôde ser carregado:", carrinhoErr)
+        carrinho.value = []
       }
     }
 
   } catch (err: any) {
-    console.error('Erro ao carregar dados:', err?.response?.data || err);
-    toast.error('Erro ao carregar produtos.');
+    console.error('Erro ao carregar dados:', err?.response?.data || err)
+    toast.error('Erro ao carregar produtos.')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
   async function adicionarAoCarrinho(produto: Product) {
-    if (!produto) return;
-    const token = localStorage.getItem('token');
+    if (!produto) return
+    const token = localStorage.getItem('token')
     if (!token) {
-      toast.info('Você precisa estar logado para adicionar ao carrinho.');
-      return;
+      toast.info('Você precisa estar logado para adicionar ao carrinho.')
+      return
     }
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const usuarioId = Number(payload.id);
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const usuarioId = Number(payload.id)
       if (!usuarioId) { toast.error('Usuário inválido. Faça login novamente.'); return; }
 
       await api.post('/itemCarrinho', {
         UsuarioId: usuarioId,
         ProdutoId: produto.id,
         Qtd: 1
-      }, { headers: getAuthHeaders() });
+      }, { headers: getAuthHeaders() })
 
       await carregarDados();
-      toast.success('Item adicionado ao carrinho com sucesso!');
-      carrinhoDrawer.value = true;
+      toast.success('Item adicionado ao carrinho com sucesso!')
+      carrinhoDrawer.value = true
     } catch (err: any) {
-      console.error('Erro ao adicionar ao carrinho:', err?.response?.data || err);
-      toast.error(err?.response?.data?.message || 'Erro ao adicionar ao carrinho');
+      console.error('Erro ao adicionar ao carrinho:', err?.response?.data || err)
+      toast.error(err?.response?.data?.message || 'Erro ao adicionar ao carrinho')
     }
   }
 
   async function removerCarrinho(index: number) {
-    const item = carrinho.value[index];
-    if (!item) return;
+    const item = carrinho.value[index]
+    if (!item) return
     try {
-      await api.delete(`/itemcarrinho/${item.id}`, { headers: getAuthHeaders() });
-      carrinho.value.splice(index, 1);
-      toast.success('Item removido do carrinho');
+      await api.delete(`/itemcarrinho/${item.id}`, { headers: getAuthHeaders() })
+      carrinho.value.splice(index, 1)
+      toast.success('Item removido do carrinho')
     } catch (err) {
-      console.error('Erro ao remover item:', err);
-      toast.error('Erro ao remover item');
+      console.error('Erro ao remover item:', err)
+      toast.error('Erro ao remover item')
     }
   }
 
   function finalizarCompra() {
-    toast.success('Compra finalizada!');
-    carrinho.value = [];
+    toast.success('Compra finalizada!')
+    carrinho.value = []
   }
 
   function onApplyFilters(payload: any) {
-    if (!payload) return;
-    filters.value = { ...filters.value, ...payload };
-    paginaAtual.value = 1;
-    filtroDrawer.value = false;
+    if (!payload) return
+    filters.value = { ...filters.value, ...payload }
+    paginaAtual.value = 1
+    filtroDrawer.value = false
   }
 
   function onClearFilters() {
-    filters.value = { nomeProduto: '', categoriaNome: '', vendedorNome: '', valorMinimo: null, valorMaximo: null };
-    paginaAtual.value = 1;
-    filtroDrawer.value = false;
+    filters.value = { nomeProduto: '', categoriaNome: '', vendedorNome: '', valorMinimo: null, valorMaximo: null }
+    paginaAtual.value = 1
+    filtroDrawer.value = false
   }
 </script>
 
