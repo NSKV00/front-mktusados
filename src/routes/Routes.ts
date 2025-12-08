@@ -12,6 +12,7 @@ import Produto from '../pages/produto.vue'
 import Teste from '../pages/teste.vue'
 import Bloqueado from '../pages/bloqueado.vue'
 import Dashboard from '../pages/dashboard.vue'
+import Endereco from '../pages/Endereco.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -25,7 +26,8 @@ const routes = [
   { path: '/produto/:id', component: Produto },
   { path: '/teste', component: Teste},
   { path: '/bloqueado', component: Bloqueado},
-  { path: '/dashboard', component: Dashboard}
+  { path: '/dashboard', component: Dashboard},
+  { path: "/enderecos", component: Endereco, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

@@ -1,3 +1,9 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 :root {
   font-size: 16px;
   
@@ -7,12 +13,12 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   
-  --gradiant-base: linear-gradient(40deg, #372b73, #372b73, #FF6B6B, #372b73);
-  --color-primary: #6a11cb;
-  --color-secondary: #2575fc;
-  --color-background: #1a1a1a;
-  --color-text: #ffffff;
-  --color-input-bg: rgba(255, 255, 255, 0.06);
+  --gradiant-base: linear-gradient(40deg, #2b6cb0, #1976d2, #4fc3f7, #1976d2);
+  --color-primary: #1976d2;
+  --color-secondary: #42a5f5;
+  --color-background: #ffffff;
+  --color-text: #213547;
+  --color-input-bg: rgba(33, 53, 71, 0.04);
   
   --input-height: 2.75rem;
   --border-radius-sm: 0.5rem;
@@ -30,7 +36,7 @@
   --transition-normal: 0.3s ease;
 }
 
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -50,7 +56,6 @@ body {
   background: var(--color-background);
   color: var(--color-text);
   min-height: 100vh;
-  background-color: #ffffff;
 }
 
 h1 {
@@ -66,11 +71,11 @@ button {
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
-  background-color: #1a1a1a;
+  background-color: #f6f9fc;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--color-primary);
 }
 button:focus,
 button:focus-visible {

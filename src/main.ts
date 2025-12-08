@@ -11,13 +11,38 @@ import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import VueTheMask from 'vue-the-mask'
 import vue3GoogleLogin from 'vue3-google-login'
+import { jwtDecode } from "jwt-decode"
+import { forceLogout } from './utils/logout'
+
+const token = localStorage.getItem("token");
+if (token) {
+  try {
+    const decoded: any = jwtDecode(token);
+
+    if (decoded.exp * 1000 < Date.now()) {
+      console.warn("Token expirado ao iniciar → logout");
+      forceLogout();
+    }
+  } catch {
+    forceLogout();
+  }
+}
 
 const vuetify = createVuetify({
   components,
   directives,
   theme: {
-    defaultTheme: 'dark',
+    defaultTheme: 'light',
     themes: {
+      light: {
+        colors: {
+          primary: '#1976d2',
+          secondary: '#42a5f5',
+          background: '#ffffff',
+          surface: '#ffffff',
+          'on-surface': '#213547'
+        }
+      },
       dark: {
         colors: {
           primary: '#6a11cb',

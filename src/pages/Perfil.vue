@@ -19,6 +19,8 @@
 
           <button class="ml-edit-btn" @click="abrirModal">Editar perfil</button>
 
+          <button class="ml-edit-btn" @click="abrirModalLogout">Logout</button>
+
           <div class="ml-details">
             <div class="ml-detail">
               <span class="label">Telefone</span>
@@ -73,9 +75,12 @@
 
           <!-- Grid de Produtos -->
           <div class="products-grid">
-            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card" @click="irParaProduto(produto.id)">
+            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
               <div class="product-media">
                 <img :src="produtoSrc(produto.img)" alt="produto" class="product-img" />
+                <span :class="['status-badge', { inativo: !produto.ativo }]">
+                  {{ produto.ativo ? 'Ativo' : 'Inativo' }}
+                </span>
               </div>
 
               <div class="product-content">
@@ -119,6 +124,20 @@
           <div class="modal-actions">
             <button type="button" class="btn-secondary" @click="fecharModal">Cancelar</button>
             <button type="submit" class="btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Logout usuário -->
+    <div v-if="abrirLogout" class="ml-modal-backdrop" @click.self="fecharLogout">
+      <div class="ml-modal">
+        <h3>Fazer logout</h3>
+        <form  class="ml-form">
+          <p>Tem certeza que deseja fazer logout?</p>
+          <div class="modal-actions">
+             <button type="button" class="btn-secondary" @click="fecharLogout">Cancelar</button>
+            <button class="ml-edit-btn" @click="Logout">Logout</button>
           </div>
         </form>
       </div>
@@ -802,12 +821,13 @@ import { ref, onMounted, computed } from 'vue'
 import apiController from "../controller/api"
 import { jwtDecode } from "jwt-decode"
 import { toast } from 'vue3-toastify'
-import { useRouter } from 'vue-router'
+import { forceLogout } from '../utils/logout'
 
 const produtos = ref([])
 const usuario = ref(null)
 const imagemBase64 = ref('')
 const modalAberto = ref(false)
+const abrirLogout = ref(false)
 const isCarregando = ref(true)
 const modalImagemAberto = ref(false)
 const preview = ref(null)
@@ -829,13 +849,6 @@ const form = ref({
   idade: ''
 })
 
-const router = useRouter()
-
-const irParaProduto = (id) => {
-  if (!id) return
-  router.push(`/produto/${id}`)
-}
-
 const fotoPadrao = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
 
 const detectarTipoImagem = (base64) => {
@@ -844,10 +857,20 @@ const detectarTipoImagem = (base64) => {
   if (base64.startsWith('iVBOR')) return 'image/png'
   return 'image/png'
 }
-
-
-const abrirProduto = (produto) => {
-  router.push(`/produto/${produto.id || produto.produtoId}`)
+function decodeJWT(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64).split('').map(c => 
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Erro ao decodificar token:', e);
+    return null;
+  }
 }
 
 const fotoSrc = computed(() => {
@@ -915,37 +938,45 @@ const fecharModalImagem = () => {
 
 const selecionarImagem = (event) => {
   const file = event.target.files[0]
-  if (!file) return alert("❌ Nenhum arquivo selecionado!")
-  if (!file.type.startsWith("image/")) return alert("❌ Selecione apenas imagens!")
+
+  if (!file) {
+    alert('❌ Nenhum arquivo selecionado!')
+    return
+  }
+
+  if (!file.type.startsWith('image/')) {
+    alert('❌ Selecione apenas imagens (JPG, PNG, etc.)!')
+    event.target.value = ''
+    return
+  }
 
   imagemSelecionada.value = file
   preview.value = URL.createObjectURL(file)
 }
 
 const salvarImagem = async () => {
-  if (!imagemSelecionada.value) return alert("❌ Nenhuma imagem selecionada!")
+  if (!imagemSelecionada.value) return
 
   const formData = new FormData()
-  formData.append("usuarioId", usuario.value.id) // string/number ok
-  formData.append("imagem", imagemSelecionada.value) // File real
+  formData.append("imagem", imagemSelecionada.value)
+  formData.append("file", imagemSelecionada.value)
 
   try {
-    await apiController.post("usuarioImagem", formData, {
-      headers: {
-        Authorization: `Bearer ${token.value}`,
-        "Content-Type": "multipart/form-data"
-      },
+    const headers = {
+      Authorization: `Bearer ${token.value}`
+    }
+
+    await apiController.post(`usuarioImagem/${usuario.value.id}`, formData, {
+      headers,
       maxContentLength: Infinity,
-      maxBodyLength: Infinity,
+      maxBodyLength: Infinity
     })
 
     toast.success("Imagem atualizada com sucesso!")
 
     const reader = new FileReader()
     reader.onload = () => {
-      const base64 = reader.result.split(",")[1]
-      imagemBase64.value = base64
-      fotoSrc.value = reader.result
+      imagemBase64.value = reader.result.split(",")[1]
     }
     reader.readAsDataURL(imagemSelecionada.value)
 
@@ -1026,7 +1057,10 @@ const validarCPF = (cpf) => {
 }
 
 const abrirModal = () => modalAberto.value = true
+const abrirModalLogout = () => abrirLogout.value = true
 const fecharModal = () => modalAberto.value = false
+const Logout = () => {forceLogout()}
+const fecharLogout = () => abrirLogout.value = false
 
 const salvarDados = async () => {
   const inicio = { ...usuario.value }
