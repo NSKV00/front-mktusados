@@ -1,10 +1,10 @@
 <template>
   <v-app class="app">
-    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isDetalhesProdutos" />
+    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isProdutoPage2 || dashboard || historico" />
     <v-main class="main-content">
       <router-view />
     </v-main>
-    <app-footer v-if="isHomePage" />
+    <app-footer v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isProdutoPage2 || dashboard || historico"  />
   </v-app>
 </template>
 
@@ -16,11 +16,12 @@
 
   const route = useRoute()
   const isHomePage = computed(() => route.path === '/')
-  const isDetalhesProduto = computed(() => route.path.startsWith('/produtos/'))
-  const isDetalhesProdutos = computed(() => isHomePage.value || isDetalhesProduto.value)
+  const isProdutoPage2 = computed(() => route.path.startsWith('/produto/'))
   const isPerfilPage = computed(() => route.path === '/perfil')
   const isEnderecoPage = computed(() => route.path === '/enderecos')
   const isProdutoPage = computed(() => route.path === '/produtoCriar')
+  const dashboard = computed(() => route.path === '/dashboard')
+  const historico = computed(() => route.path === '/historico')
 </script>
 
 <style>

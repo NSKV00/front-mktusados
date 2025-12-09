@@ -1,5 +1,8 @@
 <template>
-  <v-app>
+  <div v-if="isCarregando === true" class="ml-loading">
+    <div class="loader"></div>
+  </div>
+  <v-app v-else>
     <v-app-bar color="white" height="80" class="header-appbar">
       <v-container fluid class="d-flex align-center gap-4 pa-0">
 
@@ -25,7 +28,7 @@
 
         <v-btn icon @click="carrinhoDrawer = true" title="Carrinho">
           <v-icon>mdi-cart</v-icon>
-          <v-badge v-if="carrinhoTotalQtd > 0" :content="carrinhoTotalQtd" offset-x="10" offset-y="10" />
+          <v-badge v-if="carrinhoTotalQtd > 0" :content="carrinhoTotalQtd" offset-x="25" offset-y="10" />
         </v-btn>
       </v-container>
     </v-app-bar>
@@ -79,7 +82,10 @@
                   <v-card-text class="card-content" @click="goToDetails(p)">
                     <div class="product-title">{{ p.nome }}</div>
                     <div class="product-price">R$ {{ formatPrice(p.valor) }}</div>
-                    <div class="product-info">Vendido por {{ p.vendedorNome || 'Vendedor' }}</div>
+                    <div class="product-info">Vendido por <span class="seller-name" @click.stop="goToPerfil(p.usuarioId)">
+                      {{ p.usuarioNome || 'Vendedor' }}
+                    </span>
+                  </div>
                   </v-card-text>
 
                   <v-card-actions class="card-actions">
@@ -143,8 +149,9 @@
     quantidade?: number;
     categoria?: string;
     categoriaNome?: string;
-    vendedorNome?: string;
+    usuarioNome?: string;
     valor: number;
+    usuarioId: number;
     img?: string;
     ativo?: boolean;
     createdAt?: string;
@@ -158,6 +165,7 @@
   }
 
   const router = useRouter()
+  const isCarregando = ref(true)
 
   const isLoading = ref(true)
   const products = ref<Product[]>([])
@@ -189,7 +197,7 @@
   ]
 
   const categorias = computed(() => Array.from(new Set(products.value.map(p => p.categoriaNome || p.categoria || 'Outros'))))
-  const vendedores = computed(() => Array.from(new Set(products.value.map(p => p.vendedorNome || 'Vendedor'))))
+  const vendedores = computed(() => Array.from(new Set(products.value.map(p => p.usuarioNome || 'Vendedor'))))
 
   const produtosFiltrados = computed(() => {
     let list = products.value.filter(p => p.ativo !== false)
@@ -202,14 +210,14 @@
     if (s) {
       list = list.filter(p =>
         (p.nome || '').toLowerCase().includes(s) ||
-        (p.vendedorNome || '').toLowerCase().includes(s)
+        (p.usuarioNome || '').toLowerCase().includes(s)
       )
     }
 
     const f = filters.value
     if (f.nomeProduto) list = list.filter(p => (p.nome || '').toLowerCase().includes(String(f.nomeProduto).toLowerCase()))
     if (f.categoriaNome) list = list.filter(p => (p.categoria || p.categoriaNome) === f.categoriaNome)
-    if (f.vendedorNome) list = list.filter(p => (p.vendedorNome || '').includes(f.vendedorNome))
+    if (f.vendedorNome) list = list.filter(p => (p.usuarioNome || '').includes(f.vendedorNome))
     if (f.valorMinimo != null) list = list.filter(p => Number(p.valor) >= Number(f.valorMinimo))
     if (f.valorMaximo != null) list = list.filter(p => Number(p.valor) <= Number(f.valorMaximo))
 
@@ -237,6 +245,11 @@
     if (v < 1) paginaAtual.value = 1
     if (v > totalPaginas.value) paginaAtual.value = totalPaginas.value
   })
+
+  function goToPerfil(vendedorId?: number) {
+    if (!vendedorId) return
+    router.push({ path: `/perfilVisual/${vendedorId}` })
+  }
 
   onMounted(() => carregarDados())
 
@@ -272,7 +285,7 @@
   }
 
   function goToDetails(produto: Product) {
-    router.push({ name: 'DetalhesProdutos', params: { id: String(produto.id) } })
+    router.push({ path: `/produto/${produto.id}` })
   }
 
   let debounceTimer: number | undefined;
@@ -304,6 +317,7 @@
 
     const res = await api.get('/produto', { headers })
     products.value = Array.isArray(res.data) ? res.data : []
+    console.log(res)
 
     let usuarioId: number | null = null
     const token = localStorage.getItem('token')
@@ -345,6 +359,7 @@
     toast.error('Erro ao carregar produtos.')
   } finally {
     isLoading.value = false
+    isCarregando.value = false
   }
 }
 
@@ -434,6 +449,12 @@
   .mt-4 {
     margin-top: 16px !important;
   }
+  .seller-name {
+  font-weight: 600;
+  color: #372b73;
+  cursor: pointer;
+  text-decoration: underline;
+  }
   .categories-sheet {
     background: transparent;
     color: #050505;
@@ -502,6 +523,26 @@
     font-size: 0.85rem; 
     color: #777; 
   }
+    .ml-loading{
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,#f7f8fa,#fbfbfd);
+  }
+
+  .loader{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:5px solid rgba(0,0,0,0.06);
+    border-top-color:var(--ml-yellow);
+    animation:spin .9s linear infinite;
+  }
+
+  @keyframes spin{ 
+    to { transform:rotate(360deg);} 
+  }
   .card-actions {
     padding: 0.8rem 1rem 1.2rem; 
   }
@@ -550,5 +591,6 @@
   }
   .info-bar { 
     background: #cecece;
+    margin-top: 30px;
   }
 </style>

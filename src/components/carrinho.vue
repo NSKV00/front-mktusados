@@ -1,15 +1,15 @@
 <template>
-  <v-navigation-drawer
+<v-navigation-drawer
   v-model="drawerInterno"
   location="right"
   temporary
   width="400"
   class="carrinho-drawer"
   color="white"
-  style="z-index: 9999 !important; position: fixed !important;"
 >
-
-    
+  <!-- Container flex vertical -->
+  <div class="drawer-content">
+    <!-- HEADER -->
     <v-list-item class="drawer-header">
       <v-icon start>mdi-cart-outline</v-icon>
       <v-list-item-title class="text-h6 font-weight-bold">
@@ -22,81 +22,84 @@
 
     <v-divider></v-divider>
 
-    
-    <v-list v-if="itensComDetalhes.length > 0">
-      <v-list-item
-        v-for="item in itensComDetalhes"
-        :key="item.id"
-        class="carrinho-item pa-3"
-      >
-        <v-row align="center" no-gutters>
-          <v-col cols="3">
-            <v-img
-              :src="item.img"
-              height="60"
-              width="60"
-              contain
-              class="rounded-sm item-image-border"
-            />
-          </v-col>
+    <!-- LISTA DE ITENS COM SCROLL -->
+    <div class="carrinho-itens-scroll">
+      <v-list v-if="itensComDetalhes.length > 0">
+        <v-list-item
+          v-for="item in itensComDetalhes"
+          :key="item.id"
+          class="carrinho-item pa-3"
+        >
+          <v-row align="center" no-gutters>
+            <v-col cols="3">
+              <v-img
+                :src="item.img"
+                height="60"
+                width="60"
+                contain
+                class="rounded-sm item-image-border"
+              />
+            </v-col>
+            <v-col cols="6" class="pl-2">
+              <v-list-item-title class="item-nome text-subtitle-2 mb-1">
+                {{ item.nome }}
+              </v-list-item-title>
+              <v-list-item-subtitle class="item-info text-caption">
+                Qtd: {{ item.qtd }} | R$ {{ item.valorUnitario.toFixed(2).replace('.', ',') }}
+              </v-list-item-subtitle>
+              <strong class="item-subtotal text-body-2 mt-1">
+                R$ {{ item.subtotal.toFixed(2).replace('.', ',') }}
+              </strong>
+            </v-col>
+            <v-col cols="3" class="text-right">
+              <v-btn
+                icon="mdi-delete"
+                variant="flat"
+                size="small"
+                style="background-color: #ffffff00;"
+                color="grey-lighten-4"
+                @click="removerItem(item.id)"
+              />
+            </v-col>
+          </v-row>
+          <v-divider class="my-3"></v-divider>
+        </v-list-item>
+      </v-list>
 
-          <v-col cols="6" class="pl-2">
-            <v-list-item-title
-              class="item-nome text-subtitle-2  mb-1"
-            >
-              {{ item.nome }}
-            </v-list-item-title>
-            <v-list-item-subtitle class="item-info text-caption">
-              Qtd: {{ item.qtd }} | R$ {{ item.valorUnitario.toFixed(2).replace('.', ',') }}
-            </v-list-item-subtitle>
-            <strong class="item-subtotal text-body-2 mt-1">
-              R$ {{ item.subtotal.toFixed(2).replace('.', ',') }}
-            </strong>
-          </v-col>
+      <div v-else class="text-center pa-4 text-medium-emphasis">
+        <v-icon size="48" color="grey">mdi-cart-off</v-icon>
+        <p class="mt-2">Seu carrinho está vazio.</p>
+      </div>
+    </div>
 
-          <v-col cols="3" class="text-right">
-            <v-btn
-              icon="mdi-delete"
-              variant="flat"
-              size="small"
-              style="background-color: #ffffff00;"
-              color="grey-lighten-4"
-              @click="removerItem(item.id)"
-            />
+    <!-- TOTAL + BOTÃO FIXO -->
+    <div class="total-btnBuy">
+      <div class="pa-4 bg-grey-lighten-4">
+        <v-row class="total-summary">
+          <v-col class="text-h6 font-weight-bold">Total:</v-col>
+          <v-col class="text-h6 font-weight-bold text-right">
+            R$ {{ totalCarrinho.toFixed(2).replace('.', ',') }}
           </v-col>
         </v-row>
-        <v-divider class="my-3"></v-divider>
-      </v-list-item>
-    </v-list>
 
-    
-    <div v-else class="text-center pa-4 text-medium-emphasis">
-      <v-icon size="48" color="grey">mdi-cart-off</v-icon>
-      <p class="mt-2">Seu carrinho está vazio.</p>
+        <button class="btn-buy"
+          @click="handleBuyNow"
+          :disabled="itensComDetalhes.length === 0"
+          aria-label="Comprar agora">
+          💳 Comprar Agora
+        </button>
+      </div>
     </div>
+  </div>
+</v-navigation-drawer>
 
-  
-    <div class="pa-4 bg-grey-lighten-4 mt-auto">
-      <v-row class="total-summary">
-        <v-col class="text-h6 font-weight-bold">Total:</v-col>
-        <v-col class="text-h6 font-weight-bold text-right ">
-          R$ {{ totalCarrinho.toFixed(2).replace('.', ',') }}
-        </v-col>
-      </v-row>
-      <v-btn
-        class="mt-3"
-        color="primary"
-        block
-        :disabled="itensComDetalhes.length === 0"
-        @click="$emit('finalizar')"
-      >Finalizar Compra</v-btn>
-    </div>
-  </v-navigation-drawer>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, watch, defineProps, defineEmits } from "vue";
 import { toast } from "vue3-toastify";
+import { useRouter, useRoute } from 'vue-router'
+import api from "../controller/api"
 
 
 interface Product {
@@ -111,6 +114,12 @@ interface CarrinhoItem {
   produtoId: number;
   qtd: number;
 }
+
+const estoque = ref(0)
+const router = useRouter()
+ 
+
+
 
 const props = defineProps<{
   aberto: boolean;
@@ -134,6 +143,9 @@ watch(() => props.aberto, (val) => {
 
 watch(drawerInterno, (isOpen) => {
   emit("update:aberto", isOpen);
+
+  document.body.style.overflow = isOpen ? "hidden" : "auto";
+
   if (isOpen) {
     emit("carregar-carrinho");
   }
@@ -183,10 +195,35 @@ function removerItem(itemId: number) {
   }
 }
 
-function finalizarCompra() {
-  emit("finalizar");
-  
-}
+const handleBuyNow = () => {
+  if (itensComDetalhes.value.length === 0) {
+    toast.error("Seu carrinho está vazio!");
+    return;
+  }
+
+  // Verifica se algum item está indisponível
+  const indisponiveis = itensComDetalhes.value.filter(item => !item.disponivel || item.subtotal <= 0);
+  if (indisponiveis.length > 0) {
+    toast.error("Alguns produtos do carrinho não estão disponíveis.");
+    return;
+  }
+
+  // Prepara IDs e quantidades para enviar à página de pagamento
+  const produtoIds = itensComDetalhes.value.map(item => item.produtoId).join(',');
+  const quantidades = itensComDetalhes.value.map(item => item.qtd).join(',');
+
+  router.push({
+    path: '/pagamento',
+    query: {
+      produtoId: produtoIds,
+      quantidade: quantidades
+    }
+  });
+};
+
+
+
+
 
 </script>
 
@@ -200,9 +237,48 @@ function finalizarCompra() {
 }
 
 .carrinho-drawer {
-  z-index: 1000 !important;
+  height: 100vh !important;
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+.drawer-content {
   display: flex;
   flex-direction: column;
+  height: 100%;
+}
+
+.drawer-header {
+  background-color: #43119b; /* mantém header roxo */
+  color: white;
+}
+
+.carrinho-itens-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px;
+}
+
+
+.total-btnBuy {
+  border-top: 1px solid #ddd;
+  background-color: white; 
+  padding: 8px 16px;
+  padding-bottom: 112px;
+}
+
+
+.btn-buy {
+  width: 80%;
+  margin-top: 8px;
+  padding: 12px;
+  background-color: #43119b;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding-bottom: 12px;
 }
 
 .drawer-header {
@@ -214,7 +290,6 @@ function finalizarCompra() {
   color: white;
 }
 .item-image-border {
-  border: 1px solid #0c0c0c;
   border-radius: 4px;
 }
 .carrinho-item {
@@ -223,19 +298,19 @@ function finalizarCompra() {
 .item-nome {
   white-space: normal;
   line-height: 1.3;
-  color:#ff8801;
+  color:#0e0e0e;
   font-weight: 700;
   text-align: justify;
 }
 .item-info {
   display: block;
-  color: #ff8801;
+  color: #0e0e0e;
   font-weight: 700;
   text-align: justify;
 }
 .item-subtotal {
   display: block;
-  color: #ff8801;
+  color: #0e0e0e;
   font-weight: 700;
   text-align: justify;
 }

@@ -33,7 +33,7 @@
 
       <main class="ml-main">
         <section class="ml-products-header">
-          <h1 class="products-title">Meus Produtos</h1>
+          <h1 class="products-title">Produtos</h1>
           <div class="products-actions">
           </div>
         </section>
@@ -44,7 +44,7 @@
           </div>
 
           <div class="products-grid">
-            <article v-for="(produto, index) in produtosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
+            <article v-for="(produto, index) in produtosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card" @click="irParaProduto(produto.id)">
               <div class="product-media">
                 <img :src="produtoSrc(produto.img)" alt="produto" class="product-img" />
               </div>
@@ -310,6 +310,7 @@
   align-items:center;
   justify-content:center;
   overflow:hidden;
+  padding-top: 12px;
 }
 
 .product-img{
@@ -356,7 +357,7 @@
   margin:0;
   font-size:16px;
   font-weight:800;
-  color:var(--ml-dark);
+  color:black;
   line-height:1.2;
   display:-webkit-box;
   -webkit-line-clamp:2;
@@ -644,9 +645,17 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import  apiController  from "../controller/api"
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { jwtDecode } from "jwt-decode"
 import { toast } from 'vue3-toastify'
+
+
+const router = useRouter()
+
+const irParaProduto = (id) => {
+  if (!id) return
+  router.push(`/produto/${id}`)
+}
 
 const produtos = ref([])
 const usuario = ref(null)

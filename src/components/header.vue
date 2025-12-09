@@ -34,8 +34,10 @@
   >
     <v-list nav dense>
       <v-list-item :to="{ path: '/' }" title="Home" prepend-icon="mdi-home" />
-      <v-list-item :to="{ path: '/perfil' }" title="Perfil" prepend-icon="mdi-user" />
-      <v-list-item :to="{ path: '/enderecos' }" title="Endereços" prepend-icon="mdi-" />
+      <v-list-item :to="{ path: '/perfil' }" title="Perfil" prepend-icon="mdi-account" />
+      <v-list-item :to="{ path: '/enderecos' }" title="Endereços" prepend-icon="mdi-map-marker" />
+      <v-list-item :to="{ path: '/dashboard' }" title="Dashboard" prepend-icon="mdi-view-dashboard" />
+      <v-list-item :to="{ path: '/historico' }" title="Historico de Compras" prepend-icon="mdi-history" />
     </v-list>
   </v-navigation-drawer>
 </template>

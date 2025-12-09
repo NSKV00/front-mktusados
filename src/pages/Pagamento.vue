@@ -21,10 +21,11 @@
         <v-window v-model="tab">
           <!-- CARTÃO -->
           <v-window-item value="cartao">
+            <h1 class="parcelamento">Parcelamento Somente Compras Acima de 10R$</h1>
             <div id="cardPaymentBrick" style="margin-top: 20px;"></div>
 
             <div style="margin-top: 20px;">
-              <h3>Preço do Produto: R$ {{ (produtos.valor * quantidade2).toFixed(2) }} + Frete R$ {{ freteInfo }} = R$ {{ (produtos.valor * quantidade2 + freteInfo).toFixed(2) }}</h3>
+              <h3>Preço do Produto: R$ {{ totalProdutos.toFixed(2) }} + Frete R$ {{ freteInfo }} = R$ {{ totalGeral.toFixed(2) }}</h3>
             </div>
           </v-window-item>
   
@@ -64,7 +65,11 @@
               class="inverted-input mb-3"
             />
 
-            <div class="text-right price-text">Preço do Produto: R$ {{ (produtos.valor * quantidade2).toFixed(2) }} + Frete R$ {{ freteInfo }} = R$ {{ (produtos.valor * quantidade2 + freteInfo).toFixed(2) }}</div>
+            <div class="text-right price-text">
+              Preço do Produto: R$ {{ totalProdutos.toFixed(2) }} +
+              Frete R$ {{ freteInfo }} =
+              R$ {{ totalGeral.toFixed(2) }}
+            </div>
 
             <v-btn
               block
@@ -147,9 +152,9 @@
             </v-card>
 
             <div class="text-right price-text">
-              Preço do Produto: R$ {{ (produtos.valor * quantidade2).toFixed(2) }} +
+              Preço do Produto: R$ {{ totalProdutos.toFixed(2) }} +
               Frete R$ {{ freteInfo }} =
-              R$ {{ (produtos.valor  + freteInfo).toFixed(2) }}
+              R$ {{ totalGeral.toFixed(2) }}
             </div>
 
             <v-btn
@@ -223,7 +228,7 @@
 
 <script setup>
 import { jwtDecode } from "jwt-decode";
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import api from "../controller/api";
 import { fr } from "vuetify/locale";
 import { toast } from "vue3-toastify";
@@ -264,9 +269,9 @@ const pagamentoFeedback = ref(null);
 const mostrarAvaliacao = ref(false);
 const avaliacao = ref(0);
 const route = useRoute()
+const checkoutRes = ref({})
 
-const produtoId2 = Number(route.query.produtoId)
-const quantidade2 = Number(route.query.quantidade)
+const checkout = Number(route.query.checkoutId)
 
 const limparPagamentoLocal = () => {
   localStorage.removeItem("pixGerado");
@@ -284,7 +289,7 @@ const unloadHandler = () => {
 const enviarAvaliacao = async () => {
   try {
     await api.post("/avaliacao", {
-      ProdutoId: 18,        
+      ProdutoId: checkoutRes.value.itens[0].produtoId,        
       Numero: avaliacao.value,       
       Ativo: true                   
     }, {
@@ -324,8 +329,9 @@ function initMercadoPago() {
   const bricks = mp.bricks();
 
   bricks.create("cardPayment", "cardPaymentBrick", {
-    initialization: { amount: produtos.value ? produtos.value.valor * quantidade2 + 1 : 0 },
+    initialization: { amount: produtos.value ? totalProdutos.value + 1 : 0 },
     customization: {
+      
       visual: {
         style: {
           theme: "dark",
@@ -333,7 +339,7 @@ function initMercadoPago() {
       },
     },
     callbacks: {
-      onReady: () => console.log("Brick montado ✔"),
+      onReady: () => console.log("Brick montado ✔" + produtos.value ? totalProdutos.value + 100 : 0),
       onSubmit: async (cardData) => {
         console.log("📌 Dados do Brick:", cardData);
 
@@ -351,8 +357,8 @@ function initMercadoPago() {
             Cpf: cardData.payer.identification.number,
             produtos: [
               {
-                produtoId: produtoId2,
-                qtd: quantidade2,
+                produtoId: checkoutRes.value.itens[0].produtoId,
+                qtd: checkoutRes.value.itens[0].quantidade,
               },
             ],
             frete: freteInfo.value,
@@ -373,8 +379,6 @@ onMounted(async () => {
     window.location.href = "/login"
   }
 
-  console.log("Produto:", produtoId2)
-    console.log("Quantidade:", quantidade2)
 
   const pixStorage = localStorage.getItem("pixGerado");
   if (pixStorage === "true") {
@@ -396,9 +400,16 @@ onMounted(async () => {
     }
   })
 
-  const resProdutos = await api.get("/produto", {
-    params: { Id: produtoId2 }
+  const resCheckout = await api.get(`/checkout/${checkout}`, {
+    headers: { 
+      Authorization: `Bearer ${token.value}`,
+      "Access-Control-Allow-Origin": "*"
+    }
   })
+
+  checkoutRes.value = resCheckout.data
+  console.log("Checkout recebido:", checkoutRes.value)
+
 
    window.addEventListener("beforeunload", unloadHandler);
 
@@ -451,30 +462,56 @@ onMounted(async () => {
   }
 
   enderecoPrincipal.value = resEndereco.data.endereco
-  produtos.value = resProdutos.data[0]
+  
+  const produtosCompletos = []
 
+  for (const item of checkoutRes.value.itens) {
+    const res = await api.get(`/produto?Id=${item.produtoId}`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+
+    produtosCompletos.push({
+      ...res.data[0],
+      qtd: item.quantidade
+    })
+  }
+
+  produtos.value = produtosCompletos
+
+  console.log("Produto carregado:", produtos.value)
 
   const script = document.createElement("script");
   script.src = "https://sdk.mercadopago.com/js/v2";
   script.onload = initMercadoPago;
   document.body.appendChild(script);
 
-  console.log(resEndereco.data.endereco, resProdutos.data)
+  console.log(resEndereco.data.endereco, checkoutRes.value.itens)
   carregando.value = false
 
- const frete = calcularFrete({
-  cepOrigem: produtos.value.cep,
-  cepDestino: enderecoPrincipal.value.cep,
-  peso: 0.2,
-  altura: 2,
-  largura: 11,
-  comprimento: 16,
-  valorDeclarado: 20.5
-});
+  const frete = calcularFreteCarrinho(produtos.value, enderecoPrincipal.value.cep)
 
   console.log(user.value.sub)
   console.log("Frete calculado:", frete);
   freteInfo.value = frete.valor;
+})
+
+const totalProdutos = computed(() => {
+  if (!produtos.value) return 0
+
+  return produtos.value.reduce((total, item) => {
+    return total + (item.valor * item.qtd)
+  }, 0)
+})
+
+const totalGeral = computed(() => {
+  return totalProdutos.value + (freteInfo.value || 0)
+})
+
+const produtosParaPagamento = computed(() => {
+  return checkoutRes.value.itens.map(item => ({
+    produtoId: item.produtoId,
+    qtd: item.quantidade
+  }))
 })
 
 onBeforeRouteLeave(() => {
@@ -504,12 +541,7 @@ const gerarPix = async () => {
       nome: pixNome.value,
       cpf: pixCpf.value,
       frete: 0,
-      produtos: [
-        {
-          produtoId: produtoId2,
-          qtd: quantidade2
-        }
-      ]
+      produtos: produtosParaPagamento.value
     }, {
       headers: {
         Authorization: `Bearer ${token.value}`
@@ -556,12 +588,7 @@ const gerarBoleto = async () => {
       cidade: enderecoPrincipal.value.cidade,
       estado: enderecoPrincipal.value.estado,
       frete: freteInfo.value,
-      produtos: [
-        {
-          produtoId: produtoId2,
-          qtd: quantidade2
-        }
-      ]
+      produtos: produtosParaPagamento.value
     }, {
       headers: {
         Authorization: `Bearer ${token.value}`
@@ -612,12 +639,7 @@ const pagarCartao = async () => {
         frete: 0,
         tokenCartao: tokenId,
         Bandeira: detectarBandeira(cardNumber.value),
-        produtos: [
-          {
-            produtoId: produtoId2,
-            qtd: quantidade2
-          }
-        ]
+        produtos: produtosParaPagamento.value
       },
       {
         headers: { Authorization: `Bearer ${token.value}` }
@@ -678,6 +700,42 @@ function calcularFrete({
     pesoUsado: Number(pesoFinal.toFixed(2)),
     distancia: distancia,
   };
+}
+
+function calcularFreteCarrinho(produtos, cepDestino) {
+  
+  // encontrar o CEP mais distante do destino
+  const produtoMaisDistante = produtos.reduce((maisDistante, item) => {
+    const distAtual = Math.abs(Number(item.cep) - Number(cepDestino))
+    const distMaisDist = maisDistante
+      ? Math.abs(Number(maisDistante.cep) - Number(cepDestino))
+      : -1
+
+    return distAtual > distMaisDist ? item : maisDistante
+  }, null)
+
+  const cepOrigemSelecionado = produtoMaisDistante.cep
+
+  // peso total
+  const pesoTotal = produtos.reduce((acc, item) => {
+    return acc + item.peso * item.qtd
+  }, 0)
+
+  // valor declarado total
+  const valorDeclarado = produtos.reduce((acc, item) => {
+    return acc + item.valor * item.qtd
+  }, 0)
+
+  // calcular frete usando o CEP mais distante
+  return calcularFrete({
+    cepOrigem: cepOrigemSelecionado,
+    cepDestino,
+    peso: 0.2,
+    altura: 10,
+    largura: 20,
+    comprimento: 20,
+    valorDeclarado
+  })
 }
 
 function validarEmail(email) {
@@ -749,6 +807,13 @@ function detectarBandeira(numero) {
   width: 100%;
   height: 100%;
   background-color: #302e2e;
+}
+
+.parcelamento {
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
 }
 
 /* Card preto */

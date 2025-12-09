@@ -38,11 +38,8 @@
                             <div class="price-row">
                                 <div class="price-left">
                                     <span class="price">R$ {{ (produtoAPI?.valor || product.price).toFixed(2) }}</span>
-                                    <span v-if="priceWithDiscount" class="original">R$ {{ priceWithDiscount.toFixed(2)
-                                        }}</span>
                                 </div>
-                                <div v-if="produtoAPI?.desconto > 0" class="savings">Economize {{ produtoAPI.desconto
-                                    }}%</div>
+
                             </div>
                         </div>
 
@@ -65,6 +62,10 @@
                                     <div class="meta-value">{{ categoriaNome || product.category }}</div>
                                 </div>
                                 <div class="meta-right">
+                                    <div class="meta-label">Estado:</div>
+                                    <div class="meta-value2">{{ produtoAPI.estado }}</div>
+                                </div>
+                                <div class="meta-right">
                                     <div class="meta-label">Estoque:</div>
                                     <div :class="estoqueClass + ' stock-badge'">{{ estoque }} unidades</div>
                                 </div>
@@ -81,7 +82,7 @@
                             <div class="qty-controls">
                                 <button class="qty-btn" @click="decrement" :disabled="quantity <= 1"
                                     aria-label="Diminuir">—</button>
-                                <input type="number" v-model.number="quantity" @input="onQuantityInput" :min="1"
+                                <input type="number" v-model="quantity" @input="onQuantityInput" :min="1"
                                     :max="estoque" class="qty-input" aria-label="Quantidade" />
                                 <button class="qty-btn" @click="increment" :disabled="quantity >= estoque"
                                     aria-label="Aumentar">+</button>
@@ -200,7 +201,10 @@ onMounted(async () => {
             await buscarAvaliacao(produtoId)
 
             await buscarImagemExtra(produtoId)
+
+            
         }
+        console.log("PRODUTO API =>", produtoAPI.value)
     } catch (error) {
         console.error('Erro ao carregar produto:', error)
     } finally {
@@ -241,6 +245,7 @@ const buscarEstoque = async (produtoId) => {
 const buscarAvaliacao = async (produtoId) => {
     try {
         const res = await api.get(`/avaliacao?produtoId=${produtoId}`)
+        console.log("RES AVALIAÇÃO =>", res);
         if (res.data) {
             if (Array.isArray(res.data)) avaliacaoMedia.value = res.data[0]?.media || res.data[0]?.nota || 0
             else if (typeof res.data === 'number') avaliacaoMedia.value = res.data
@@ -279,9 +284,12 @@ const increment = () => {
 }
 
 const onQuantityInput = () => {
-    if (quantity.value < 1) quantity.value = 1
-    if (quantity.value > estoque.value) quantity.value = estoque.value
-}
+    const num = Number(quantity.value);
+
+    if (isNaN(num) || num < 1) quantity.value = 1;
+    else if (num > estoque.value) quantity.value = estoque.value;
+    else quantity.value = num;
+};
 
 const handleAddToCart = () => {
     if (estoque.value <= 0) {
@@ -293,8 +301,8 @@ const handleAddToCart = () => {
     try {
         const body = {
             ProdutoId: produtoAPI.value.id,
-            Quantidade: quantity.value,
-            UsuarioId: user.value.id
+            Qtd: quantity.value,
+            UsuarioId: Number(user.value.id)
         }
 
         const res = await api.post("/itemCarrinho", body, {
@@ -317,17 +325,36 @@ const handleAddToCart = () => {
     adicionarCarrinho()
 }
 
-const handleBuyNow = () => {
+const handleBuyNow =  async () => {
     if (estoque.value <= 0) {
         toast.error('Produto fora de estoque!')
         return
     }
 
+    const body = {
+        usuarioId: Number(user.value.id),
+        itens: [
+            {
+                produtoId: Number(produtoId2.value),
+                quantidade: quantity.value
+            },
+        ]
+    }
+
+    console.log("BODY ENVIADO =>", body);
+
+    const res = await api.post("/checkout", body,
+        {
+            headers: {
+                Authorization: `Bearer ${token.value}`
+            }
+        }
+    )
+
     router.push({
         path: '/pagamento',
         query: {
-            produtoId: produtoAPI.value.id,
-            quantidade: quantity.value
+            checkoutId: res.data.id
         }
     })
     }
@@ -489,7 +516,7 @@ const goBack = () => {
     border-radius: 14px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .rating-row {
@@ -523,7 +550,7 @@ const goBack = () => {
 .meta-card {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 10px;
 }
 
@@ -536,6 +563,14 @@ const goBack = () => {
 .meta-value {
     background: #f3eaff;
     color: #6236c9;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.meta-value2 {
+    background: #d89d304d;
+    color: #db8f00;
     padding: 6px 12px;
     border-radius: 999px;
     font-weight: 700;
