@@ -1,5 +1,9 @@
 <template>
-  <v-container fluid class="endereco-container">
+  <div v-if="isCarregando === true" class="ml-loading">
+    <div class="loader"></div>
+  </div>
+
+  <v-container v-else fluid class="endereco-container">
     <v-card class="header-card mb-6 d-flex flex-column">
       <v-row class="pa-6" align="center" justify="space-between" no-gutters>
         <v-col cols="12" sm="auto">
@@ -230,6 +234,8 @@
       </v-card>
     </v-dialog>
   </v-container>
+
+  
 </template>
 
 <script setup>
@@ -246,6 +252,7 @@
   const enderecoPrincipalId = ref(null)
   const modalAberto = ref(false)
   const enderecoPrincipalRegistroId = ref(null)
+  const isCarregando = ref(true)
 
   const form = ref({
     cep: "",
@@ -443,6 +450,8 @@
   onMounted(async () => {
     await carregarEnderecos()
     await carregarEnderecoPrincipal()
+
+    isCarregando.value = false
   })
 </script>
 
@@ -480,6 +489,28 @@
     display: flex;
     flex-direction: column;
   }
+
+  .ml-loading{
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,#f7f8fa,#fbfbfd);
+  }
+
+  .loader{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:5px solid rgba(0,0,0,0.06);
+    border-top-color:var(--ml-yellow);
+    animation:spin .9s linear infinite;
+  }
+
+  @keyframes spin{ 
+    to { transform:rotate(360deg);} 
+  }
+
   .endereco-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 12px 28px rgba(25, 118, 210, 0.12);
@@ -662,10 +693,9 @@
     .endereco-card :deep(.v-card__text) {
       padding: 12px !important;
     }
+
   }
 
-  /* Mantemos aparência clara mesmo em preferência escura do sistema.
-     Isso evita que a página fique com fundo escuro inesperadamente. */
   @media (prefers-color-scheme: dark) {
     .endereco-container {
       background: linear-gradient(180deg, #cccccc, #c9c9c9);

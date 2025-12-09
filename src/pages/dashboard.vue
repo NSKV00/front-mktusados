@@ -1,5 +1,8 @@
 <template>
-  <div class="page-container">
+  <div v-if="isCarregando === true" class="ml-loading">
+    <div class="loader"></div>
+  </div>
+  <div v-else class="page-container">
     <div class="main-content">
       <!-- Stats Cards -->
       <div class="stats-grid">
@@ -121,6 +124,7 @@ const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
 
 const dashboardData = ref({})
 const usuario = ref({})
+const isCarregando = ref(true)
 
 onMounted(async () => {
 
@@ -140,6 +144,8 @@ onMounted(async () => {
   dashboardData.value = res.data
   console.log('Dashboard Data:', res.data);
   console.log('Usuário Data:', res2.data[0]);
+
+  isCarregando.value = false
 });
 
 const formatCurrency = (v) => {
@@ -348,6 +354,27 @@ const produtoImgSrc = computed(() => {
   font-weight: 600;
   margin-bottom: 20px;
 }
+
+  .ml-loading{
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,#f7f8fa,#fbfbfd);
+  }
+
+  .loader{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:5px solid rgba(0,0,0,0.06);
+    border-top-color:var(--ml-yellow);
+    animation:spin .9s linear infinite;
+  }
+
+  @keyframes spin{ 
+    to { transform:rotate(360deg);} 
+  }
 
 .btn-detalhes {
   width: 100%;

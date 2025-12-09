@@ -1,5 +1,8 @@
 <template>
-  <v-app>
+  <div v-if="isCarregando === true" class="ml-loading">
+    <div class="loader"></div>
+  </div>
+  <v-app v-else>
     <v-app-bar color="white" height="80" class="header-appbar">
       <v-container fluid class="d-flex align-center gap-4 pa-0">
 
@@ -25,7 +28,7 @@
 
         <v-btn icon @click="carrinhoDrawer = true" title="Carrinho">
           <v-icon>mdi-cart</v-icon>
-          <v-badge v-if="carrinhoTotalQtd > 0" :content="carrinhoTotalQtd" offset-x="10" offset-y="10" />
+          <v-badge v-if="carrinhoTotalQtd > 0" :content="carrinhoTotalQtd" offset-x="25" offset-y="10" />
         </v-btn>
       </v-container>
     </v-app-bar>
@@ -162,6 +165,7 @@
   }
 
   const router = useRouter()
+  const isCarregando = ref(true)
 
   const isLoading = ref(true)
   const products = ref<Product[]>([])
@@ -355,6 +359,7 @@
     toast.error('Erro ao carregar produtos.')
   } finally {
     isLoading.value = false
+    isCarregando.value = false
   }
 }
 
@@ -518,6 +523,26 @@
     font-size: 0.85rem; 
     color: #777; 
   }
+    .ml-loading{
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,#f7f8fa,#fbfbfd);
+  }
+
+  .loader{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:5px solid rgba(0,0,0,0.06);
+    border-top-color:var(--ml-yellow);
+    animation:spin .9s linear infinite;
+  }
+
+  @keyframes spin{ 
+    to { transform:rotate(360deg);} 
+  }
   .card-actions {
     padding: 0.8rem 1rem 1.2rem; 
   }
@@ -566,5 +591,6 @@
   }
   .info-bar { 
     background: #cecece;
+    margin-top: 30px;
   }
 </style>
