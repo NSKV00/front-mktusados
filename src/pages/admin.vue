@@ -1,7 +1,6 @@
 <template>
   <div class="dashboard">
 
-    <!-- NAV TABS -->
     <div class="tabs">
       <div
         class="tab"
@@ -20,7 +19,6 @@
       >🛒 Compras</div>
     </div>
 
-    <!-- CONTENT -->
     <div v-if="tab === 'usuarios'">
       <div class="toolbar">
         <input
@@ -147,8 +145,6 @@
     </div>
     </div>
 
-
-    <!-- PRODUTOS -->
     <div v-if="tab === 'produtos'">
       <div class="toolbar">
         <input
@@ -240,8 +236,6 @@
       </div>
     </div>
 
-
-    <!-- COMPRAS -->
     <div v-if="tab === 'compras'">
       <div class="toolbar">
         <input
@@ -449,9 +443,7 @@ const ativarUsuario = async (id) => {
 const atualizarUsuario = async (id, data) => {
   try {
     const res = await api.patch(`/usuarios/${id}`, data)
-    console.log("RESPOSTA DO PATCH:", res.data)
     await carregarUsuarios() 
-    console.log("Atualizado:", res.data)
   } catch (err) {
     console.error(err)
   }
@@ -596,7 +588,6 @@ const atualizarProduto = async (id, data) => {
     const res = await api.patch(`/produto/${id}`, data, {
       headers: { "Content-Type": "multipart/form-data" }
     })
-    console.log("Produto atualizado:", res.data)
     await carregarProdutos()
   } catch (err) {
     console.error(err)
@@ -709,7 +700,6 @@ const prevPageCompras = () => {
   color: #1f2937;
 }
 
-/* TABS */
 .tabs {
   display: flex;
   gap: 28px;
@@ -735,7 +725,6 @@ const prevPageCompras = () => {
   border-bottom: 3px solid #2563eb;
 }
 
-/* SEARCH + FILTERS */
 .toolbar {
   display: flex;
   gap: 12px;
@@ -743,7 +732,6 @@ const prevPageCompras = () => {
   margin-bottom: 16px;
 }
 
-/* BOTÕES PROFISSIONAIS */
 .btn-action {
   padding: 7px 14px;
   border-radius: 8px;
@@ -759,7 +747,6 @@ const prevPageCompras = () => {
   min-width: 140px; 
 }
 
-/* ROXO — ativar / conceder admin */
 .btn-purple {
   background: #7C3AED15;
   color: #6D28D9;
@@ -771,7 +758,6 @@ const prevPageCompras = () => {
   transform: translateY(-1px);
 }
 
-/* LARANJA — inativar / remover admin */
 .btn-orange {
   background: #F9731615;
   color: #C2410C;
@@ -783,7 +769,6 @@ const prevPageCompras = () => {
   transform: translateY(-1px);
 }
 
-/* Desativado */
 .btn-action:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -799,7 +784,6 @@ const prevPageCompras = () => {
   font-size: 14px;
 }
 
-/* SELECT Moderno */
 .select {
   appearance: none;
   -webkit-appearance: none;
@@ -826,7 +810,6 @@ const prevPageCompras = () => {
   outline: none;
 }
 
-/* Desabilitado */
 .select:disabled {
   background-color: #f3f4f6;
   color: #9ca3af;
@@ -909,7 +892,6 @@ const prevPageCompras = () => {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
 }
 
-/* CARD TABLE */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -943,7 +925,6 @@ td {
   color: #374151;
 }
 
-/* TAG / BADGE */
 .badge {
   padding: 4px 10px;
   border-radius: 12px;
@@ -961,7 +942,6 @@ td {
   color: #374151;
 }
 
-/* STATUS */
 .status {
   padding: 4px 12px;
   border-radius: 12px;
@@ -990,40 +970,37 @@ td {
   border-spacing: 0 8px;
 }
 
-/* Cada coluna com largura fixa */
 .users-table th:nth-child(1), 
 .users-table td:nth-child(1) {
-  width: 200px;   /* Nome */
+  width: 200px;  
 }
 
 .users-table th:nth-child(2), 
 .users-table td:nth-child(2) {
-  width: 280px;   /* Email */
+  width: 280px;   
 }
 
 .users-table th:nth-child(3), 
 .users-table td:nth-child(3) {
-  width: 120px;   /* Função */
+  width: 120px;  
 }
 
 .users-table th:nth-child(4), 
 .users-table td:nth-child(4) {
-  width: 180px;   /* Status */
+  width: 180px;  
 }
 
 .users-table th:nth-child(5), 
 .users-table td:nth-child(5) {
-  width: 260px;   /* Ações */
+  width: 260px;  
 }
 
-/* Centralização vertical e horizontal */
 .users-table td,
 .users-table th {
   text-align: left;
   vertical-align: middle;
 }
 
-/* Ícone e texto alinhados */
 .email-cell,
 .name-cell {
   display: flex;
@@ -1031,7 +1008,6 @@ td {
   gap: 6px;
 }
 
-/* BUTTONS */
 .acoes {
   display: flex;
   gap: 8px;
@@ -1077,7 +1053,6 @@ td {
   color: #166534;
 }
 
-/* PRICE / INVENTORY */
 .price {
   font-weight: 600;
   color: #166534;
@@ -1094,7 +1069,6 @@ td {
   color: #6b7280;
 }
 
-/* FOOTER + PAGINATION */
 .footer {
   margin-top: 20px;
   display: flex;
@@ -1127,7 +1101,6 @@ td {
   border-color: #2563eb;
 }
 
-/* RECEITA */
 .receita {
   padding: 12px 16px;
   background: #ecfdf5;

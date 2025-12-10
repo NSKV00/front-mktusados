@@ -4,7 +4,6 @@
   </div>
   <div v-else class="page-container">
     <div class="main-content">
-      <!-- Stats Cards -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-content">
@@ -34,9 +33,7 @@
         </div>
       </div>
 
-      <!-- Main Grid -->
       <div class="main-grid">
-        <!-- Left: Último Pedido -->
         <div class="card card-pedido">
           <h2 class="card-title">Último Pedido Aprovado</h2>
           <p class="pedido-numero">#ORD-{{ ultimoPedido.id ?? '' }}</p>
@@ -80,7 +77,6 @@
           <div class="badge-status">Pagamento aprovado</div>
         </div>
 
-        <!-- Right: Produto Mais Vendido -->
         <div class="card card-produto">
           <div class="card-header-produto">
             <h2 class="card-title">Produto Mais Vendido</h2>
@@ -142,8 +138,6 @@ onMounted(async () => {
 
   usuario.value = res2.data[0]
   dashboardData.value = res.data
-  console.log('Dashboard Data:', res.data);
-  console.log('Usuário Data:', res2.data[0]);
 
   isCarregando.value = false
 });
@@ -177,7 +171,6 @@ const produtoImgSrc = computed(() => {
   if (!img) return 'https://via.placeholder.com/400x280?text=Sem+imagem'
   if (typeof img === 'string') {
     if (img.startsWith('data:')) return img
-    // Assume base64 string without data URI prefix
     return `data:image/png;base64,${img}`
   }
   return 'https://via.placeholder.com/400x280?text=Sem+imagem'

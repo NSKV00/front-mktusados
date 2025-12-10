@@ -15,32 +15,42 @@
                       Z"
                     fill="none" stroke="#E60023" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 
-              <rect x="61" y="44" width="6" height="28" rx="3" ry="3" fill="#E60023" />
-
-              <circle cx="64" cy="82" r="5" fill="#E60023" />
+              <!-- símbolo de interrogação -->
+              <circle cx="64" cy="48" r="6" fill="#E60023" />
+              <path d="M64 60 L64 80" stroke="#E60023" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="64" cy="88" r="5" fill="#E60023" />
             </svg>
           </div>
-          <h1 class="titulo-erro">Sua Conta Foi Bloqueada</h1>
+          <h1 class="titulo-erro">Produto Não Encontrada</h1>
         </div>
 
         <p class="descricao-erro">
-          Sua conta foi temporariamente bloqueada. Para resolver esta situação e obter mais informações, entre em contato conosco.
+          O produto que você está tentando acessar não existe ou foi removido. Verifique o endereço ou volte para a página inicial.
         </p>
 
         <div class="caixa-contato">
-          <p class="rotulo-contato">Entre em contato através do email:</p>
-          <p class="email-contato">chukkovendassuporte@gmail.com</p>
+          <p class="rotulo-contato">Você pode voltar para:</p>
+          <p class="email-contato" @click="voltarHome" style="cursor: pointer; text-decoration: underline;">
+            Página Inicial
+          </p>
         </div>
 
         <p class="texto-suporte">
-          Nossa equipe de suporte está disponível para ajudá-lo a resolver esta questão.
+          Se você acha que isso é um erro, entre em contato com nosso suporte.
         </p>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+function voltarHome() {
+  router.push('/');
+}
 </script>
 
 <style scoped>
@@ -51,7 +61,7 @@
 }
 
 .page-container {
-  background: linear-gradient(135deg, #eee9ea 0%, #fce4ec 100%);
+  background: linear-gradient(135deg, #eeece9 0%, #ebcb90 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -66,8 +76,8 @@
 }
 
 .card-erro {
-  background: #ffe8e888;
-  border: 3px solid #e53935;
+  background: #fff6e888;
+  border: 3px solid #ec8714;
   border-radius: 20px;
   padding: 60px 40px;
   box-shadow: 0 10px 40px rgba(229, 57, 53, 0.15);
@@ -85,7 +95,7 @@
 .icone-escudo {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, rgba(229, 57, 53, 0.1) 0%, rgba(244, 67, 54, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(229, 173, 53, 0.288) 0%, rgba(255, 145, 0, 0.267) 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -96,22 +106,22 @@
 .titulo-erro {
   font-size: 24px;
   font-weight: 700;
-  color: #e53935;
+  color: #ec8714;
   margin: 0;
   letter-spacing: -0.3px;
 }
 
 .descricao-erro {
   font-size: 14px;
-  color: #e53935;
+  color: #ec8714;
   line-height: 1.6;
   margin-bottom: 32px;
   font-weight: 500;
 }
 
 .caixa-contato {
-  background: linear-gradient(135deg, rgba(229, 57, 53, 0.05) 0%, rgba(244, 67, 54, 0.03) 100%);
-  border: 2px solid #ffcdd2;
+  background: linear-gradient(135deg, rgba(229, 173, 53, 0.288) 0%, rgba(255, 145, 0, 0.267) 100%);
+  border: 2px solid #fff3cd;
   border-radius: 16px;
   padding: 24px 20px;
   margin-bottom: 32px;
@@ -119,7 +129,7 @@
 
 .rotulo-contato {
   font-size: 13px;
-  color: #e53935;
+  color: #ec8714;
   margin: 0 0 12px 0;
   font-weight: 600;
   text-transform: uppercase;
@@ -128,7 +138,7 @@
 
 .email-contato {
   font-size: 15px;
-  color: #e53935;
+  color: #ec8714;
   margin: 0;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -136,7 +146,7 @@
 
 .texto-suporte {
   font-size: 13px;
-  color: #e53935;
+  color: #ec8714;
   line-height: 1.5;
   margin: 0;
   font-weight: 500;

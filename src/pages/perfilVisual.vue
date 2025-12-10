@@ -68,9 +68,9 @@
           </div>
 
           <div v-if="produtos.length > 0" class="pagination-controls">
-            <button class="btn-pagination" @click="offset = Math.max(0, offset - 12)" :disabled="offset === 0" aria-label="Anterior">&lt;</button>
+            <button class="btn-pagination" @click="offset = Math.max(0, offset - 12)" :disabled="offset === 0" aria-label="Anterior"><-</button>
             <span class="pagination-info">{{ offset + 1 }} - {{ Math.min(offset + 12, produtos.length) }} de {{ produtos.length }}</span>
-            <button class="btn-pagination" @click="offset = Math.min(produtos.length - 1, offset + 12)" :disabled="offset + 12 >= produtos.length" aria-label="Próximo">&gt;</button>
+            <button class="btn-pagination" @click="offset = Math.min(produtos.length - 1, offset + 12)" :disabled="offset + 12 >= produtos.length" aria-label="Próximo">-></button>
           </div>
         </section>
       </main>
@@ -500,8 +500,9 @@
 }
 
 .btn-pagination{
-  background:#4c0163;
+  background:#7c01a175;
   border:1px solid rgba(0,0,0,0.06);
+  color: black;
   padding:8px 12px;
   border-radius:8px;
   font-weight:700;
@@ -509,7 +510,7 @@
 }
 
 .btn-pagination:disabled{
-  opacity:0.45;
+  opacity:0.65;
   cursor:not-allowed;
 }
 
@@ -611,11 +612,11 @@
 
 .preview-box {
   width: 100%;
-  max-width: 300px;   /* largura máxima do preview */
-  max-height: 300px;  /* altura máxima do preview */
+  max-width: 300px;   
+  max-height: 300px;  
   margin: 16px auto;
   overflow: hidden;
-  border-radius: 12px;  /* opcional, deixa arredondado */
+  border-radius: 12px;  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -625,7 +626,7 @@
 .preview-box img {
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain; /* mantém proporção e não corta a imagem */
+  object-fit: contain; 
   display: block;
 }
 
@@ -724,56 +725,51 @@ const produtoSrc = (imagem) => {
 }
 
 onMounted(async () => {
-     console.log("onMounted foi chamado!")
-
-  
+  console.log("onMounted foi chamado!")
+  isCarregando.value = true
 
   try {
-
-    console.log(user.value)
-    isCarregando.value = true
     const headers = {
       Authorization: `Bearer ${token.value}`
     };
 
     const [response, response2, response3] = await Promise.all([
-      apiController.get("produto", {
-        params: { usuarioId: usuarioId.value , skip:offset.value },
-        headers
-      }),
-      apiController.get("usuarios", {
-        params: { id: usuarioId.value },
-        headers
-      }),
+      apiController.get("produto", { params: { usuarioId: usuarioId.value, skip: offset.value }, headers }),
+      apiController.get("usuarios", { params: { id: usuarioId.value }, headers }),
       apiController.get(`usuarioImagem/${usuarioId.value}`, { headers })
     ]);
 
-    if (response2?.data) {
-      usuario.value = response2.data[0];
+    if (!response2?.data || response2.data.length === 0) {
+      router.replace('/perfilNaoEncontrado')
+      return
     }
 
+    // Se chegou aqui, usuário existe
+    usuario.value = response2.data[0]
+
     if (response?.data) {
-      produtos.value = response.data;
+      produtos.value = response.data
     }
+
     if (response3?.data) {
-      imagemBase64.value = produtoSrc(response3.data.imagemBase64);
+      imagemBase64.value = produtoSrc(response3.data.imagemBase64)
     }
 
     console.log("Produto SRC FINAL:", produtoSrc(produtos.value[0]?.img));
     console.log("USUÁRIO CARREGADO:", usuario.value.id);
 
     form.value = {
-    nome: usuario.value.nome || '',
-    telefone: usuario.value.telefone || usuario.value.telefones || '',
-    cpf: usuario.value.cpf || '',
-    idade: usuario.value.idade || usuario.value.age || ''
+      nome: usuario.value.nome || '',
+      telefone: usuario.value.telefone || usuario.value.telefones || '',
+      cpf: usuario.value.cpf || '',
+      idade: usuario.value.idade || usuario.value.age || ''
     }
-
-    isCarregando.value = false
 
   } catch (error) {
     console.error("Erro ao buscar produtos:", error)
-    isCarregando.value = true
+    router.replace('/404') 
+  } finally {
+    isCarregando.value = false
   }
 })
 

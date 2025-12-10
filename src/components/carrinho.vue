@@ -100,6 +100,18 @@ import { ref, computed, watch, defineProps, defineEmits } from "vue";
 import { toast } from "vue3-toastify";
 import { useRouter, useRoute } from 'vue-router'
 import api from "../controller/api"
+import { jwtDecode } from "jwt-decode";
+
+interface User {
+  id: number;
+  nome?: string;
+  email?: string;
+}
+
+const tokenLocal = localStorage.getItem("token") || ""
+const token = ref(tokenLocal)
+const user = ref<User | null>(tokenLocal ? jwtDecode<User>(tokenLocal) : null);
+const usuarioIdLogado = Number(user.value!.id);
 
 
 interface Product {
@@ -195,30 +207,36 @@ function removerItem(itemId: number) {
   }
 }
 
-const handleBuyNow = () => {
+const handleBuyNow = async () => {
   if (itensComDetalhes.value.length === 0) {
     toast.error("Seu carrinho está vazio!");
     return;
   }
 
-  // Verifica se algum item está indisponível
   const indisponiveis = itensComDetalhes.value.filter(item => !item.disponivel || item.subtotal <= 0);
   if (indisponiveis.length > 0) {
     toast.error("Alguns produtos do carrinho não estão disponíveis.");
     return;
   }
 
-  // Prepara IDs e quantidades para enviar à página de pagamento
-  const produtoIds = itensComDetalhes.value.map(item => item.produtoId).join(',');
-  const quantidades = itensComDetalhes.value.map(item => item.qtd).join(',');
+  try {
+    const dto = {
+      UsuarioId: usuarioIdLogado, 
+      Itens: itensComDetalhes.value.map(item => ({
+        ProdutoId: item.produtoId,
+        Quantidade: item.qtd
+      }))
+    };
 
-  router.push({
-    path: '/pagamento',
-    query: {
-      produtoId: produtoIds,
-      quantidade: quantidades
-    }
-  });
+    const response = await api.post("/checkout", dto);
+
+    toast.success("Checkout criado com sucesso!");
+
+    const checkoutId = Number(response.data.id);
+    router.push(`/pagamento?checkoutId=${checkoutId}`);
+  } catch (error: any) {
+    toast.error("Erro ao criar checkout: " + (error.response?.data?.message || error.message));
+  }
 };
 
 

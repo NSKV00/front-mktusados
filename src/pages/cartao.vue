@@ -20,8 +20,8 @@ export default {
   data() {
     return {
       brickController: null,
-      messages: [],       // mensagens recebidas do SignalR
-      connection: null    // conexão SignalR
+      messages: [],       
+      connection: null   
     };
   },
 
@@ -51,7 +51,6 @@ export default {
         callbacks: {
           onReady: () => console.log("Brick montado ✔"),
           onSubmit: async (cardData) => {
-            console.log("📌 Dados do Brick:", cardData);
 
             const response = await fetch("https://api-c-atha.onrender.com/pagamento", {
               method: "POST",
@@ -75,7 +74,6 @@ export default {
             });
 
             const result = await response.json();
-            console.log("📘 API:", result);
           },
           onError: (err) => console.error("ERRO BRICK:", err)
         }
@@ -85,7 +83,6 @@ export default {
     },
 
     async startSignalR() {
-      // cria a conexão
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl("https://api-c-atha.onrender.com/myhub", { 
           accessTokenFactory: () => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHJpbmczIiwiaWQiOiI1Iiwibm9tZSI6InN0cmluZzMiLCJhZG1pbiI6IlRydWUiLCJjcGYiOiJzdHJpbmczIiwibmJmIjoxNzY0NjIwNTE0LCJleHAiOjE3NjQ3OTMzMTQsImlhdCI6MTc2NDYyMDUxNH0.8nTgifygxIOMjJCvu4NvEb9PkCWkmf7jKQ88iDw3ZuU" 
@@ -93,15 +90,12 @@ export default {
         .withAutomaticReconnect()
         .build();
 
-      // recebe mensagens do Hub
       this.connection.on("ReceiveMessage", (msg) => {
         this.messages.push(msg);
       });
 
-      // inicia a conexão
       try {
         await this.connection.start();
-        console.log("Conectado ao Hub SignalR!");
       } catch (err) {
         console.error("Erro ao conectar SignalR:", err);
       }

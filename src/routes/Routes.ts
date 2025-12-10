@@ -14,6 +14,10 @@ import Bloqueado from '../pages/bloqueado.vue'
 import Dashboard from '../pages/dashboard.vue'
 import Endereco from '../pages/Endereco.vue'
 import HistoricoCompra from '../pages/HistoricoCompra.vue'
+import Admin from '../pages/admin.vue'
+import NaoEncontrada from '../pages/naoEncontrada.vue'
+import ProdutoNaoEncontrado from '../pages/produtoNaoEncontrado.vue'
+import PerfilNaoEncontrado from '../pages/perfilNaoEncontrado.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -30,6 +34,11 @@ const routes = [
   { path: '/dashboard', component: Dashboard},
   { path: "/enderecos", component: Endereco, meta: { requiresAuth: true } },
   { path: "/historico", component: HistoricoCompra, meta: { requiresAuth: true } },
+  { path: "/admin", component: Admin, meta: { requiresAuth: true } },
+  { path: "/404", component: NaoEncontrada, meta: { requiresAuth: true } },
+  { path: "/produto404", component: ProdutoNaoEncontrado, meta: { requiresAuth: true } },
+  { path: "/perfilNaoEncontrado", component: PerfilNaoEncontrado, meta: { requiresAuth: true } },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NaoEncontrada }
 ]
 
 const router = createRouter({

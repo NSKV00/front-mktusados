@@ -203,6 +203,8 @@ onMounted(async () => {
             await buscarImagemExtra(produtoId)
 
             
+        } else {
+            router.replace('/produto404')
         }
         console.log("PRODUTO API =>", produtoAPI.value)
     } catch (error) {

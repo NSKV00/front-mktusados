@@ -75,12 +75,9 @@
 
           <!-- Grid de Produtos -->
           <div class="products-grid">
-            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card">
+            <article v-for="(produto, index) in produtosFiltradosVisiveis" :key="produto.id || produto.produtoId || produto.titulo" class="product-card" @click="irParaProduto(produto.id)">
               <div class="product-media">
                 <img :src="produtoSrc(produto.img)" alt="produto" class="product-img" />
-                <span :class="['status-badge', { inativo: !produto.ativo }]">
-                  {{ produto.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
               </div>
 
               <div class="product-content">
@@ -92,9 +89,6 @@
                 <div class="product-bottom">
                   <div class="price-wrap">
                     <span class="product-price">R$ {{ (produto.preco ?? produto.valor) }}</span>
-                  </div>
-                  <div class="meta-wrap">
-                    <span class="product-category">{{ produto.categoria || 'Sem categoria' }}</span>
                   </div>
                 </div>
               </div>
@@ -129,7 +123,7 @@
       </div>
     </div>
 
-    <!-- Modal: Logout usuário -->
+        <!-- Modal: Logout usuário -->
     <div v-if="abrirLogout" class="ml-modal-backdrop" @click.self="fecharLogout">
       <div class="ml-modal">
         <h3>Fazer logout</h3>
@@ -542,7 +536,7 @@
 
 .product-bottom{
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:center;
   gap:12px;
   margin-top:auto;
@@ -817,17 +811,18 @@
 
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import apiController from "../controller/api"
 import { jwtDecode } from "jwt-decode"
 import { toast } from 'vue3-toastify'
+import { useRouter } from 'vue-router'
 import { forceLogout } from '../utils/logout'
 
 const produtos = ref([])
 const usuario = ref(null)
 const imagemBase64 = ref('')
-const modalAberto = ref(false)
 const abrirLogout = ref(false)
+const modalAberto = ref(false)
 const isCarregando = ref(true)
 const modalImagemAberto = ref(false)
 const preview = ref(null)
@@ -840,6 +835,9 @@ const filtroAtivo = ref('ativos') // 'ativos' ou 'inativos'
 const tokenLocal = localStorage.getItem("token") || ""
 const token = ref(tokenLocal)
 const user = ref(tokenLocal ? jwtDecode(tokenLocal) : null)
+const abrirModalLogout = () => abrirLogout.value = true
+const Logout = () => {forceLogout()}
+const fecharLogout = () => abrirLogout.value = false
 
 const form = ref({
   email: '',
@@ -849,6 +847,13 @@ const form = ref({
   idade: ''
 })
 
+const router = useRouter()
+
+const irParaProduto = (id) => {
+  if (!id) return
+  router.push(`/produto/${id}`)
+}
+
 const fotoPadrao = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
 
 const detectarTipoImagem = (base64) => {
@@ -857,34 +862,27 @@ const detectarTipoImagem = (base64) => {
   if (base64.startsWith('iVBOR')) return 'image/png'
   return 'image/png'
 }
-function decodeJWT(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64).split('').map(c => 
-        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error('Erro ao decodificar token:', e);
-    return null;
-  }
+
+
+const abrirProduto = (produto) => {
+  router.push(`/produto/${produto.id || produto.produtoId}`)
 }
 
 const fotoSrc = computed(() => {
   const b = imagemBase64.value
 
-  if (!b || typeof b !== "string" || !b.trim()) {
+  if (!b || typeof b !== "string") {
     return fotoPadrao
   }
-
-  if (!b || typeof b !== 'string') return null
   const trimmed = b.trim()
-  if (trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('http') || trimmed.startsWith('/')) return trimmed
-  const tipo = detectarTipoImagem(trimmed)
+  if (trimmed.startsWith("data:image")) {
+    return trimmed
+  }
+  if (/^(http|https|\/)/.test(trimmed)) {
+    return trimmed
+  }
+  const tipo = detectarTipoImagem(trimmed) || "image/jpeg"
+
   return `data:${tipo};base64,${trimmed}`
 })
 
@@ -938,45 +936,36 @@ const fecharModalImagem = () => {
 
 const selecionarImagem = (event) => {
   const file = event.target.files[0]
-
-  if (!file) {
-    alert('❌ Nenhum arquivo selecionado!')
-    return
-  }
-
-  if (!file.type.startsWith('image/')) {
-    alert('❌ Selecione apenas imagens (JPG, PNG, etc.)!')
-    event.target.value = ''
-    return
-  }
+  if (!file) return alert("❌ Nenhum arquivo selecionado!")
+  if (!file.type.startsWith("image/")) return alert("❌ Selecione apenas imagens!")
 
   imagemSelecionada.value = file
   preview.value = URL.createObjectURL(file)
 }
 
 const salvarImagem = async () => {
-  if (!imagemSelecionada.value) return
+  if (!imagemSelecionada.value) return alert("❌ Nenhuma imagem selecionada!")
 
   const formData = new FormData()
-  formData.append("imagem", imagemSelecionada.value)
-  formData.append("file", imagemSelecionada.value)
+  formData.append("usuarioId", usuario.value.id) 
+  formData.append("imagem", imagemSelecionada.value) 
 
   try {
-    const headers = {
-      Authorization: `Bearer ${token.value}`
-    }
-
-    await apiController.post(`usuarioImagem/${usuario.value.id}`, formData, {
-      headers,
+    await apiController.post("usuarioImagem", formData, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "Content-Type": "multipart/form-data"
+      },
       maxContentLength: Infinity,
-      maxBodyLength: Infinity
+      maxBodyLength: Infinity,
     })
 
     toast.success("Imagem atualizada com sucesso!")
 
     const reader = new FileReader()
     reader.onload = () => {
-      imagemBase64.value = reader.result.split(",")[1]
+      const base64 = reader.result.split(",")[1]
+      imagemBase64.value = produtoSrc(base64)
     }
     reader.readAsDataURL(imagemSelecionada.value)
 
@@ -1057,10 +1046,7 @@ const validarCPF = (cpf) => {
 }
 
 const abrirModal = () => modalAberto.value = true
-const abrirModalLogout = () => abrirLogout.value = true
 const fecharModal = () => modalAberto.value = false
-const Logout = () => {forceLogout()}
-const fecharLogout = () => abrirLogout.value = false
 
 const salvarDados = async () => {
   const inicio = { ...usuario.value }

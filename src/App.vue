@@ -1,10 +1,10 @@
 <template>
   <v-app class="app">
-    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isProdutoPage2 || dashboard || historico" />
+    <app-header v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isProdutoPage2 || dashboard || historico || admin || perfilVisual" />
     <v-main class="main-content">
       <router-view />
     </v-main>
-    <app-footer v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isProdutoPage2 || dashboard || historico"  />
+    <app-footer v-if="isHomePage || isEnderecoPage || isPerfilPage || isProdutoPage || isProdutoPage2 || dashboard || historico || admin || perfilVisual"  />
   </v-app>
 </template>
 
@@ -22,6 +22,8 @@
   const isProdutoPage = computed(() => route.path === '/produtoCriar')
   const dashboard = computed(() => route.path === '/dashboard')
   const historico = computed(() => route.path === '/historico')
+  const admin = computed(() => route.path === '/admin')
+  const perfilVisual = computed(() => route.path.startsWith('/perfilVisual/'))
 </script>
 
 <style>
