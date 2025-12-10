@@ -26,6 +26,7 @@
   </v-app-bar>
 
   <v-navigation-drawer
+    ref="navDrawerRef"
     v-model="drawer"
     class="list"
     temporary
@@ -43,13 +44,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { jwtDecode } from 'jwt-decode'
 import api from '../controller/api'
 
 const router = useRouter()
 const drawer = ref(false)
+const navDrawerRef = ref<HTMLElement | null>(null)
 const usuario = ref<any>({ nome: '' })
 const imagemBase64 = ref('')
 
@@ -119,6 +121,32 @@ onMounted(async () => {
     console.error("Erro ao carregar header:", error)
   }
 })
+
+const onDocumentClick = (e: MouseEvent) => {
+  if (!drawer.value) return
+  const drawerEl = navDrawerRef.value as HTMLElement | null
+  const target = e.target as Node | null
+  if (drawerEl && target && !drawerEl.contains(target)) {
+    drawer.value = false
+  }
+}
+
+watch(drawer, (val) => {
+  if (val) {
+    document.body.classList.add('no-scroll')
+  } else {
+    document.body.classList.remove('no-scroll')
+  }
+})
+
+onMounted(() => {
+  document.addEventListener('click', onDocumentClick, true)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocumentClick, true)
+  document.body.classList.remove('no-scroll')
+})
 </script>
 
 <style scoped>
@@ -128,6 +156,13 @@ onMounted(async () => {
     align-items: center;
     gap: 12px;
     padding-right: 1rem;
+  }
+  .me-2{
+    position: relative !important;
+    z-index: 10000 !important;
+
+
+
   }
   .avatar-wrapper {
     width: 60px;
@@ -167,5 +202,11 @@ onMounted(async () => {
   .Logo {
     width: var(--logo-size-mobile);
     height: auto;
+  }
+</style>
+<style>
+  /* Bloqueia rolagem do body quando o drawer estiver aberto */
+  body.no-scroll {
+    overflow: hidden !important;
   }
 </style>
