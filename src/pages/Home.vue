@@ -440,7 +440,7 @@
   .search-field {
     max-width: 760px;
     width: 100%;
-  
+  }
   .home-main {
     background: #faf9fc;
     min-height: calc(100vh - 120px);
