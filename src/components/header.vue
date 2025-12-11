@@ -4,7 +4,7 @@
 
     <div class="logo">
       <router-link to="/" aria-label="Home">
-        <img class="Logo" src="../assets/logo.png" alt="Logo" />
+        <img class="Logo" src="../assets/Logo.png" alt="Logo" />
       </router-link>
     </div>
 
