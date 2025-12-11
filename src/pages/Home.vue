@@ -26,7 +26,7 @@
           <v-icon>mdi-filter-variant</v-icon>
         </v-btn>
 
-        <v-btn icon @click="carrinhoDrawer = true" title="Carrinho">
+        <v-btn v-if="isLogged" icon @click="carrinhoDrawer = true" title="Carrinho">
           <v-icon>mdi-cart</v-icon>
           <v-badge v-if="carrinhoTotalQtd > 0" :content="carrinhoTotalQtd" offset-x="25" offset-y="10" />
         </v-btn>
@@ -116,6 +116,7 @@
     </v-main>
 
     <Carrinho
+      v-if="isLogged"
       v-model:aberto="carrinhoDrawer"
       :carrinho="carrinho"
       :produtos="products"
@@ -164,6 +165,7 @@
     usuarioId?: number;
   }
 
+  const isLogged = computed(() => Boolean(localStorage.getItem("token")))
   const router = useRouter()
   const isCarregando = ref(true)
 
@@ -317,7 +319,7 @@
 
     const res = await api.get('/produto', { headers })
     products.value = Array.isArray(res.data) ? res.data : []
-    console.log(res)
+    console.log(res.data)
 
     let usuarioId: number | null = null
     const token = localStorage.getItem('token')
@@ -335,7 +337,7 @@
       carrinho.value = []
       return
     }
-
+    
     try {
       const resCarrinho = await api.get('/itemCarrinho', {
         params: { usuarioId },

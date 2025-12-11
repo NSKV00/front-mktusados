@@ -18,32 +18,91 @@ import Admin from '../pages/admin.vue'
 import NaoEncontrada from '../pages/naoEncontrada.vue'
 import ProdutoNaoEncontrado from '../pages/produtoNaoEncontrado.vue'
 import PerfilNaoEncontrado from '../pages/perfilNaoEncontrado.vue'
+import SemPermisao from '../pages/semPermisao.vue'
+import { jwtDecode } from 'jwt-decode'
+import api from '../controller/api'
 
 const routes = [
   { path: '/', component: Home },
   { path: '/login', component: Login },
   { path: '/cadastro', component: Cadastro },
-  { path: '/perfil', component: Perfil },
-  { path: '/produtoCriar', component: ProdutoAdicionar },
-  { path: '/pagamento', component: Pagamento },
-  { path: '/cartao', component: Cartao },
-  { path: '/perfilVisual/:id', component: PerfilVisual },
-  { path: '/produto/:id', component: Produto },
+  { path: '/perfil', component: Perfil, meta: { requiresAuth: true, isAtivo: true } },
+  { path: '/produtoCriar', component: ProdutoAdicionar, meta: { requiresAuth: true, isAtivo: true } },
+  { path: '/pagamento', component: Pagamento, meta: { requiresAuth: true, isAtivo: true, isEndereco: true } },
+  { path: '/cartao', component: Cartao , meta: { requiresAuth: true, isAtivo: true }},
+  { path: '/perfilVisual/:id', component: PerfilVisual , meta: { requiresAuth: true, isAtivo: true }},
+  { path: '/produto/:id', component: Produto , meta: { requiresAuth: true, isAtivo: true }},
   { path: '/teste', component: Teste},
   { path: '/bloqueado', component: Bloqueado},
-  { path: '/dashboard', component: Dashboard},
-  { path: "/enderecos", component: Endereco, meta: { requiresAuth: true } },
-  { path: "/historico", component: HistoricoCompra, meta: { requiresAuth: true } },
-  { path: "/admin", component: Admin, meta: { requiresAuth: true } },
-  { path: "/404", component: NaoEncontrada, meta: { requiresAuth: true } },
-  { path: "/produto404", component: ProdutoNaoEncontrado, meta: { requiresAuth: true } },
-  { path: "/perfilNaoEncontrado", component: PerfilNaoEncontrado, meta: { requiresAuth: true } },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NaoEncontrada }
+  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, isAtivo: true }},
+  { path: "/enderecos", component: Endereco, meta: { requiresAuth: true, isAtivo: true } },
+  { path: "/historico", component: HistoricoCompra, meta: { requiresAuth: true, isAtivo: true } },
+  { path: "/admin", component: Admin, meta: { requiresAuth: true, isAdmin: true } },
+  { path: "/404", component: NaoEncontrada },
+  { path: "/produto404", component: ProdutoNaoEncontrado, meta: { requiresAuth: true , isAtivo: true} },
+  { path: "/perfilNaoEncontrado", component: PerfilNaoEncontrado, meta: { requiresAuth: true , isAtivo: true} },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NaoEncontrada },
+  { path: '/semPermisao', name: 'semPermisao', component: SemPermisao }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+router.beforeEach(async (to, from, next) => {
+  const token = localStorage.getItem("token")
+  
+ 
+  if (to.meta.requiresAuth && !token) {
+    return next("/login")
+  }
+
+  if (to.meta.adminOnly) {
+    try {
+      const usuario = jwtDecode(token!)
+      const res = await api.get(`/usuarios?Id=${usuario.id}`)
+      console.log(res.data)
+      const isAdmin = res.data[0].admin
+
+      if (!isAdmin) {
+        return next("/semPermisao")
+      }
+    } catch (e) {
+      return next("/login") 
+    }
+  }
+
+  if(to.meta.isAtivo) {
+    try {
+      const usuario = jwtDecode(token!)
+      const res = await api.get(`/usuarios?Id=${usuario.id}`)
+      console.log(res.data)
+      const isAtivo2 = res.data[0].ativo
+
+      if (!isAtivo2) {
+        return next("/bloqueado")
+      }
+    } catch (e) {
+      return next("/login") 
+    }
+  }
+
+if (to.meta.isEndereco) {
+  try {
+    const usuario = jwtDecode(token!)
+    await api.get(`/endereco-principal/${usuario.id}`)
+
+    return next()
+  } catch (e) {
+    if (e.response && e.response.status === 404) {
+      return next("/enderecos")
+    }
+    return next("/login")
+  }
+}
+
+  next()
 })
 
 export default router

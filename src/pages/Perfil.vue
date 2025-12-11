@@ -860,6 +860,7 @@ const detectarTipoImagem = (base64) => {
   if (base64.startsWith('UklG')) return 'image/webp'
   if (base64.startsWith('/9j/')) return 'image/jpeg'
   if (base64.startsWith('iVBOR')) return 'image/png'
+  if (base64.startsWith('AAAAHGZ0eXBhdmlm')) return 'image/avif'
   return 'image/png'
 }
 
@@ -887,27 +888,24 @@ const fotoSrc = computed(() => {
 })
 
 const produtoSrc = (imagem) => {
-  if (!imagem) return null
+  if (!imagem || typeof imagem !== 'string') return null;
 
-  if (typeof imagem === 'string') {
-    const trimmed = imagem.trim()
-    if (trimmed.startsWith('/9j/') || trimmed.startsWith('iVBOR') || trimmed.startsWith('UklG')) {
-      const tipo = detectarTipoImagem(trimmed)
-      return `data:${tipo};base64,${trimmed}`
-    }
+  const trimmed = imagem.trim();
 
-    if (trimmed.startsWith('data:')) return trimmed
-    return trimmed
+  if (trimmed.startsWith("data:image")) {
+    return trimmed;
   }
 
-  if (typeof imagem === 'object') {
-    return produtoSrc(imagem.base64 || imagem.url || '')
+  const isBase64 = /^[A-Za-z0-9+/=]+$/.test(trimmed.replace(/\s/g, ''));
+
+  if (isBase64) {
+    const tipo = detectarTipoImagem(trimmed);
+    return `data:${tipo};base64,${trimmed}`;
   }
 
-  return null
+  return trimmed;
 }
 
-// ===== COMPUTED: FILTRAR PRODUTOS =====
 const produtosAtivos = computed(() => {
   return produtos.value.filter(p => p.ativo === true)
 })

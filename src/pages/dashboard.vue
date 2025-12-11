@@ -2,6 +2,15 @@
   <div v-if="isCarregando === true" class="ml-loading">
     <div class="loader"></div>
   </div>
+
+
+  <div v-else-if="!dashboardData || !dashboardData.ultimoPedido">
+  <div class="sem-vendas-global">
+    Não possui venda no momento.
+  </div>
+
+
+</div>
   <div v-else class="page-container">
     <div class="main-content">
       <div class="stats-grid">
@@ -189,6 +198,17 @@ const produtoImgSrc = computed(() => {
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   padding: 40px 20px;
+}
+
+.sem-vendas-global {
+  margin-top: 20px;
+  padding: 25px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  color: #555;
+  background: #f3f3f3;
+  border-radius: 12px;
 }
 
 .main-content {

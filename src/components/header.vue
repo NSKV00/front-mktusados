@@ -38,6 +38,7 @@
       <v-list-item :to="{ path: '/enderecos' }" title="Endereços" prepend-icon="mdi-map-marker" />
       <v-list-item :to="{ path: '/dashboard' }" title="Dashboard" prepend-icon="mdi-view-dashboard" />
       <v-list-item :to="{ path: '/historico' }" title="Historico de Compras" prepend-icon="mdi-history" />
+      <v-list-item v-if="isAdmin" :to="{ path: '/admin' }" title="Admin" prepend-icon="mdi-shield-account" />
     </v-list>
   </v-navigation-drawer>
 </template>
@@ -52,6 +53,7 @@ const router = useRouter()
 const drawer = ref(false)
 const usuario = ref<any>({ nome: '' })
 const imagemBase64 = ref('')
+const isAdmin = ref(false)
 
 const tokenLocal = localStorage.getItem("token") || ""
 const tokenValido =
@@ -108,13 +110,21 @@ onMounted(async () => {
 
     const img = await api.get(`usuarioImagem/${usuario.value.id}`)
 
-    const base = img?.data?.imagem
+    const base = img?.data?.imagemBase64
+
+    
 
     if (typeof base === "string" && base.trim() !== "") {
       imagemBase64.value = base.replace(/[\r\n\s]+/g, "")
     } else {
       imagemBase64.value = ""
     }
+
+
+    const usuario2 = jwtDecode(tokenLocal!)
+    const res = await api.get(`/usuarios?Id=${usuario2.id}`)
+    isAdmin.value = res.data[0].admin
+
   } catch (error) {
     console.error("Erro ao carregar header:", error)
   }
