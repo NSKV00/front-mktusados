@@ -2,7 +2,7 @@
   <main class="main">
     <v-form class="form" ref="formRef" @submit.prevent="handleSubmit">
       <span class="logo">
-        <img class="Logo" src="../assets/logo.png" alt="Logo" />
+        <img class="Logo" src="../assets/Logo.png" alt="Logo" />
       </span>
 
       <span class="title">Criar Conta</span>
