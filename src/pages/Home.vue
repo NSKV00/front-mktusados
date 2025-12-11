@@ -40,18 +40,6 @@
             <v-sheet elevation="0" class="pa-3 info-bar">
               <div class="d-flex gap-3 align-center ">
                 <v-sheet class="pa-2 categories-sheet" elevation="0">
-                  <div class="chips-row">
-                    <v-chip
-                      v-for="cat in quickCategories"
-                      :key="cat"
-                      :class="{ 'active-chip': selectedCategory === cat }"
-                      outlined
-                      @click="selectCategory(cat)"
-                    >
-                      <v-icon left small>{{ iconFor(cat) }}</v-icon>
-                      {{ cat }}
-                    </v-chip>
-                  </div>
                 </v-sheet>
                 <v-spacer />
                 <v-select v-model="sortOrder" :items="sortItems" dense hide-details style="max-width:200px;" />
@@ -265,11 +253,6 @@
     carregarDados()
   })
 
-  function iconFor(cat: string) {
-    const map: Record<string, string> = { 'Eletrônicos': 'mdi-cellphone', 'Moda': 'mdi-tshirt-crew', 'Beleza': 'mdi-lipstick', 'Casa': 'mdi-sofa', 'Jogos': 'mdi-gamepad', 'Tudo': 'mdi-fire' }
-    return map[cat] || 'mdi-tag'
-  }
-
   function formatPrice(v: any) {
     const n = Number(v || 0)
     return n.toFixed(2).replace('.', ',')
@@ -309,11 +292,6 @@
   }
 
   function onSearchEnter() {
-    paginaAtual.value = 1
-  }
-
-  function selectCategory(cat: string) {
-    selectedCategory.value = (cat === 'Tudo') ? null : cat
     paginaAtual.value = 1
   }
 
