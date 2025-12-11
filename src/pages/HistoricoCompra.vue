@@ -162,7 +162,6 @@ const prevPage = () => {
 </script>
 
 <style>
-/* BASE */
 body {
   font-family: "Inter", sans-serif;
   background: #f6f7fb;
@@ -184,14 +183,12 @@ body {
   margin-bottom: 24px;
 }
 
-/* GRID FLUIDO */
 .grid-layout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 24px;
 }
 
-/* CARD */
 .card {
   background: white;
   border-radius: 16px;
@@ -230,7 +227,6 @@ body {
   margin: 8px 0 16px;
 }
 
-/* ITEM */
 .item {
   display: flex;
   justify-content: space-between;
@@ -270,7 +266,6 @@ body {
   margin-bottom: 16px;
 }
 
-/* BOTÃO */
 .btn-details {
   width: 100%;
   background: #0f172a;
@@ -287,7 +282,6 @@ body {
   background: #1e293b;
 }
 
-/* MODAL */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -380,8 +374,6 @@ body {
   background: #1e293b;
 }
 
-
-/* PAGINAÇÃO */
 .pagination {
   display: flex;
   justify-content: center;
@@ -400,7 +392,6 @@ body {
   font-size: 15px;
 }
 
-/* FILTROS */
 .filters {
   display: flex;
   justify-content: flex-end;
@@ -438,9 +429,6 @@ body {
   cursor: pointer;
 }
 
-
-
-/* 🖥️ Laptops grandes (entre 1400px e 1100px) */
 @media (max-width: 1400px) {
   .container {
     padding: 30px;
@@ -453,7 +441,6 @@ body {
   }
 }
 
-/* 💻 Laptops médios (1100px a 900px) */
 @media (max-width: 1100px) {
   .grid-layout {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -466,7 +453,6 @@ body {
   }
 }
 
-/* 📱 Tablets (900px a 600px) */
 @media (max-width: 900px) {
   .container {
     padding: 25px;
@@ -495,7 +481,6 @@ body {
   }
 }
 
-/* 📱📱 Celulares grandes (600px a 480px) */
 @media (max-width: 600px) {
   .container {
     padding: 18px;
@@ -523,7 +508,6 @@ body {
   }
 }
 
-/* 📱 Celulares pequenos (480px pra baixo) */
 @media (max-width: 480px) {
   .container {
     padding: 14px;

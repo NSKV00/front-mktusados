@@ -37,7 +37,7 @@ const routes = [
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, isAtivo: true }},
   { path: "/enderecos", component: Endereco, meta: { requiresAuth: true, isAtivo: true } },
   { path: "/historico", component: HistoricoCompra, meta: { requiresAuth: true, isAtivo: true } },
-  { path: "/admin", component: Admin, meta: { requiresAuth: true, isAdmin: true } },
+  { path: "/admin", component: Admin, meta: { requiresAuth: true, adminOnly: true } },
   { path: "/404", component: NaoEncontrada },
   { path: "/produto404", component: ProdutoNaoEncontrado, meta: { requiresAuth: true , isAtivo: true} },
   { path: "/perfilNaoEncontrado", component: PerfilNaoEncontrado, meta: { requiresAuth: true , isAtivo: true} },

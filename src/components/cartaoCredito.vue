@@ -14,16 +14,14 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import * as signalR from "@microsoft/signalr";
-import api from "@/controller/api"; // ajuste caso seu path seja outro
+import api from "@/controller/api"; 
 
-// Props
 defineProps({
-  amount: { type: Number, required: true },        // valor da compra
-  usuarioId: { type: Number, required: true },    // id do usuário
-  token: { type: String, required: true }         // token JWT para autenticação
+  amount: { type: Number, required: true },       
+  usuarioId: { type: Number, required: true },    
+  token: { type: String, required: true }    
 });
 
-// Emite evento de sucesso ou erro
 const emit = defineEmits(["success", "error"]);
 
 const brickController = ref(null);
@@ -36,7 +34,7 @@ onMounted(() => {
 });
 
 function loadMercadoPagoScript() {
-  if (document.getElementById("mp-sdk")) return initMPBrick(); // já carregado
+  if (document.getElementById("mp-sdk")) return initMPBrick(); 
   const script = document.createElement("script");
   script.src = "https://sdk.mercadopago.com/js/v2";
   script.id = "mp-sdk";
@@ -108,7 +106,6 @@ function startSignalR() {
     .catch(err => console.error("Erro ao conectar SignalR:", err));
 }
 
-// Método para submeter o pagamento de fora do componente
 function submitBrick() {
   if (brickController.value) brickController.value.submit();
 }

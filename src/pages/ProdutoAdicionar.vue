@@ -49,7 +49,6 @@
             </div>
           </div>
 
-          <!-- INPUTS -->
           <input
             ref="fileInput"
             type="file"
@@ -415,7 +414,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* ======== BASE ======== */
 * {
   box-sizing: border-box;
   font-family: "Inter", system-ui, sans-serif;
@@ -428,7 +426,6 @@ body, html {
   color: #111827;
 }
 
-/* Estilo do v-select customizado */
 :deep(.styled-select) {
   width: 100%;
 }
@@ -509,7 +506,6 @@ body, html {
   color: #fed5aa;
 }
 
-/* ======== RESPONSIVE ======== */
 @media (max-width: 768px) {
   :deep(.vs__dropdown-toggle) {
     padding: 6px 10px;
@@ -566,7 +562,6 @@ body, html {
   padding-left: 0.5em;
 }
 
-/* ======== MAIN ======== */
 .main-content {
   max-width: 100%;
   margin: 0 auto;
@@ -577,7 +572,6 @@ body, html {
   align-items: center;
 }
 
-/* DICAS */
 .tips-banner {
   width: 75%;
   max-width: 960px;
@@ -613,7 +607,6 @@ body, html {
   align-items: center;
 }
 
-/* FORM */
 .form-container {
   width: 75%;
   max-width: 960px;
@@ -695,7 +688,6 @@ body, html {
   gap: 20px;
 }
 
-/* FOTO UPLOAD */
 .photo-upload {
   border: 2px dashed #fcd9bdc7;
   background: #fcf1e7;
@@ -706,7 +698,7 @@ body, html {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  overflow: hidden; /* importante: corta partes que ultrapassam */
+  overflow: hidden;
   transition: 0.3s;
 }
 
@@ -733,7 +725,7 @@ body, html {
   cursor: pointer;
   overflow: hidden;
   transition: 0.3s;
-  position: relative; /* <- necessário para posicionamento absoluto do botão */
+  position: relative; 
 }
 
 .photo-item {
@@ -765,8 +757,8 @@ body, html {
 .photo-upload img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* preenche todo o container */
-  border-radius: 0; /* opcional — o container já tem bordas arredondadas */
+  object-fit: cover; 
+  border-radius: 0; 
 }
 
 .photo-upload:hover {
@@ -842,7 +834,6 @@ body, html {
   transition: 0.2s;
 }
 
-/* Botão Anunciar */
 .btn-anunciar {
   background-color: #8d1ca0;
   color: white;
@@ -853,7 +844,6 @@ body, html {
   background-color: #460851;
 }
 
-/* Botão Cancelar */
 .btn-cancelar {
   background-color: #b6b6b6ef;
   color: #333;

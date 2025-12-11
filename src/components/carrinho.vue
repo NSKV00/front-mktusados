@@ -7,9 +7,7 @@
   class="carrinho-drawer"
   color="white"
 >
-  <!-- Container flex vertical -->
   <div class="drawer-content">
-    <!-- HEADER -->
     <v-list-item class="drawer-header">
       <v-icon start>mdi-cart-outline</v-icon>
       <v-list-item-title class="text-h6 font-weight-bold">
@@ -22,7 +20,6 @@
 
     <v-divider></v-divider>
 
-    <!-- LISTA DE ITENS COM SCROLL -->
     <div class="carrinho-itens-scroll">
       <v-list v-if="itensComDetalhes.length > 0">
         <v-list-item
@@ -265,7 +262,7 @@ const handleBuyNow = async () => {
 }
 
 .drawer-header {
-  background-color: #43119b; /* mantém header roxo */
+  background-color: #43119b; 
   color: white;
 }
 

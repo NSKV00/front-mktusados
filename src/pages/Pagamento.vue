@@ -716,17 +716,14 @@ function calcularFreteCarrinho(produtos, cepDestino) {
 
   const cepOrigemSelecionado = produtoMaisDistante.cep
 
-  // peso total
   const pesoTotal = produtos.reduce((acc, item) => {
     return acc + item.peso * item.qtd
   }, 0)
 
-  // valor declarado total
   const valorDeclarado = produtos.reduce((acc, item) => {
     return acc + item.valor * item.qtd
   }, 0)
 
-  // calcular frete usando o CEP mais distante
   return calcularFrete({
     cepOrigem: cepOrigemSelecionado,
     cepDestino,
@@ -764,7 +761,7 @@ function validarCPF(cpf) {
 }
 
 function detectarBandeira(numero) {
-  numero = numero.replace(/\D/g, ""); // remove espaços e traços
+  numero = numero.replace(/\D/g, "");
 
   const regras = {
     visa: /^4[0-9]{12}(?:[0-9]{3})?$/,
@@ -781,19 +778,17 @@ function detectarBandeira(numero) {
     }
   }
 
-  // fallback: se começar com 50-55 ou 2221-2720, assume MasterCard (teste MP)
   if (/^5[0-5]/.test(numero) || /^2(2[2-9]|[3-7])/.test(numero)) {
     return "mastercard";
   }
 
-  return null; // não identificou
+  return null;
 }
 
 
 </script>
 
 <style scoped>
-/* página inteira invertida */
 :host,
 .v-application {
   background: #000 !important;
@@ -816,21 +811,18 @@ function detectarBandeira(numero) {
   font-size: 1.4rem;
 }
 
-/* Card preto */
 .inverted-card {
   background: #000 !important;
   color: #fff !important;
   border: 1px solid #444;
 }
 
-/* Segundo card */
 .inverted-card-2 {
   background: #111 !important;
   color: #fff !important;
   border: 1px solid #333;
 }
 
-/* Inputs invertidos */
 .inverted-input .v-field {
   background: #111 !important;
   color: #fff !important;
@@ -840,7 +832,6 @@ function detectarBandeira(numero) {
   color: #fff !important;
 }
 
-/* Tabs invertidas */
 .inverted-tabs {
   color: #fff !important;
 }
@@ -853,14 +844,12 @@ function detectarBandeira(numero) {
   background: #222 !important;
 }
 
-/* Alerts invertidos */
 .inverted-alert {
   background: #111 !important;
   color: #fff !important;
   border: 1px solid #333;
 }
 
-/* Preço verde claro para contraste */
 .price-text {
   color: #7aff9a !important;
   font-weight: bold;
@@ -868,7 +857,6 @@ function detectarBandeira(numero) {
   justify-content: center;
 }
 
-/* Botão branco com texto preto */
 .black-btn {
   background: #fff !important;
   color: #000 !important;
@@ -885,7 +873,6 @@ function detectarBandeira(numero) {
   color: gold;
 }
 
-/* Container da avaliação */
 .divAvalia {
   background: linear-gradient(145deg, rgba(0, 0, 0, 0.596), rgba(0, 0, 0, 0.788));
   padding: 40px 30px;
@@ -918,7 +905,6 @@ function detectarBandeira(numero) {
   text-align: center;
 }
 
-/* Estrelas */
 .estrelas {
   display: flex;
   gap: 10px;
@@ -934,7 +920,6 @@ function detectarBandeira(numero) {
   transform: scale(1.2);
 }
 
-/* Botão enviar avaliação */
 .divAvalia .v-btn {
   display: flex;
   flex-direction: row;
@@ -955,7 +940,6 @@ function detectarBandeira(numero) {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
-/* Mobile responsiveness */
 @media (max-width: 600px) {
   .divAvalia {
     padding: 30px 20px;

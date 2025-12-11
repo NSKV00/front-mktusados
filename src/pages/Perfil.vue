@@ -137,7 +137,6 @@
       </div>
     </div>
 
-    <!-- Modal: Alterar imagem de perfil -->
     <div v-if="modalImagemAberto" class="ml-modal-backdrop" @click.self="fecharModalImagem">
       <div class="ml-modal">
         <h3>Alterar imagem de perfil</h3>
@@ -170,7 +169,6 @@
   --container-width: min(1200px, 100%);
 }
 
-/* Page layout */
 .ml-page{
   min-height: 100vh;
   background: linear-gradient(180deg,#f7f8fa,#fbfbfd);
@@ -190,7 +188,6 @@
   align-items: start;
 }
 
-/* Aside: user card */
 .ml-aside {
   position: relative;
   display: flex;
@@ -307,14 +304,12 @@
   color:var(--muted);
 }
 
-/* Main content */
 .ml-main{
   display:flex;
   flex-direction:column;
   gap:18px;
 }
 
-/* Products header */
 .ml-products-header{
   display:flex;
   align-items:center;
@@ -340,7 +335,6 @@
   justify-content:flex-end;
 }
 
-/* Add product button */
 .btn-add-produto{
   display:inline-flex;
   align-items:center;
@@ -367,7 +361,6 @@
   font-size:16px;
 }
 
-/* ===== FILTER TABS ===== */
 .filter-tabs {
   display: flex;
   gap: 8px;
@@ -429,7 +422,6 @@
   color: white;
 }
 
-/* Products grid */
 .ml-products{
   background: transparent;
 }
@@ -441,7 +433,6 @@
   align-items:start;
 }
 
-/* Card */
 .product-card{
   width: 100%;
   background:#fff;
@@ -569,7 +560,6 @@
   color:var(--muted);
 }
 
-/* Empty state */
 .ml-empty{
   display:flex;
   gap:16px;
@@ -593,7 +583,6 @@
   text-align:center;
 }
 
-/* Pagination */
 .pagination-controls{
   display:flex;
   align-items:center;
@@ -628,7 +617,6 @@
   font-weight:700;
 }
 
-/* Modal styles */
 .ml-modal-backdrop{
   position:fixed;
   inset:0;
@@ -683,7 +671,6 @@
   box-shadow: 0 0 0 3px rgba(255, 210, 0, 0.1);
 }
 
-/* Modal buttons */
 .modal-actions{
   display:flex;
   justify-content:center;
@@ -724,7 +711,6 @@
   border-color: rgba(0,0,0,0.12);
 }
 
-/* Loading */
 .ml-loading{
   min-height: 100vh;
   display:flex;
@@ -782,7 +768,6 @@
   }
 }
 
-/* Responsiveness */
 @media (max-width: 980px){
   .ml-container{ grid-template-columns: 1fr; }
   .products-grid{ grid-template-columns: repeat(1,1fr); }
@@ -830,7 +815,7 @@ const imagemSelecionada = ref(null)
 const fileInput = ref(null)
 const offset = ref(0)
 const offsetFiltro = ref(0)
-const filtroAtivo = ref('ativos') // 'ativos' ou 'inativos'
+const filtroAtivo = ref('ativos')
 
 const tokenLocal = localStorage.getItem("token") || ""
 const token = ref(tokenLocal)
