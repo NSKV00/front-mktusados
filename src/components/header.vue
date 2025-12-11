@@ -55,6 +55,13 @@ const usuario = ref<any>({ nome: '' })
 const imagemBase64 = ref('')
 const isAdmin = ref(false)
 
+interface MeuToken {
+  id: number;
+  nome?: string;
+  email?: string;
+  admin?: boolean;
+}
+
 const tokenLocal = localStorage.getItem("token") || ""
 const tokenValido =
   tokenLocal &&
@@ -121,7 +128,7 @@ onMounted(async () => {
     }
 
 
-    const usuario2 = jwtDecode(tokenLocal!)
+    const usuario2 = jwtDecode<MeuToken>(tokenLocal)
     const res = await api.get(`/usuarios?Id=${usuario2.id}`)
     isAdmin.value = res.data[0].admin
 

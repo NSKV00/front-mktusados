@@ -96,7 +96,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, defineProps, defineEmits } from "vue";
+import { ref, computed, watch } from "vue";
 import { toast } from "vue3-toastify";
 import { useRouter, useRoute } from 'vue-router'
 import api from "../controller/api"
@@ -118,7 +118,7 @@ interface Product {
   id: number;
   nome: string;
   valor: number;
-  img: string;
+  img?: string;
 }
 
 interface CarrinhoItem {

@@ -27,7 +27,7 @@
             </div>
 
             <div class="photo-item" v-if="form.fotoPreview">
-              <img :src="form.fotoPreview" alt="Foto principal" />
+              <img :src="`${form.fotoPreview}`" alt="Foto principal" />
               <button class="remove-btn" @click="removeFotoPrincipal">✕</button>
             </div>
 
@@ -104,7 +104,7 @@
               v-model="form.categoriaId"
               :options="categoriasAPI"
               label="nome"
-              :reduce="cat => cat.id"
+              :reduce="(cat: any) => cat.id"
               :clearable="false"
               placeholder="Selecione..."
               class="styled-select"
@@ -117,7 +117,7 @@
               v-model="form.estado"
               :options="estadoOpcoes"
               label="label"
-              :reduce="opt => opt.value"
+              :reduce="(opt: any) => opt.value"
               :clearable="false"
               placeholder="Selecione..."
               class="styled-select"
@@ -185,6 +185,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore
 import vSelect from "vue-select"
 import "vue-select/dist/vue-select.css"
 import { ref, onMounted } from "vue"
@@ -206,8 +207,8 @@ const estadoOpcoes = ref([
 ])
 
 const form = ref({
-  foto: null,
-  fotoPreview: null,
+  foto: null as File | null,
+  fotoPreview: null as string | ArrayBuffer | null,
   fotosAngulos: [] as File[],
   fotosAngulosPreview: [] as string[],
   titulo: "",
@@ -240,7 +241,7 @@ function handleFileUpload(event: Event) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      form.value.fotoPreview = e.target?.result as string;
+      form.value.fotoPreview = e.target?.result as string ;
     };
     reader.readAsDataURL(file);
   }
@@ -389,6 +390,7 @@ try {
     window.location.href = "/perfil";
   }, 1600);
 } catch (error) {
+  // @ts-ignore
   const msg = error.response?.data?.message || "Erro ao criar anúncio. Tente novamente mais tarde.";
   toast.error(msg);
 }

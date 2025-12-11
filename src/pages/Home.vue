@@ -77,7 +77,7 @@
                     <template #badge>Novo</template>
                   </v-badge>
 
-                  <v-img :src="converterBase64(p.img)" class="product-image" height="200" cover @click="goToDetails(p)" />
+                  <v-img :src="converterBase64(p.img) || undefined" class="product-image" height="200" cover @click="goToDetails(p)" />
 
                   <v-card-text class="card-content" @click="goToDetails(p)">
                     <div class="product-title">{{ p.nome }}</div>
@@ -173,10 +173,7 @@
   const products = ref<Product[]>([])
   const carrinho = ref<CarrinhoItem[]>([])
   const localSearch = ref('')
-  const quickCategories = ref(api.get('/categoria').then(res => {
-    const cats = Array.isArray(res.data) ? res.data : []
-    return ['Tudo', ...cats]
-  }).catch(() => ['Tudo']))
+  const quickCategories = ref<string[]>(['Tudo']); 
   const selectedCategory = ref<string | null>(null)
   const filtroDrawer = ref(false)
   const carrinhoDrawer = ref(false)
@@ -197,6 +194,16 @@
     { title: 'Menor preço', value: 'price-asc' },
     { title: 'Maior preço', value: 'price-desc' },
   ]
+
+  async function carregarCategorias() {
+  try {
+    const res = await api.get('/categoria')
+    const cats = Array.isArray(res.data) ? res.data : []
+    quickCategories.value = ['Tudo', ...cats]
+  } catch {
+    quickCategories.value = ['Tudo']
+  }
+}
 
   const categorias = computed(() => Array.from(new Set(products.value.map(p => p.categoriaNome || p.categoria || 'Outros'))))
   const vendedores = computed(() => Array.from(new Set(products.value.map(p => p.usuarioNome || 'Vendedor'))))
@@ -253,7 +260,10 @@
     router.push({ path: `/perfilVisual/${vendedorId}` })
   }
 
-  onMounted(() => carregarDados())
+  onMounted(() => {
+    carregarCategorias()
+    carregarDados()
+  })
 
   function iconFor(cat: string) {
     const map: Record<string, string> = { 'Eletrônicos': 'mdi-cellphone', 'Moda': 'mdi-tshirt-crew', 'Beleza': 'mdi-lipstick', 'Casa': 'mdi-sofa', 'Jogos': 'mdi-gamepad', 'Tudo': 'mdi-fire' }

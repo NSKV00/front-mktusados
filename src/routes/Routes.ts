@@ -50,6 +50,10 @@ const router = createRouter({
   routes,
 })
 
+interface UsuarioToken {
+  id: number;
+}
+
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token")
   
@@ -60,7 +64,7 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.meta.adminOnly) {
     try {
-      const usuario = jwtDecode(token!)
+      const usuario = jwtDecode<UsuarioToken>(token!)
       const res = await api.get(`/usuarios?Id=${usuario.id}`)
       console.log(res.data)
       const isAdmin = res.data[0].admin
@@ -75,7 +79,7 @@ router.beforeEach(async (to, from, next) => {
 
   if(to.meta.isAtivo) {
     try {
-      const usuario = jwtDecode(token!)
+      const usuario = jwtDecode<UsuarioToken>(token!)
       const res = await api.get(`/usuarios?Id=${usuario.id}`)
       console.log(res.data)
       const isAtivo2 = res.data[0].ativo
@@ -90,11 +94,11 @@ router.beforeEach(async (to, from, next) => {
 
 if (to.meta.isEndereco) {
   try {
-    const usuario = jwtDecode(token!)
+    const usuario = jwtDecode<UsuarioToken>(token!)
     await api.get(`/endereco-principal/${usuario.id}`)
 
     return next()
-  } catch (e) {
+  } catch (e: any) {
     if (e.response && e.response.status === 404) {
       return next("/enderecos")
     }
