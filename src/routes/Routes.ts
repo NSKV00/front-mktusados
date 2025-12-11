@@ -6,7 +6,7 @@ import Perfil from '../pages/Perfil.vue'
 
 import ProdutoAdicionar from '../pages/ProdutoAdicionar.vue'
 import Pagamento from '../pages/Pagamento.vue'
-import Cartao from '../pages/Cartao.vue'
+import Cartao from '../pages/cartao.vue'
 import PerfilVisual from '../pages/perfilVisual.vue'
 import Produto from '../pages/produto.vue'
 import Teste from '../pages/teste.vue'
