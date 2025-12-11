@@ -189,7 +189,7 @@ import vSelect from "vue-select"
 import "vue-select/dist/vue-select.css"
 import { ref, onMounted } from "vue"
 import { jwtDecode } from "jwt-decode"
-import  apiController  from "../controller/api"
+import apiController from "../controller/api"
 import { nextTick } from "vue"
 import { toast } from "vue3-toastify"
 
