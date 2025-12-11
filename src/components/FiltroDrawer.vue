@@ -1,10 +1,12 @@
 <template>
-  <v-navigation-drawer
+  <v-dialog
     v-model="openLocal"
     right
     width="380"
     class="filter-drawer"
     overlay
+    temporary
+    stateless
   >
     <div class="drawer-head pa-3 d-flex align-center justify-space-between">
       <div>
@@ -95,7 +97,7 @@
     <v-card-text class="pa-4 muted small">
       Dica: use a busca rápida no topo para resultados instantâneos.
     </v-card-text>
-  </v-navigation-drawer>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
