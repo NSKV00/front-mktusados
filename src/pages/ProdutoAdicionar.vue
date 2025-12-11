@@ -378,7 +378,7 @@ for (const file of form.value.fotosAngulos) {
 
 
 try {
-  const produtoResponse = await apiController.post("/produto", formData, {
+   await apiController.post("/produto", formData, {
     headers: { 
       Authorization: `Bearer ${token.value}`,
       "Content-Type": undefined

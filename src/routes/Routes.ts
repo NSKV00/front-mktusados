@@ -54,7 +54,7 @@ interface UsuarioToken {
   id: number;
 }
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, __from, next) => {
   const token = localStorage.getItem("token")
   
  

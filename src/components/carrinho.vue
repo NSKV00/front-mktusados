@@ -98,7 +98,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue";
 import { toast } from "vue3-toastify";
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter} from 'vue-router'
 import api from "../controller/api"
 import { jwtDecode } from "jwt-decode";
 
@@ -109,7 +109,6 @@ interface User {
 }
 
 const tokenLocal = localStorage.getItem("token") || ""
-const token = ref(tokenLocal)
 const user = ref<User | null>(tokenLocal ? jwtDecode<User>(tokenLocal) : null);
 const usuarioIdLogado = Number(user.value!.id);
 
@@ -127,7 +126,6 @@ interface CarrinhoItem {
   qtd: number;
 }
 
-const estoque = ref(0)
 const router = useRouter()
  
 
